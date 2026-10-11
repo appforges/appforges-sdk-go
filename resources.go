@@ -22,6 +22,12 @@ type ArticlesPublishToWechatMpParams struct {
 	Body *PublishToWechatMpRequest
 }
 
+// PublishToWechatMp PublishToWechatMp
+//
+// 直接发布 Markdown 或 HTML 内容到微信公众号。
+//
+//	一站式完成：正文预处理 → 封面上传 → 创建/更新草稿 → 可选群发。
+//	适用于 CLI 工具（如 wepub）直接调用的场景。
 func (s *ArticlesService) PublishToWechatMp(ctx context.Context, params ArticlesPublishToWechatMpParams, options ...runtime.RequestOption) (*PublishToWechatMpResponse, error) {
 	return runtime.Execute[*PublishToWechatMpResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/creative/wechat-mp/articles", Idempotent: false, NullableResponse: false, Body: params.Body, Fields: []runtime.Field{{Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
@@ -31,6 +37,9 @@ type AssetsUploadAssetParams struct {
 	Body *UploadAssetRequest
 }
 
+// UploadAsset UploadAsset
+//
+// 直接上传小文件（建议 < 4MB），文件数据通过 gRPC 消息体传输。
 func (s *AssetsService) UploadAsset(ctx context.Context, params AssetsUploadAssetParams, options ...runtime.RequestOption) (*UploadAssetResponse, error) {
 	return runtime.Execute[*UploadAssetResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/creative/assets", Idempotent: false, NullableResponse: false, Body: params.Body, Fields: []runtime.Field{{Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
@@ -40,6 +49,18 @@ type AuthorizeAuthorizeParams struct {
 	Body *AuthorizeRequest
 }
 
+// Authorize Generate an authorization code after the user grants consent.
+//
+// Although the public-facing OAuth 2.0 /authorize endpoint (RFC 6749 §3.1)
+//
+//	is a browser-redirect entry that relies on the IdP session cookie rather
+//	than a Bearer token, **this RPC is invoked from the BFF** (account
+//	service) after it has already exchanged the user's session cookie for an
+//	access_token. Therefore the call into IAM itself MUST carry
+//	`Authorization: Bearer <access_token>` so authMiddleware can resolve the
+//	user_id — declaring CREDENTIAL_NONE here would cause the middleware to
+//	skip token validation and the handler would then fail with
+//	`no user_id in context`.
 func (s *AuthorizeService) Authorize(ctx context.Context, params AuthorizeAuthorizeParams, options ...runtime.RequestOption) (*AuthorizeResponse, error) {
 	return runtime.Execute[*AuthorizeResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/oauth/authorize", Idempotent: false, NullableResponse: false, Body: params.Body, Fields: []runtime.Field{{Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
@@ -49,18 +70,38 @@ type CreativePromptGetPromptTemplateParams struct {
 	TemplateId string
 }
 
+// GetPromptTemplate GetPromptTemplate
+//
+// 获取指定模板的排版提示词。
+//
+//	提示词描述了该模板的排版规则，可直接用于 LLM 指令。
 func (s *CreativePromptService) GetPromptTemplate(ctx context.Context, params CreativePromptGetPromptTemplateParams, options ...runtime.RequestOption) (*GetPromptTemplateResponse, error) {
 	return runtime.Execute[*GetPromptTemplateResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/creative/templates/{template_id}/prompt", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"template_id": fmt.Sprint(params.TemplateId)}, Fields: []runtime.Field{{Name: "template_id", Value: params.TemplateId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type ExportsService struct{ client *runtime.Client }
 type ExportsGetPageExportParams struct {
-	ExportId  string
-	PageId    string
-	UserId    string
+	// ExportId Required. Persisted artifact identifier belonging to version_id.
+	ExportId string
+	// PageId Required. Owning page identifier.
+	PageId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// VersionId Required. Immutable source version identifier.
 	VersionId string
 }
 
+// GetPageExport GetPageExport
+//
+// Refresh the controlled download ticket for a published artifact.
+//
+// export_id: Required. Persisted artifact identifier belonging to version_id.
+//
+// page_id: Required. Owning page identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// version_id: Required. Immutable source version identifier.
 func (s *ExportsService) GetPageExport(ctx context.Context, params ExportsGetPageExportParams, options ...runtime.RequestOption) (*GetPageExportResponse, error) {
 	return runtime.Execute[*GetPageExportResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}/versions/{version_id}/exports/{export_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"export_id": fmt.Sprint(params.ExportId), "page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId), "version_id": fmt.Sprint(params.VersionId)}, Fields: []runtime.Field{{Name: "export_id", Value: params.ExportId, Required: true, Nullable: false, Enum: []string{}}, {Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "version_id", Value: params.VersionId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
@@ -73,6 +114,9 @@ type InstructionsListPageInstructionsParams struct {
 	PageToken runtime.Optional[string]
 }
 
+// ListPageInstructions ListPageInstructions
+//
+// Read private requirements for an owned page; never includes system prompts.
 func (s *InstructionsService) ListPageInstructions(ctx context.Context, params InstructionsListPageInstructionsParams, options ...runtime.RequestOption) (*ListPageInstructionsResponse, error) {
 	return runtime.Execute[*ListPageInstructionsResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}/instructions", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId)}, Query: url.Values(runtime.Query(map[string]any{"page_size": params.PageSize, "page_token": params.PageToken})), Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "page_size", Value: params.PageSize, Required: false, Nullable: false, Enum: []string{}}, {Name: "page_token", Value: params.PageToken, Required: false, Nullable: false, Enum: []string{}}}}, options...)
 }
@@ -93,67 +137,138 @@ type IntrospectIntrospectTokenParams struct {
 	Body *IntrospectTokenRequest
 }
 
+// IntrospectToken IntrospectToken
+//
+// Introspect a token to determine its validity and metadata (RFC 7662).
 func (s *IntrospectService) IntrospectToken(ctx context.Context, params IntrospectIntrospectTokenParams, options ...runtime.RequestOption) (*IntrospectTokenResponse, error) {
 	return runtime.Execute[*IntrospectTokenResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/oauth/introspect", Idempotent: true, NullableResponse: false, Body: params.Body, Fields: []runtime.Field{{Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type JwksService struct{ client *runtime.Client }
 
+// GetJWKS 返回当前活跃的 ID Token 签名公钥列表（JWKS 格式，RFC 7517 §5）。
+//
+// 用于 OIDC 双 token 模型中 id_token (JWT, RS256) 的本地验签。
+//
+//	accounts.appforges.com BFF 把本 RPC 的响应直接转发给
+//	/.well-known/jwks.json 端点，客户端启动时拉取一次、按 Cache-Control
+//	缓存（典型 24h），随后用 keys[].kid 匹配 JWT header 的 kid 字段、
+//	用对应公钥验 RS256 签名。
+//
+//	公开端点，无需任何 credential。资源 API 鉴权与本 RPC 无关——资源
+//	API 仍走 access_token + IntrospectToken 路径。
 func (s *JwksService) GetJWKS(ctx context.Context, options ...runtime.RequestOption) (*GetJWKSResponse, error) {
 	return runtime.Execute[*GetJWKSResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/oauth/jwks", Idempotent: true, NullableResponse: false}, options...)
 }
 
 type MetadataService struct{ client *runtime.Client }
 type MetadataGetPageVersionMetadataParams struct {
-	PageId    string
-	UserId    string
+	// PageId Required. Owning page identifier.
+	PageId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// VersionId Required. Explicit published version belonging to page_id; never resolves latest.
 	VersionId string
 }
 
+// GetPageVersionMetadata GetPageVersionMetadata
+//
+// Return authoritative published-version metadata without HTML or download tickets.
+//
+// page_id: Required. Owning page identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// version_id: Required. Explicit published version belonging to page_id; never resolves latest.
 func (s *MetadataService) GetPageVersionMetadata(ctx context.Context, params MetadataGetPageVersionMetadataParams, options ...runtime.RequestOption) (*GetPageVersionMetadataResponse, error) {
 	return runtime.Execute[*GetPageVersionMetadataResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}/versions/{version_id}/metadata", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId), "version_id": fmt.Sprint(params.VersionId)}, Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "version_id", Value: params.VersionId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageCategoriesService struct{ client *runtime.Client }
 type PinpageCategoriesApplyOrganizationParams struct {
-	UserId          string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 	Body            *PinpageCategoriesApplyOrganizationBody
 }
 
+// ApplyOrganization ApplyCategoryOrganization
+//
+// Apply one unexpired settled preview without a second charge.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpageCategoriesService) ApplyOrganization(ctx context.Context, params PinpageCategoriesApplyOrganizationParams, options ...runtime.RequestOption) (*ApplyCategoryOrganizationResponse, error) {
 	return runtime.Execute[*ApplyCategoryOrganizationResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-categories:apply-organization", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Body: params.Body, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageCategoriesDeleteCategoryParams struct {
-	CategoryId                   string
-	UserId                       string
-	ImpactFingerprint            string
-	XIdempotencyKey              string
+	// CategoryId Required. Root category to revoke and delete with its subtree.
+	CategoryId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// ImpactFingerprint Required. Exact aggregate impact fingerprint from the adjacent preview.
+	ImpactFingerprint string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
+	XIdempotencyKey string
+	// XPinPageDeletionConfirmation Required short-lived deletion capability returned by the matching PinPage deletion preview operation.
 	XPinPageDeletionConfirmation string
 }
 
+// DeleteCategory DeleteCategory
+//
+// Revoke a confirmed subtree and its pages, then schedule exact cleanup.
+//
+// category_id: Required. Root category to revoke and delete with its subtree.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// impactFingerprint: Required. Exact aggregate impact fingerprint from the adjacent preview.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
+//
+// X-PinPage-Deletion-Confirmation: Required short-lived deletion capability returned by the matching PinPage deletion preview operation.
 func (s *PinpageCategoriesService) DeleteCategory(ctx context.Context, params PinpageCategoriesDeleteCategoryParams, options ...runtime.RequestOption) (*DeleteCategoryResponse, error) {
 	return runtime.Execute[*DeleteCategoryResponse](ctx, s.client, runtime.Request{Method: "DELETE", Path: "/v1/users/{user_id}/pinpage-categories/{category_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"category_id": fmt.Sprint(params.CategoryId), "user_id": fmt.Sprint(params.UserId)}, Query: url.Values(runtime.Query(map[string]any{"impactFingerprint": params.ImpactFingerprint})), Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey, "X-PinPage-Deletion-Confirmation": params.XPinPageDeletionConfirmation})), Fields: []runtime.Field{{Name: "category_id", Value: params.CategoryId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "impactFingerprint", Value: params.ImpactFingerprint, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-PinPage-Deletion-Confirmation", Value: params.XPinPageDeletionConfirmation, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageCategoriesEstimateOrganizationParams struct {
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string
 	Body   *PinpageCategoriesEstimateOrganizationBody
 }
 
+// EstimateOrganization EstimateCategoryOrganization
+//
+// Create a durable estimate for one natural-language organization request.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageCategoriesService) EstimateOrganization(ctx context.Context, params PinpageCategoriesEstimateOrganizationParams, options ...runtime.RequestOption) (*EstimateCategoryOrganizationResponse, error) {
 	return runtime.Execute[*EstimateCategoryOrganizationResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-categories:estimate-organization", Idempotent: false, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Body: params.Body, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageCategoriesListCategoriesParams struct {
-	UserId           string
-	OrderBy          runtime.Optional[string]
-	PageSize         runtime.Optional[int64]
-	PageToken        runtime.Optional[string]
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// OrderBy Optional. name asc (default) or updated_at desc.
+	OrderBy   runtime.Optional[string]
+	PageSize  runtime.Optional[int64]
+	PageToken runtime.Optional[string]
+	// ParentCategoryId Optional. Omit to list roots; otherwise list direct children of this node.
 	ParentCategoryId runtime.Optional[string]
 }
 
+// ListCategories ListCategories
+//
+// List one level of direct child categories.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// orderBy: Optional. name asc (default) or updated_at desc.
+//
+// parentCategoryId: Optional. Omit to list roots; otherwise list direct children of this node.
 func (s *PinpageCategoriesService) ListCategories(ctx context.Context, params PinpageCategoriesListCategoriesParams, options ...runtime.RequestOption) (*ListCategoriesResponse, error) {
 	return runtime.Execute[*ListCategoriesResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-categories", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Query: url.Values(runtime.Query(map[string]any{"orderBy": params.OrderBy, "page_size": params.PageSize, "page_token": params.PageToken, "parentCategoryId": params.ParentCategoryId})), Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "orderBy", Value: params.OrderBy, Required: false, Nullable: false, Enum: []string{}}, {Name: "page_size", Value: params.PageSize, Required: false, Nullable: false, Enum: []string{}}, {Name: "page_token", Value: params.PageToken, Required: false, Nullable: false, Enum: []string{}}, {Name: "parentCategoryId", Value: params.ParentCategoryId, Required: false, Nullable: false, Enum: []string{}}}}, options...)
 }
@@ -170,155 +285,319 @@ func (s *PinpageCategoriesService) ListCategoriesAll(ctx context.Context, params
 }
 
 type PinpageCategoriesPreviewCategoryDeletionParams struct {
+	// CategoryId Required. Root category whose exact subtree impact is requested.
 	CategoryId string
-	UserId     string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
 }
 
+// PreviewCategoryDeletion PreviewCategoryDeletion
+//
+// Produce a signed exact impact snapshot for one category subtree.
+//
+// category_id: Required. Root category whose exact subtree impact is requested.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageCategoriesService) PreviewCategoryDeletion(ctx context.Context, params PinpageCategoriesPreviewCategoryDeletionParams, options ...runtime.RequestOption) (*PreviewCategoryDeletionResponse, error) {
 	return runtime.Execute[*PreviewCategoryDeletionResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-categories/{category_id}:preview-deletion", Idempotent: false, NullableResponse: false, PathParams: map[string]string{"category_id": fmt.Sprint(params.CategoryId), "user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "category_id", Value: params.CategoryId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageCategoriesPreviewOrganizationParams struct {
-	UserId          string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 	Body            *PinpageCategoriesPreviewOrganizationBody
 }
 
+// PreviewOrganization PreviewCategoryOrganization
+//
+// Consume an estimate and accept asynchronous organization planning.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpageCategoriesService) PreviewOrganization(ctx context.Context, params PinpageCategoriesPreviewOrganizationParams, options ...runtime.RequestOption) (*PreviewCategoryOrganizationResponse, error) {
 	return runtime.Execute[*PreviewCategoryOrganizationResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-categories:preview-organization", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Body: params.Body, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageCategoryOrganizationJobsService struct{ client *runtime.Client }
 type PinpageCategoryOrganizationJobsGetCategoryOrganizationJobParams struct {
+	// OrganizationJobId Required. Opaque user-requested organization job identifier.
 	OrganizationJobId string
-	UserId            string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
 }
 
+// GetCategoryOrganizationJob GetCategoryOrganizationJob
+//
+// Return one user-requested category organization job.
+//
+// organization_job_id: Required. Opaque user-requested organization job identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageCategoryOrganizationJobsService) GetCategoryOrganizationJob(ctx context.Context, params PinpageCategoryOrganizationJobsGetCategoryOrganizationJobParams, options ...runtime.RequestOption) (*GetCategoryOrganizationJobResponse, error) {
 	return runtime.Execute[*GetCategoryOrganizationJobResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-category-organization-jobs/{organization_job_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"organization_job_id": fmt.Sprint(params.OrganizationJobId), "user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "organization_job_id", Value: params.OrganizationJobId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageCategoryPreferenceService struct{ client *runtime.Client }
 type PinpageCategoryPreferenceGetCategoryPreferenceParams struct {
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string
 }
 
+// GetCategoryPreference GetCategoryPreference
+//
+// Return the user-scoped singleton category preference.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageCategoryPreferenceService) GetCategoryPreference(ctx context.Context, params PinpageCategoryPreferenceGetCategoryPreferenceParams, options ...runtime.RequestOption) (*GetCategoryPreferenceResponse, error) {
 	return runtime.Execute[*GetCategoryPreferenceResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-category-preference", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageCategoryPreferenceUpdateCategoryPreferenceParams struct {
-	UserId          string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 	Body            *PinpageCategoryPreferenceUpdateCategoryPreferenceBody
 }
 
+// UpdateCategoryPreference UpdateCategoryPreference
+//
+// Fully replace or explicitly clear the singleton category preference.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpageCategoryPreferenceService) UpdateCategoryPreference(ctx context.Context, params PinpageCategoryPreferenceUpdateCategoryPreferenceParams, options ...runtime.RequestOption) (*UpdateCategoryPreferenceResponse, error) {
 	return runtime.Execute[*UpdateCategoryPreferenceResponse](ctx, s.client, runtime.Request{Method: "PUT", Path: "/v1/users/{user_id}/pinpage-category-preference", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Body: params.Body, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageJobsService struct{ client *runtime.Client }
 type PinpageJobsCreateGenerationParams struct {
-	UserId          string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 	Body            *PinpageJobsCreateGenerationBody
 }
 
+// CreateGeneration CreateGeneration
+//
+// Atomically freeze the user input and create a page plus generation job.
+//
+//	Vertex owns LLM charging and quota admission; this request deliberately
+//	carries no quote, balance, budget, or user-authorized charge fields.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpageJobsService) CreateGeneration(ctx context.Context, params PinpageJobsCreateGenerationParams, options ...runtime.RequestOption) (*CreateGenerationResponse, error) {
 	return runtime.Execute[*CreateGenerationResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-jobs", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Body: params.Body, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageJobsEstimateParams struct {
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string
 	Body   *PinpageJobsEstimateBody
 }
 
+// Estimate EstimateGeneration
+//
+// Create a durable, short-lived estimate without starting generation.
+//
+//	Deprecated. New clients call CreateGeneration directly.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// Deprecated:
 func (s *PinpageJobsService) Estimate(ctx context.Context, params PinpageJobsEstimateParams, options ...runtime.RequestOption) (*EstimateGenerationResponse, error) {
 	return runtime.Execute[*EstimateGenerationResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-jobs:estimate", Idempotent: false, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Body: params.Body, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageJobsGetJobParams struct {
-	JobId  string
+	// JobId Required. Opaque job identifier.
+	JobId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string
 }
 
+// GetJob GetJob
+//
+// Return the authoritative state of one generation job.
+//
+// job_id: Required. Opaque job identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageJobsService) GetJob(ctx context.Context, params PinpageJobsGetJobParams, options ...runtime.RequestOption) (*GetJobResponse, error) {
 	return runtime.Execute[*GetJobResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-jobs/{job_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"job_id": fmt.Sprint(params.JobId), "user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "job_id", Value: params.JobId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageJobsRetryJobParams struct {
-	JobId           string
-	UserId          string
+	// JobId Required. Failed source job from the request path.
+	JobId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 	Body            *PinpageJobsRetryJobBody
 }
 
+// RetryJob RetryJob
+//
+// Consume a RETRY_JOB estimate and create a new job with frozen input.
+//
+// job_id: Required. Failed source job from the request path.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpageJobsService) RetryJob(ctx context.Context, params PinpageJobsRetryJobParams, options ...runtime.RequestOption) (*RetryJobResponse, error) {
 	return runtime.Execute[*RetryJobResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-jobs/{job_id}:retry", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"job_id": fmt.Sprint(params.JobId), "user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Body: params.Body, Fields: []runtime.Field{{Name: "job_id", Value: params.JobId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageJobsSubmitParams struct {
-	UserId          string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 	Body            *PinpageJobsSubmitBody
 }
 
+// Submit SubmitGeneration
+//
+// Consume a CREATE_PAGE estimate and atomically create a page and job.
+//
+//	Deprecated. New clients call CreateGeneration directly.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
+//
+// Deprecated:
 func (s *PinpageJobsService) Submit(ctx context.Context, params PinpageJobsSubmitParams, options ...runtime.RequestOption) (*SubmitGenerationResponse, error) {
 	return runtime.Execute[*SubmitGenerationResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-jobs:submit", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Body: params.Body, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageMaterialsService struct{ client *runtime.Client }
 type PinpageMaterialsDeleteMaterialParams struct {
-	MaterialId      string
-	UserId          string
+	// MaterialId Required. Unbound material whose access is revoked.
+	MaterialId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 }
 
+// DeleteMaterial DeleteMaterial
+//
+// Revoke access to one unbound material and schedule cleanup.
+//
+// material_id: Required. Unbound material whose access is revoked.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpageMaterialsService) DeleteMaterial(ctx context.Context, params PinpageMaterialsDeleteMaterialParams, options ...runtime.RequestOption) (*DeleteMaterialResponse, error) {
 	return runtime.Execute[*DeleteMaterialResponse](ctx, s.client, runtime.Request{Method: "DELETE", Path: "/v1/users/{user_id}/pinpage-materials/{material_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"material_id": fmt.Sprint(params.MaterialId), "user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Fields: []runtime.Field{{Name: "material_id", Value: params.MaterialId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageMaterialsGetMaterialParams struct {
+	// MaterialId Required. Opaque material identifier.
 	MaterialId string
-	UserId     string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
 }
 
+// GetMaterial GetMaterial
+//
+// Return one user-owned material's validation and parsing fact.
+//
+// material_id: Required. Opaque material identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageMaterialsService) GetMaterial(ctx context.Context, params PinpageMaterialsGetMaterialParams, options ...runtime.RequestOption) (*GetMaterialResponse, error) {
 	return runtime.Execute[*GetMaterialResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-materials/{material_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"material_id": fmt.Sprint(params.MaterialId), "user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "material_id", Value: params.MaterialId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpagePagesService struct{ client *runtime.Client }
 type PinpagePagesDeletePageParams struct {
-	PageId                       string
-	UserId                       string
-	ExpectedContentRevision      string
-	ImpactFingerprint            string
-	PageEtag                     runtime.Optional[string]
-	XIdempotencyKey              string
+	// PageId Required. Page to revoke and delete.
+	PageId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// ExpectedContentRevision Required. Content revision returned by the adjacent preview.
+	ExpectedContentRevision string
+	// ImpactFingerprint Required. Exact impact fingerprint returned by the adjacent preview.
+	ImpactFingerprint string
+	// PageEtag Optional. Exact representation validator requested by the client.
+	PageEtag runtime.Optional[string]
+	// XIdempotencyKey Required opaque idempotency key for this operation.
+	XIdempotencyKey string
+	// XPinPageDeletionConfirmation Required short-lived deletion capability returned by the matching PinPage deletion preview operation.
 	XPinPageDeletionConfirmation string
 }
 
+// DeletePage DeletePage
+//
+// Revoke page access and accept its exact content scope for cleanup.
+//
+// page_id: Required. Page to revoke and delete.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// expectedContentRevision: Required. Content revision returned by the adjacent preview.
+//
+// impactFingerprint: Required. Exact impact fingerprint returned by the adjacent preview.
+//
+// pageEtag: Optional. Exact representation validator requested by the client.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
+//
+// X-PinPage-Deletion-Confirmation: Required short-lived deletion capability returned by the matching PinPage deletion preview operation.
 func (s *PinpagePagesService) DeletePage(ctx context.Context, params PinpagePagesDeletePageParams, options ...runtime.RequestOption) (*DeletePageResponse, error) {
 	return runtime.Execute[*DeletePageResponse](ctx, s.client, runtime.Request{Method: "DELETE", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId)}, Query: url.Values(runtime.Query(map[string]any{"expectedContentRevision": params.ExpectedContentRevision, "impactFingerprint": params.ImpactFingerprint, "pageEtag": params.PageEtag})), Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey, "X-PinPage-Deletion-Confirmation": params.XPinPageDeletionConfirmation})), Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "expectedContentRevision", Value: params.ExpectedContentRevision, Required: true, Nullable: false, Enum: []string{}}, {Name: "impactFingerprint", Value: params.ImpactFingerprint, Required: true, Nullable: false, Enum: []string{}}, {Name: "pageEtag", Value: params.PageEtag, Required: false, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-PinPage-Deletion-Confirmation", Value: params.XPinPageDeletionConfirmation, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpagePagesGetPageParams struct {
+	// PageId Required. Opaque page identifier.
 	PageId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string
 }
 
+// GetPage GetPage
+//
+// Return one authoritative page without embedding version HTML.
+//
+// page_id: Required. Opaque page identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpagePagesService) GetPage(ctx context.Context, params PinpagePagesGetPageParams, options ...runtime.RequestOption) (*GetPageResponse, error) {
 	return runtime.Execute[*GetPageResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpagePagesListPagesParams struct {
-	UserId     string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// CategoryId Optional. Restrict results to one direct category.
 	CategoryId runtime.Optional[string]
-	OrderBy    runtime.Optional[string]
-	PageSize   runtime.Optional[int64]
-	PageToken  runtime.Optional[string]
+	// OrderBy Optional. created_at desc (default) or created_at asc.
+	OrderBy   runtime.Optional[string]
+	PageSize  runtime.Optional[int64]
+	PageToken runtime.Optional[string]
 }
 
+// ListPages ListPages
+//
+// List the user's recent pages or pages directly assigned to one category.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// categoryId: Optional. Restrict results to one direct category.
+//
+// orderBy: Optional. created_at desc (default) or created_at asc.
 func (s *PinpagePagesService) ListPages(ctx context.Context, params PinpagePagesListPagesParams, options ...runtime.RequestOption) (*ListPagesResponse, error) {
 	return runtime.Execute[*ListPagesResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-pages", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Query: url.Values(runtime.Query(map[string]any{"categoryId": params.CategoryId, "orderBy": params.OrderBy, "page_size": params.PageSize, "page_token": params.PageToken})), Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "categoryId", Value: params.CategoryId, Required: false, Nullable: false, Enum: []string{}}, {Name: "orderBy", Value: params.OrderBy, Required: false, Nullable: false, Enum: []string{}}, {Name: "page_size", Value: params.PageSize, Required: false, Nullable: false, Enum: []string{}}, {Name: "page_token", Value: params.PageToken, Required: false, Nullable: false, Enum: []string{}}}}, options...)
 }
@@ -335,31 +614,61 @@ func (s *PinpagePagesService) ListPagesAll(ctx context.Context, params PinpagePa
 }
 
 type PinpagePagesPreviewPageDeletionParams struct {
+	// PageId Required. Page whose exact deletion impact is requested.
 	PageId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string
 }
 
+// PreviewPageDeletion PreviewPageDeletion
+//
+// Produce a signed, short-lived exact deletion-impact snapshot.
+//
+// page_id: Required. Page whose exact deletion impact is requested.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpagePagesService) PreviewPageDeletion(ctx context.Context, params PinpagePagesPreviewPageDeletionParams, options ...runtime.RequestOption) (*PreviewPageDeletionResponse, error) {
 	return runtime.Execute[*PreviewPageDeletionResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}:preview-deletion", Idempotent: false, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpagePagesRegeneratePageParams struct {
-	PageId          string
-	UserId          string
+	// PageId Required. Existing page to regenerate.
+	PageId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 	Body            *PinpagePagesRegeneratePageBody
 }
 
+// RegeneratePage RegeneratePage
+//
+// Consume a REGENERATE_PAGE estimate and create a new logical job.
+//
+// page_id: Required. Existing page to regenerate.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpagePagesService) RegeneratePage(ctx context.Context, params PinpagePagesRegeneratePageParams, options ...runtime.RequestOption) (*RegeneratePageResponse, error) {
 	return runtime.Execute[*RegeneratePageResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}:regenerate", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Body: params.Body, Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpagePagesRenamePageParams struct {
+	// PageId Required. Owned page identifier.
 	PageId string
+	// UserId Required. Authenticated owner or me.
 	UserId string
 	Body   *PinpagePagesRenamePageBody
 }
 
+// RenamePage RenamePage
+//
+// Save a user display name without regenerating immutable artifacts.
+//
+// page_id: Required. Owned page identifier.
+//
+// user_id: Required. Authenticated owner or me.
 func (s *PinpagePagesService) RenamePage(ctx context.Context, params PinpagePagesRenamePageParams, options ...runtime.RequestOption) (*RenamePageResponse, error) {
 	return runtime.Execute[*RenamePageResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}:rename", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId)}, Body: params.Body, Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
@@ -371,98 +680,188 @@ type PinpagePromptGetPagePromptParams struct {
 	PromptRevisionId runtime.Optional[string]
 }
 
+// GetPagePrompt GetPagePrompt
+//
+// Read private requirements for an owned page; never includes system prompts.
 func (s *PinpagePromptService) GetPagePrompt(ctx context.Context, params PinpagePromptGetPagePromptParams, options ...runtime.RequestOption) (*GetPagePromptResponse, error) {
 	return runtime.Execute[*GetPagePromptResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}/prompt", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId)}, Query: url.Values(runtime.Query(map[string]any{"promptRevisionId": params.PromptRevisionId})), Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "promptRevisionId", Value: params.PromptRevisionId, Required: false, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageStorageProtectionService struct{ client *runtime.Client }
 type PinpageStorageProtectionGetStorageProtectionParams struct {
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string
 }
 
+// GetStorageProtection GetStorageProtection
+//
+// Return the user's authoritative hosted-content protection state.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageStorageProtectionService) GetStorageProtection(ctx context.Context, params PinpageStorageProtectionGetStorageProtectionParams, options ...runtime.RequestOption) (*GetStorageProtectionResponse, error) {
 	return runtime.Execute[*GetStorageProtectionResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-storage-protection", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageUploadsService struct{ client *runtime.Client }
 type PinpageUploadsAbortUploadParams struct {
-	UploadId        string
-	UserId          string
+	// UploadId Required. Unfinished upload session to abort.
+	UploadId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 }
 
+// AbortUpload AbortUpload
+//
+// Abort an unfinished multipart session without creating a material.
+//
+// upload_id: Required. Unfinished upload session to abort.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpageUploadsService) AbortUpload(ctx context.Context, params PinpageUploadsAbortUploadParams, options ...runtime.RequestOption) (*AbortUploadResponse, error) {
 	return runtime.Execute[*AbortUploadResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-uploads/{upload_id}:abort", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"upload_id": fmt.Sprint(params.UploadId), "user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Fields: []runtime.Field{{Name: "upload_id", Value: params.UploadId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageUploadsCompleteUploadParams struct {
-	UploadId        string
-	UserId          string
+	// UploadId Required. OPEN or idempotently completed upload identifier.
+	UploadId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 }
 
+// CompleteUpload CompleteUpload
+//
+// Complete and verify multipart content, then create a material on success.
+//
+// upload_id: Required. OPEN or idempotently completed upload identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpageUploadsService) CompleteUpload(ctx context.Context, params PinpageUploadsCompleteUploadParams, options ...runtime.RequestOption) (*CompleteUploadResponse, error) {
 	return runtime.Execute[*CompleteUploadResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-uploads/{upload_id}:complete", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"upload_id": fmt.Sprint(params.UploadId), "user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Fields: []runtime.Field{{Name: "upload_id", Value: params.UploadId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageUploadsCreateUploadParams struct {
-	UserId          string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 	Body            *PinpageUploadsCreateUploadBody
 }
 
+// CreateUpload CreateUpload
+//
+// Consume one estimate item and create a durable multipart session.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *PinpageUploadsService) CreateUpload(ctx context.Context, params PinpageUploadsCreateUploadParams, options ...runtime.RequestOption) (*CreateUploadResponse, error) {
 	return runtime.Execute[*CreateUploadResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-uploads", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Body: params.Body, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageUploadsEstimateParams struct {
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string
 	Body   *PinpageUploadsEstimateBody
 }
 
+// Estimate EstimateUpload
+//
+// Create a durable file-service estimate before reserving or signing work.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageUploadsService) Estimate(ctx context.Context, params PinpageUploadsEstimateParams, options ...runtime.RequestOption) (*EstimateUploadResponse, error) {
 	return runtime.Execute[*EstimateUploadResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-uploads:estimate", Idempotent: false, NullableResponse: false, PathParams: map[string]string{"user_id": fmt.Sprint(params.UserId)}, Body: params.Body, Fields: []runtime.Field{{Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PinpageUploadsGetUploadParams struct {
+	// UploadId Required. Opaque PinPage upload identifier.
 	UploadId string
-	UserId   string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
 }
 
+// GetUpload GetUpload
+//
+// Return and reconcile one durable multipart session.
+//
+// upload_id: Required. Opaque PinPage upload identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageUploadsService) GetUpload(ctx context.Context, params PinpageUploadsGetUploadParams, options ...runtime.RequestOption) (*GetUploadResponse, error) {
 	return runtime.Execute[*GetUploadResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-uploads/{upload_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"upload_id": fmt.Sprint(params.UploadId), "user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "upload_id", Value: params.UploadId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type PinpageUploadsSignUploadPartsParams struct {
+	// UploadId Required. OPEN upload session identifier.
 	UploadId string
-	UserId   string
-	Body     *PinpageUploadsSignUploadPartsBody
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	Body   *PinpageUploadsSignUploadPartsBody
 }
 
+// SignUploadParts SignUploadParts
+//
+// Sign short-lived PUT capabilities for explicitly requested parts.
+//
+// upload_id: Required. OPEN upload session identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PinpageUploadsService) SignUploadParts(ctx context.Context, params PinpageUploadsSignUploadPartsParams, options ...runtime.RequestOption) (*SignUploadPartsResponse, error) {
 	return runtime.Execute[*SignUploadPartsResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-uploads/{upload_id}:sign-parts", Idempotent: false, NullableResponse: false, PathParams: map[string]string{"upload_id": fmt.Sprint(params.UploadId), "user_id": fmt.Sprint(params.UserId)}, Body: params.Body, Fields: []runtime.Field{{Name: "upload_id", Value: params.UploadId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type PreviewService struct{ client *runtime.Client }
 type PreviewGetCategoryOrganizationPreviewParams struct {
+	// OrganizationJobId Required. Successful organization job identifier.
 	OrganizationJobId string
-	UserId            string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
 }
 
+// GetCategoryOrganizationPreview GetCategoryOrganizationPreview
+//
+// Return the durable settled preview produced by a successful job.
+//
+// organization_job_id: Required. Successful organization job identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
 func (s *PreviewService) GetCategoryOrganizationPreview(ctx context.Context, params PreviewGetCategoryOrganizationPreviewParams, options ...runtime.RequestOption) (*GetCategoryOrganizationPreviewResponse, error) {
 	return runtime.Execute[*GetCategoryOrganizationPreviewResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-category-organization-jobs/{organization_job_id}/preview", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"organization_job_id": fmt.Sprint(params.OrganizationJobId), "user_id": fmt.Sprint(params.UserId)}, Fields: []runtime.Field{{Name: "organization_job_id", Value: params.OrganizationJobId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type ProgressService struct{ client *runtime.Client }
 type ProgressGetGenerationProgressParams struct {
-	JobId         string
-	UserId        string
+	JobId  string
+	UserId string
+	// AfterEventSeq Optional. after event seq.
 	AfterEventSeq runtime.Optional[string]
-	PageSize      runtime.Optional[int64]
-	PageToken     runtime.Optional[string]
-	UiLocale      runtime.Optional[string]
+	// PageSize Optional. page size.
+	PageSize runtime.Optional[int64]
+	// PageToken Optional. page token.
+	PageToken runtime.Optional[string]
+	// UiLocale Optional. ui locale.
+	UiLocale runtime.Optional[string]
 }
 
+// GetGenerationProgress GetGenerationProgress
+//
+// Read current state and immutable history without triggering recovery.
+//
+// afterEventSeq: Optional. after event seq.
+//
+// pageSize: Optional. page size.
+//
+// pageToken: Optional. page token.
+//
+// uiLocale: Optional. ui locale.
 func (s *ProgressService) GetGenerationProgress(ctx context.Context, params ProgressGetGenerationProgressParams, options ...runtime.RequestOption) (*GetGenerationProgressResponse, error) {
 	return runtime.Execute[*GetGenerationProgressResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-jobs/{job_id}/progress", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"job_id": fmt.Sprint(params.JobId), "user_id": fmt.Sprint(params.UserId)}, Query: url.Values(runtime.Query(map[string]any{"afterEventSeq": params.AfterEventSeq, "pageSize": params.PageSize, "pageToken": params.PageToken, "uiLocale": params.UiLocale})), Fields: []runtime.Field{{Name: "job_id", Value: params.JobId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "afterEventSeq", Value: params.AfterEventSeq, Required: false, Nullable: false, Enum: []string{}}, {Name: "pageSize", Value: params.PageSize, Required: false, Nullable: false, Enum: []string{}}, {Name: "pageToken", Value: params.PageToken, Required: false, Nullable: false, Enum: []string{}}, {Name: "uiLocale", Value: params.UiLocale, Required: false, Nullable: false, Enum: []string{}}}}, options...)
 }
@@ -472,6 +871,9 @@ type RevokeRevokeTokenParams struct {
 	Body *RevokeTokenRequest
 }
 
+// RevokeToken RevokeToken
+//
+// Revoke an access or refresh token (RFC 7009).
 func (s *RevokeService) RevokeToken(ctx context.Context, params RevokeRevokeTokenParams, options ...runtime.RequestOption) (RevokeTokenResponse, error) {
 	return runtime.Execute[RevokeTokenResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/oauth/revoke", Idempotent: true, NullableResponse: false, Body: params.Body, Fields: []runtime.Field{{Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
@@ -481,14 +883,23 @@ type ScopesGetScopeParams struct {
 	Name string
 }
 
+// GetScope GetScope
+//
+// Get a scope by its name.
 func (s *ScopesService) GetScope(ctx context.Context, params ScopesGetScopeParams, options ...runtime.RequestOption) (*GetScopeResponse, error) {
 	return runtime.Execute[*GetScopeResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/scopes/{name}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"name": fmt.Sprint(params.Name)}, Fields: []runtime.Field{{Name: "name", Value: params.Name, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type ScopesListScopesParams struct {
+	// Category Optional filter by category
 	Category runtime.Optional[string]
 }
 
+// ListScopes ListScopes
+//
+// List all available scopes, optionally filtered by category.
+//
+// category: Optional filter by category
 func (s *ScopesService) ListScopes(ctx context.Context, params ScopesListScopesParams, options ...runtime.RequestOption) (*ListScopesResponse, error) {
 	return runtime.Execute[*ListScopesResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/scopes", Idempotent: true, NullableResponse: false, Query: url.Values(runtime.Query(map[string]any{"category": params.Category})), Fields: []runtime.Field{{Name: "category", Value: params.Category, Required: false, Nullable: false, Enum: []string{}}}}, options...)
 }
@@ -498,18 +909,29 @@ type SignUrlsSignAssetUrlsParams struct {
 	Body *SignAssetUrlsRequest
 }
 
+// SignAssetUrls SignAssetUrls
+//
+// 为已缓存的对象键重新生成签名 URL。
+//
+//	当客户端本地缓存了 object_key 但 URL 过期时，调用此接口获取新的签名 URL。
 func (s *SignUrlsService) SignAssetUrls(ctx context.Context, params SignUrlsSignAssetUrlsParams, options ...runtime.RequestOption) (*SignAssetUrlsResponse, error) {
 	return runtime.Execute[*SignAssetUrlsResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/creative/assets/sign-urls", Idempotent: true, NullableResponse: false, Body: params.Body, Fields: []runtime.Field{{Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type TemplatePresetsService struct{ client *runtime.Client }
 
+// ListPresets ListPresets
+//
+// 列出当前用户的所有自定义预设。
 func (s *TemplatePresetsService) ListPresets(ctx context.Context, options ...runtime.RequestOption) (*ListPresetsResponse, error) {
 	return runtime.Execute[*ListPresetsResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/creative/template-presets", Idempotent: true, NullableResponse: false}, options...)
 }
 
 type TemplatesService struct{ client *runtime.Client }
 
+// ListTemplates ListTemplates
+//
+// 列出所有系统排版模板。
 func (s *TemplatesService) ListTemplates(ctx context.Context, options ...runtime.RequestOption) (*ListTemplatesResponse, error) {
 	return runtime.Execute[*ListTemplatesResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/creative/templates", Idempotent: true, NullableResponse: false}, options...)
 }
@@ -519,12 +941,22 @@ type TokenTokenParams struct {
 	Body *TokenRequest
 }
 
+// Token Token
+//
+// Exchange an authorization code, refresh token, or client credentials for tokens.
 func (s *TokenService) Token(ctx context.Context, params TokenTokenParams, options ...runtime.RequestOption) (*TokenResponse, error) {
 	return runtime.Execute[*TokenResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/oauth/token", Idempotent: false, NullableResponse: false, Body: params.Body, Fields: []runtime.Field{{Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type UsersService struct{ client *runtime.Client }
 
+// GetProfile Get the authenticated user's profile.
+//
+// GetProfileRequest is empty — caller identity comes from the OAuth
+//
+//	access token. `me` in the URL is a reserved word meaning
+//	"holder of the current token"; substituting `/v1/users/{user_id}`
+//	is rejected with 403 PERMISSION_DENIED.
 func (s *UsersService) GetProfile(ctx context.Context, options ...runtime.RequestOption) (*GetProfileResponse, error) {
 	return runtime.Execute[*GetProfileResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/me", Idempotent: true, NullableResponse: false}, options...)
 }
@@ -534,29 +966,58 @@ type VerifyVerifyPlatformAccountParams struct {
 	Body *VerifyPlatformAccountRequest
 }
 
+// VerifyPlatformAccount VerifyPlatformAccount
+//
+// 验证平台账号凭证是否有效。
+//
+//	用于在正式绑定或发布前检查凭证可用性。
 func (s *VerifyService) VerifyPlatformAccount(ctx context.Context, params VerifyVerifyPlatformAccountParams, options ...runtime.RequestOption) (*VerifyPlatformAccountResponse, error) {
 	return runtime.Execute[*VerifyPlatformAccountResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/creative/platform-accounts/verify", Idempotent: true, NullableResponse: false, Body: params.Body, Fields: []runtime.Field{{Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }
 
 type VersionsService struct{ client *runtime.Client }
 type VersionsGetPageVersionParams struct {
-	PageId    string
-	UserId    string
+	// PageId Required. Owning page identifier.
+	PageId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// VersionId Required. Version identifier that must belong to page_id.
 	VersionId string
 }
 
+// GetPageVersion GetPageVersion
+//
+// Return one complete immutable version, including validated HTML.
+//
+// page_id: Required. Owning page identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// version_id: Required. Version identifier that must belong to page_id.
 func (s *VersionsService) GetPageVersion(ctx context.Context, params VersionsGetPageVersionParams, options ...runtime.RequestOption) (*GetPageVersionResponse, error) {
 	return runtime.Execute[*GetPageVersionResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}/versions/{version_id}", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId), "version_id": fmt.Sprint(params.VersionId)}, Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "version_id", Value: params.VersionId, Required: true, Nullable: false, Enum: []string{}}}}, options...)
 }
 
 type VersionsListPageVersionsParams struct {
-	PageId    string
-	UserId    string
+	// PageId Required. Owning page identifier.
+	PageId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// OrderBy Optional. sequence_number desc (default) or sequence_number asc.
 	OrderBy   runtime.Optional[string]
 	PageSize  runtime.Optional[int64]
 	PageToken runtime.Optional[string]
 }
 
+// ListPageVersions ListPageVersions
+//
+// List immutable published-version summaries for one page.
+//
+// page_id: Required. Owning page identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// orderBy: Optional. sequence_number desc (default) or sequence_number asc.
 func (s *VersionsService) ListPageVersions(ctx context.Context, params VersionsListPageVersionsParams, options ...runtime.RequestOption) (*ListPageVersionsResponse, error) {
 	return runtime.Execute[*ListPageVersionsResponse](ctx, s.client, runtime.Request{Method: "GET", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}/versions", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId)}, Query: url.Values(runtime.Query(map[string]any{"orderBy": params.OrderBy, "page_size": params.PageSize, "page_token": params.PageToken})), Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "orderBy", Value: params.OrderBy, Required: false, Nullable: false, Enum: []string{}}, {Name: "page_size", Value: params.PageSize, Required: false, Nullable: false, Enum: []string{}}, {Name: "page_token", Value: params.PageToken, Required: false, Nullable: false, Enum: []string{}}}}, options...)
 }
@@ -573,13 +1034,28 @@ func (s *VersionsService) ListPageVersionsAll(ctx context.Context, params Versio
 }
 
 type VersionsRestorePageVersionParams struct {
-	PageId          string
-	UserId          string
-	VersionId       string
+	// PageId Required. Owning page identifier.
+	PageId string
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string
+	// VersionId Required. Historical version to make current.
+	VersionId string
+	// XIdempotencyKey Required opaque idempotency key for this operation.
 	XIdempotencyKey string
 	Body            *VersionsRestorePageVersionBody
 }
 
+// RestorePageVersion RestorePageVersion
+//
+// Make one immutable historical version current without creating a job.
+//
+// page_id: Required. Owning page identifier.
+//
+// user_id: Required. Owner path; accepts me or the authenticated user's identifier.
+//
+// version_id: Required. Historical version to make current.
+//
+// X-Idempotency-Key: Required opaque idempotency key for this operation.
 func (s *VersionsService) RestorePageVersion(ctx context.Context, params VersionsRestorePageVersionParams, options ...runtime.RequestOption) (*RestorePageVersionResponse, error) {
 	return runtime.Execute[*RestorePageVersionResponse](ctx, s.client, runtime.Request{Method: "POST", Path: "/v1/users/{user_id}/pinpage-pages/{page_id}/versions/{version_id}:restore", Idempotent: true, NullableResponse: false, PathParams: map[string]string{"page_id": fmt.Sprint(params.PageId), "user_id": fmt.Sprint(params.UserId), "version_id": fmt.Sprint(params.VersionId)}, Headers: http.Header(runtime.Query(map[string]any{"X-Idempotency-Key": params.XIdempotencyKey})), Body: params.Body, Fields: []runtime.Field{{Name: "page_id", Value: params.PageId, Required: true, Nullable: false, Enum: []string{}}, {Name: "user_id", Value: params.UserId, Required: true, Nullable: false, Enum: []string{}}, {Name: "version_id", Value: params.VersionId, Required: true, Nullable: false, Enum: []string{}}, {Name: "X-Idempotency-Key", Value: params.XIdempotencyKey, Required: true, Nullable: false, Enum: []string{}}, {Name: "body", Value: params.Body, Required: true, Nullable: false}}}, options...)
 }

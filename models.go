@@ -13,17 +13,201 @@ var _ = fmt.Errorf
 var _ = time.Time{}
 var _ = runtime.Some[bool]
 
+// APIKey APIKey represents a developer's API key credential.
 type APIKey struct {
-	AllowedScopes runtime.Optional[[]string]     `json:"allowed_scopes"`
-	AppId         runtime.Optional[string]       `json:"app_id"`
-	CreatedAt     runtime.Optional[Timestamp]    `json:"created_at"`
-	ExpiresAt     runtime.Optional[Timestamp]    `json:"expires_at"`
-	KeyId         runtime.Optional[string]       `json:"key_id"`
-	KeyPrefix     runtime.Optional[string]       `json:"key_prefix"`
-	LastUsedAt    runtime.Optional[Timestamp]    `json:"last_used_at"`
-	Name          runtime.Optional[string]       `json:"name"`
-	RateLimit     runtime.Optional[int64]        `json:"rate_limit"`
-	Status        runtime.Optional[APIKeyStatus] `json:"status"`
+	AllowedScopes runtime.Optional[[]string] `json:"allowed_scopes"`
+	AppId         runtime.Optional[string]   `json:"app_id"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// ExpiresAt Zero value = never expires
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	KeyId     runtime.Optional[string]    `json:"key_id"`
+	// KeyPrefix First 8 chars for identification, e.g. "ak_live_"
+	KeyPrefix runtime.Optional[string] `json:"key_prefix"`
+	// LastUsedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	LastUsedAt runtime.Optional[Timestamp] `json:"last_used_at"`
+	// Name Human-readable label, e.g. "Production Key"
+	Name runtime.Optional[string] `json:"name"`
+	// RateLimit Requests per minute; 0 = platform default
+	RateLimit runtime.Optional[int64] `json:"rate_limit"`
+	// Status APIKeyStatus represents the lifecycle state of an API key.
+	Status runtime.Optional[APIKeyStatus] `json:"status"`
 }
 
 func (v APIKey) MarshalJSON() ([]byte, error) {
@@ -53,6 +237,7 @@ func (v *APIKey) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// APIKeyStatus APIKeyStatus represents the lifecycle state of an API key.
 type APIKeyStatus string
 
 const (
@@ -75,8 +260,10 @@ func (v APIKeyStatus) MarshalJSON() ([]byte, error) {
 }
 
 type AbortUploadRequest struct {
+	// UploadId Required. Unfinished upload session to abort.
 	UploadId string `json:"upload_id"`
-	UserId   string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v AbortUploadRequest) MarshalJSON() ([]byte, error) {
@@ -91,6 +278,7 @@ func (v *AbortUploadRequest) UnmarshalJSON(data []byte) error {
 }
 
 type AbortUploadResponse struct {
+	// Upload Required. Durable upload session in the ABORTED state.
 	Upload *UploadSession `json:"upload"`
 }
 
@@ -101,14 +289,24 @@ func (v *AbortUploadResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "upload", Value: &v.Upload, Required: true, Nullable: false, Enum: []string{}})
 }
 
+// AccountStorageProtection AccountStorageProtection is the authoritative user-scoped singleton that
+//
+//	tells clients whether hosted content remains protected.
 type AccountStorageProtection struct {
-	CostSummary      runtime.Optional[*CostSummary] `json:"cost_summary"`
-	ExpiresAt        runtime.Optional[Timestamp]    `json:"expires_at"`
-	LastCheckedAt    Timestamp                      `json:"last_checked_at"`
-	ProtectedAt      runtime.Optional[Timestamp]    `json:"protected_at"`
-	Reason           AccountStorageProtectionReason `json:"reason"`
-	RemainingSeconds string                         `json:"remaining_seconds"`
-	State            AccountStorageProtectionState  `json:"state"`
+	// CostSummary (OPTIONAL) Conditional. Present when a current settled storage fact exists.
+	CostSummary runtime.Optional[*CostSummary] `json:"cost_summary"`
+	// ExpiresAt (OPTIONAL) Conditional. Required in PROTECTED or EXPIRY_CLEANUP.
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	// LastCheckedAt Required. Time the server last recalculated the state from billing facts.
+	LastCheckedAt Timestamp `json:"last_checked_at"`
+	// ProtectedAt (OPTIONAL) Conditional. Required in PROTECTED or EXPIRY_CLEANUP.
+	ProtectedAt runtime.Optional[Timestamp] `json:"protected_at"`
+	// Reason Required. Stable reason for the current state.
+	Reason AccountStorageProtectionReason `json:"reason"`
+	// RemainingSeconds Required. Server-computed nonnegative seconds; zero outside PROTECTED.
+	RemainingSeconds string `json:"remaining_seconds"`
+	// State Required. Persisted storage protection state.
+	State AccountStorageProtectionState `json:"state"`
 }
 
 func (v AccountStorageProtection) MarshalJSON() ([]byte, error) {
@@ -132,6 +330,9 @@ func (v *AccountStorageProtection) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// AccountStorageProtectionReason AccountStorageProtectionReason is the stable reason for the current account
+//
+//	storage protection state.
 type AccountStorageProtectionReason string
 
 const (
@@ -156,6 +357,7 @@ func (v AccountStorageProtectionReason) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"ACCOUNT_STORAGE_PROTECTION_REASON_UNSPECIFIED", "ACCOUNT_STORAGE_PROTECTION_REASON_NORMAL_ACCOUNT", "ACCOUNT_STORAGE_PROTECTION_REASON_STORAGE_PERIOD_SETTLED", "ACCOUNT_STORAGE_PROTECTION_REASON_STORAGE_ADJUSTMENT_SETTLED", "ACCOUNT_STORAGE_PROTECTION_REASON_BALANCE_GRACE", "ACCOUNT_STORAGE_PROTECTION_REASON_PROTECTION_EXPIRED", "ACCOUNT_STORAGE_PROTECTION_REASON_CLEANUP_COMPLETE"})
 }
 
+// AccountStorageProtectionState AccountStorageProtectionState is the persisted account protection state.
 type AccountStorageProtectionState string
 
 const (
@@ -179,9 +381,12 @@ func (v AccountStorageProtectionState) MarshalJSON() ([]byte, error) {
 }
 
 type AddMemberRequest struct {
-	OrgId  runtime.Optional[string]                 `json:"org_id"`
-	Role   runtime.Optional[OrganizationMemberRole] `json:"role"`
-	UserId runtime.Optional[string]                 `json:"user_id"`
+	OrgId runtime.Optional[string] `json:"org_id"`
+	// Role Required. Role to assign. OWNER is rejected here (use ownership
+	//  transfer flow); admin / member are accepted.
+	Role runtime.Optional[OrganizationMemberRole] `json:"role"`
+	// UserId Required. The user being invited.
+	UserId runtime.Optional[string] `json:"user_id"`
 }
 
 func (v AddMemberRequest) MarshalJSON() ([]byte, error) {
@@ -198,6 +403,12 @@ func (v *AddMemberRequest) UnmarshalJSON(data []byte) error {
 }
 
 type AddMemberResponse struct {
+	// Member OrganizationMember is a (org, user) edge with a role and lifecycle status.
+	//
+	//  The role taxonomy (owner / admin / member) is the SAME WORDS as the
+	//  application-level membership role surfaced by the developer center;
+	//  the two live at different scopes and do not transitively grant each
+	//  other.
 	Member runtime.Optional[*OrganizationMember] `json:"member"`
 }
 
@@ -208,7 +419,9 @@ func (v *AddMemberResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "member", Value: &v.Member, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// Any Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
 type Any struct {
+	// Type A URL/resource name that uniquely identifies the type of the serialized message.
 	Type runtime.Optional[string] `json:"@type"`
 }
 
@@ -219,6 +432,7 @@ func (v *Any) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "@type", Value: &v.Type, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// AppforgesCommonV1PaginationRequest Pagination request parameters.
 type AppforgesCommonV1PaginationRequest struct {
 	PageSize  runtime.Optional[int64]  `json:"page_size"`
 	PageToken runtime.Optional[string] `json:"page_token"`
@@ -235,6 +449,7 @@ func (v *AppforgesCommonV1PaginationRequest) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// AppforgesCommonV1PaginationResponse Pagination response metadata.
 type AppforgesCommonV1PaginationResponse struct {
 	NextPageToken runtime.Optional[string] `json:"next_page_token"`
 	TotalCount    runtime.Optional[int64]  `json:"total_count"`
@@ -251,6 +466,7 @@ func (v *AppforgesCommonV1PaginationResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ApplicationStatus ApplicationStatus represents the lifecycle state of an OAuth application.
 type ApplicationStatus string
 
 const (
@@ -272,6 +488,7 @@ func (v ApplicationStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"APPLICATION_STATUS_UNSPECIFIED", "APPLICATION_STATUS_ACTIVE", "APPLICATION_STATUS_SUSPENDED", "APPLICATION_STATUS_DELETED"})
 }
 
+// ApplicationType ApplicationType describes the kind of OAuth client application.
 type ApplicationType string
 
 const (
@@ -295,10 +512,14 @@ func (v ApplicationType) MarshalJSON() ([]byte, error) {
 }
 
 type ApplyCategoryOrganizationRequest struct {
-	BillingIntentId   string `json:"billing_intent_id"`
-	EstimateId        string `json:"estimate_id"`
+	// BillingIntentId Required. Settled billing intent belonging to the organization job.
+	BillingIntentId string `json:"billing_intent_id"`
+	// EstimateId Required. Estimate consumed by the organization job.
+	EstimateId string `json:"estimate_id"`
+	// OrganizationJobId Required. Successful, unexpired organization job.
 	OrganizationJobId string `json:"organization_job_id"`
-	UserId            string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v ApplyCategoryOrganizationRequest) MarshalJSON() ([]byte, error) {
@@ -317,6 +538,7 @@ func (v *ApplyCategoryOrganizationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ApplyCategoryOrganizationResponse struct {
+	// ApplyResult Required. Applied change count, tree revision, cost, and commit time.
 	ApplyResult *CategoryOrganizationApplyResult `json:"apply_result"`
 }
 
@@ -327,17 +549,206 @@ func (v *ApplyCategoryOrganizationResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "apply_result", Value: &v.ApplyResult, Required: true, Nullable: false, Enum: []string{}})
 }
 
+// Article Article represents a piece of text content (article, post, etc.).
+//
+//	Article 是图文创作的核心实体，同一篇文章可能同时存在 Markdown 和 HTML 两个版本。
 type Article struct {
-	ArticleId     runtime.Optional[string]        `json:"article_id"`
-	Content       runtime.Optional[string]        `json:"content"`
-	CoverImageUrl runtime.Optional[string]        `json:"cover_image_url"`
-	CreatedAt     runtime.Optional[Timestamp]     `json:"created_at"`
-	Format        runtime.Optional[ContentFormat] `json:"format"`
-	ProjectId     runtime.Optional[string]        `json:"project_id"`
-	Summary       runtime.Optional[string]        `json:"summary"`
-	Tags          runtime.Optional[[]string]      `json:"tags"`
-	Title         runtime.Optional[string]        `json:"title"`
-	UpdatedAt     runtime.Optional[Timestamp]     `json:"updated_at"`
+	// ArticleId 文章唯一标识。
+	ArticleId runtime.Optional[string] `json:"article_id"`
+	// Content 文章正文，格式由 format 字段决定。
+	Content runtime.Optional[string] `json:"content"`
+	// CoverImageUrl 封面图 URL。
+	CoverImageUrl runtime.Optional[string] `json:"cover_image_url"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// Format 正文格式（Markdown 或 HTML）。
+	Format runtime.Optional[ContentFormat] `json:"format"`
+	// ProjectId 所属项目 ID。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// Summary 文章摘要，用于发布时的描述和 SEO。
+	Summary runtime.Optional[string] `json:"summary"`
+	// Tags 文章标签，用于分类和检索。
+	Tags runtime.Optional[[]string] `json:"tags"`
+	// Title 文章标题。
+	Title runtime.Optional[string] `json:"title"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
 func (v Article) MarshalJSON() ([]byte, error) {
@@ -367,19 +778,122 @@ func (v *Article) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// Asset Asset represents an uploaded media resource.
+//
+//	素材可被文章引用、视频合成使用，生命周期跟随所属项目。
 type Asset struct {
-	AssetId         runtime.Optional[string]            `json:"asset_id"`
-	ContentType     runtime.Optional[string]            `json:"content_type"`
-	CreatedAt       runtime.Optional[Timestamp]         `json:"created_at"`
-	DurationSeconds runtime.Optional[int64]             `json:"duration_seconds"`
-	Filename        runtime.Optional[string]            `json:"filename"`
-	Height          runtime.Optional[int64]             `json:"height"`
-	Metadata        runtime.Optional[map[string]string] `json:"metadata"`
-	ProjectId       runtime.Optional[string]            `json:"project_id"`
-	SizeBytes       runtime.Optional[string]            `json:"size_bytes"`
-	Type            runtime.Optional[AssetType]         `json:"type"`
-	Url             runtime.Optional[string]            `json:"url"`
-	Width           runtime.Optional[int64]             `json:"width"`
+	// AssetId 素材唯一标识。
+	AssetId runtime.Optional[string] `json:"asset_id"`
+	// ContentType MIME 类型，例如 "image/png"、"video/mp4"。
+	ContentType runtime.Optional[string] `json:"content_type"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// DurationSeconds 时长（秒），仅视频和音频有效。
+	DurationSeconds runtime.Optional[int64] `json:"duration_seconds"`
+	// Filename 原始文件名。
+	Filename runtime.Optional[string] `json:"filename"`
+	// Height 高度（像素），仅图片和视频有效。
+	Height runtime.Optional[int64] `json:"height"`
+	// Metadata 扩展元数据，例如 EXIF 信息、编码参数等。
+	Metadata runtime.Optional[map[string]string] `json:"metadata"`
+	// ProjectId 所属项目 ID。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// SizeBytes 文件大小（字节）。
+	SizeBytes runtime.Optional[string] `json:"size_bytes"`
+	// Type 素材类型。
+	Type runtime.Optional[AssetType] `json:"type"`
+	// Url 素材访问 URL（CDN 地址）。
+	Url runtime.Optional[string] `json:"url"`
+	// Width 宽度（像素），仅图片和视频有效。
+	Width runtime.Optional[int64] `json:"width"`
 }
 
 func (v Asset) MarshalJSON() ([]byte, error) {
@@ -429,6 +943,7 @@ func (v *AssetMetadataEntry) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// AssetType AssetType indicates the type of a media asset.
 type AssetType string
 
 const (
@@ -452,14 +967,24 @@ func (v AssetType) MarshalJSON() ([]byte, error) {
 }
 
 type AuthorizeRequest struct {
-	ClientId            runtime.Optional[string] `json:"client_id"`
-	CodeChallenge       runtime.Optional[string] `json:"code_challenge"`
+	ClientId runtime.Optional[string] `json:"client_id"`
+	// CodeChallenge PKCE: base64url(SHA256(code_verifier))
+	CodeChallenge runtime.Optional[string] `json:"code_challenge"`
+	// CodeChallengeMethod "S256"
 	CodeChallengeMethod runtime.Optional[string] `json:"code_challenge_method"`
-	Nonce               runtime.Optional[string] `json:"nonce"`
-	RedirectUri         runtime.Optional[string] `json:"redirect_uri"`
-	ResponseType        runtime.Optional[string] `json:"response_type"`
-	Scope               runtime.Optional[string] `json:"scope"`
-	State               runtime.Optional[string] `json:"state"`
+	// Nonce OIDC nonce (Core 1.0 §3.1.2.1). Optional. 标准路径：客户端在
+	//  /authorize 请求带 nonce → IAM 随授权码持久化 → 交换 token 时回灌进
+	//  id_token 的 nonce claim。BFF 只需 verbatim 透传本字段，不解析、不
+	//  生成。TokenRequest.nonce (= 9) 保留为旧客户端兼容兜底：交换时若授权
+	//  码上已存有 nonce 则优先用存储值。仅当 scope 包含 "openid" 时有意义。
+	Nonce       runtime.Optional[string] `json:"nonce"`
+	RedirectUri runtime.Optional[string] `json:"redirect_uri"`
+	// ResponseType "code"
+	ResponseType runtime.Optional[string] `json:"response_type"`
+	// Scope Space-delimited scopes
+	Scope runtime.Optional[string] `json:"scope"`
+	// State CSRF protection
+	State runtime.Optional[string] `json:"state"`
 }
 
 func (v AuthorizeRequest) MarshalJSON() ([]byte, error) {
@@ -487,8 +1012,9 @@ func (v *AuthorizeRequest) UnmarshalJSON(data []byte) error {
 
 type AuthorizeResponse struct {
 	AuthorizationCode runtime.Optional[string] `json:"authorization_code"`
-	RedirectUri       runtime.Optional[string] `json:"redirect_uri"`
-	State             runtime.Optional[string] `json:"state"`
+	// RedirectUri Full redirect URI with code and state
+	RedirectUri runtime.Optional[string] `json:"redirect_uri"`
+	State       runtime.Optional[string] `json:"state"`
 }
 
 func (v AuthorizeResponse) MarshalJSON() ([]byte, error) {
@@ -504,13 +1030,192 @@ func (v *AuthorizeResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// AuthorizedApplication AuthorizedApplication represents an application the user has granted access to.
 type AuthorizedApplication struct {
-	AppId         runtime.Optional[string]    `json:"app_id"`
-	AppName       runtime.Optional[string]    `json:"app_name"`
+	AppId   runtime.Optional[string] `json:"app_id"`
+	AppName runtime.Optional[string] `json:"app_name"`
+	// AuthorizedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
 	AuthorizedAt  runtime.Optional[Timestamp] `json:"authorized_at"`
 	GrantedScopes runtime.Optional[[]string]  `json:"granted_scopes"`
-	LastUsedAt    runtime.Optional[Timestamp] `json:"last_used_at"`
-	LogoUrl       runtime.Optional[string]    `json:"logo_url"`
+	// LastUsedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	LastUsedAt runtime.Optional[Timestamp] `json:"last_used_at"`
+	LogoUrl    runtime.Optional[string]    `json:"logo_url"`
 }
 
 func (v AuthorizedApplication) MarshalJSON() ([]byte, error) {
@@ -533,10 +1238,102 @@ func (v *AuthorizedApplication) UnmarshalJSON(data []byte) error {
 }
 
 type AvatarRetirement struct {
-	MediaId     runtime.Optional[string]                `json:"media_id"`
-	OperationId runtime.Optional[string]                `json:"operation_id"`
-	State       runtime.Optional[AvatarRetirementState] `json:"state"`
-	UpdatedAt   runtime.Optional[Timestamp]             `json:"updated_at"`
+	MediaId runtime.Optional[string] `json:"media_id"`
+	// OperationId Immutable non-empty caller operation identifier; reused across process restarts.
+	OperationId runtime.Optional[string] `json:"operation_id"`
+	// State --- Avatar retirement (INTERNAL) ---
+	//  Persistent deletion fence, not a lease. Neither timeouts nor retries release it.
+	State runtime.Optional[AvatarRetirementState] `json:"state"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
 func (v AvatarRetirement) MarshalJSON() ([]byte, error) {
@@ -554,6 +1351,9 @@ func (v *AvatarRetirement) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// AvatarRetirementState --- Avatar retirement (INTERNAL) ---
+//
+//	Persistent deletion fence, not a lease. Neither timeouts nor retries release it.
 type AvatarRetirementState string
 
 const (
@@ -575,9 +1375,14 @@ func (v AvatarRetirementState) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"AVATAR_RETIREMENT_STATE_UNSPECIFIED", "AVATAR_RETIREMENT_STATE_BINDABLE", "AVATAR_RETIREMENT_STATE_RETIRING", "AVATAR_RETIREMENT_STATE_RETIRED"})
 }
 
+// BatchPublishArticleRequest BatchPublishArticleRequest 将一篇文章同时发布到多个平台。
+//
+//	每个 target 独立执行，互不影响（部分平台失败不影响其他平台）。
 type BatchPublishArticleRequest struct {
-	ArticleId runtime.Optional[string]                `json:"article_id"`
-	Targets   runtime.Optional[[]*BatchPublishTarget] `json:"targets"`
+	// ArticleId 要发布的文章 ID。
+	ArticleId runtime.Optional[string] `json:"article_id"`
+	// Targets 目标平台列表，每个 target 包含平台、配置和账号。
+	Targets runtime.Optional[[]*BatchPublishTarget] `json:"targets"`
 }
 
 func (v BatchPublishArticleRequest) MarshalJSON() ([]byte, error) {
@@ -592,6 +1397,7 @@ func (v *BatchPublishArticleRequest) UnmarshalJSON(data []byte) error {
 }
 
 type BatchPublishArticleResponse struct {
+	// Records 每个目标平台对应一条发布记录。
 	Records runtime.Optional[[]*PublishRecord] `json:"records"`
 }
 
@@ -602,9 +1408,14 @@ func (v *BatchPublishArticleResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "records", Value: &v.Records, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// BatchPublishTarget BatchPublishTarget 批量发布中的单个目标平台配置。
 type BatchPublishTarget struct {
-	AccountId      runtime.Optional[string]         `json:"account_id"`
-	Platform       runtime.Optional[Platform]       `json:"platform"`
+	AccountId runtime.Optional[string] `json:"account_id"`
+	// Platform Platform indicates the target publishing platform.
+	//  新增平台时，在此枚举追加值，并在 publish.proto 中添加对应的 XxxConfig 消息。
+	Platform runtime.Optional[Platform] `json:"platform"`
+	// PlatformConfig PlatformConfig 封装各平台的发布配置。
+	//  使用 oneof 确保每次发布只携带一个平台的配置。
 	PlatformConfig runtime.Optional[PlatformConfig] `json:"platform_config"`
 }
 
@@ -622,6 +1433,8 @@ func (v *BatchPublishTarget) UnmarshalJSON(data []byte) error {
 }
 
 type BatchValidateAvatarMediaIDsRequest struct {
+	// MediaIds Up to ~1000 media_ids per request. SweepOrphans paginates upstream
+	//  via keyset cursor; this stays well under typical gRPC body limits.
 	MediaIds runtime.Optional[[]string] `json:"media_ids"`
 }
 
@@ -633,6 +1446,8 @@ func (v *BatchValidateAvatarMediaIDsRequest) UnmarshalJSON(data []byte) error {
 }
 
 type BatchValidateAvatarMediaIDsResponse struct {
+	// InUseMediaIds Subset of input media_ids that are still referenced by at least one
+	//  user's avatar column. Order is unspecified; absence implies orphan.
 	InUseMediaIds runtime.Optional[[]string] `json:"in_use_media_ids"`
 }
 
@@ -643,10 +1458,16 @@ func (v *BatchValidateAvatarMediaIDsResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "in_use_media_ids", Value: &v.InUseMediaIds, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// BindPlatformAccountRequest BindPlatformAccountRequest 通过 OAuth 授权码绑定平台账号。
+//
+//	典型流程：前端引导用户完成 OAuth 授权 → 获取 auth_code → 调用此接口完成绑定。
 type BindPlatformAccountRequest struct {
-	AuthCode    runtime.Optional[string]   `json:"auth_code"`
-	Platform    runtime.Optional[Platform] `json:"platform"`
-	RedirectUri runtime.Optional[string]   `json:"redirect_uri"`
+	// AuthCode OAuth 授权码。
+	AuthCode runtime.Optional[string] `json:"auth_code"`
+	// Platform 要绑定的平台。
+	Platform runtime.Optional[Platform] `json:"platform"`
+	// RedirectUri OAuth 回调地址。
+	RedirectUri runtime.Optional[string] `json:"redirect_uri"`
 }
 
 func (v BindPlatformAccountRequest) MarshalJSON() ([]byte, error) {
@@ -663,6 +1484,7 @@ func (v *BindPlatformAccountRequest) UnmarshalJSON(data []byte) error {
 }
 
 type BindPlatformAccountResponse struct {
+	// Account 绑定成功的平台账号信息。
 	Account runtime.Optional[*PlatformAccount] `json:"account"`
 }
 
@@ -673,6 +1495,9 @@ func (v *BindPlatformAccountResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "account", Value: &v.Account, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// CancelVideoTaskRequest CancelVideoTaskRequest 取消正在执行的视频生成任务。
+//
+//	仅 PENDING / GENERATING_SCRIPT / GENERATING_ASSETS / COMPOSITING 状态的任务可取消。
 type CancelVideoTaskRequest struct {
 	TaskId runtime.Optional[string] `json:"task_id"`
 }
@@ -685,6 +1510,7 @@ func (v *CancelVideoTaskRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CancelVideoTaskResponse struct {
+	// Task 取消后的任务状态。
 	Task runtime.Optional[*VideoTask] `json:"task"`
 }
 
@@ -695,15 +1521,24 @@ func (v *CancelVideoTaskResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "task", Value: &v.Task, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// Category Category is one user-owned node in the PinPage category tree.
 type Category struct {
-	CategoryId       string                   `json:"category_id"`
-	CreatedAt        Timestamp                `json:"created_at"`
-	DirectChildCount int64                    `json:"direct_child_count"`
-	DirectPageCount  int64                    `json:"direct_page_count"`
-	Etag             string                   `json:"etag"`
-	Name             string                   `json:"name"`
+	// CategoryId Required. Opaque category identifier.
+	CategoryId string `json:"category_id"`
+	// CreatedAt Required. Category creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// DirectChildCount Required. Number of direct child categories.
+	DirectChildCount int64 `json:"direct_child_count"`
+	// DirectPageCount Required. Number of pages directly assigned to this category.
+	DirectPageCount int64 `json:"direct_page_count"`
+	// Etag Required. Optimistic concurrency validator.
+	Etag string `json:"etag"`
+	// Name Required. User-visible name, unique within the current parent.
+	Name string `json:"name"`
+	// ParentCategoryId (OPTIONAL) Optional. Direct parent category; absent for a root category.
 	ParentCategoryId runtime.Optional[string] `json:"parent_category_id"`
-	UpdatedAt        Timestamp                `json:"updated_at"`
+	// UpdatedAt Required. Time category metadata last changed.
+	UpdatedAt Timestamp `json:"updated_at"`
 }
 
 func (v Category) MarshalJSON() ([]byte, error) {
@@ -729,11 +1564,19 @@ func (v *Category) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryChange CategoryChange is one safe, concrete change proposed by a category
+//
+//	organization preview.
 type CategoryChange struct {
-	CategoryId       runtime.Optional[string] `json:"category_id"`
-	ChangeType       CategoryChangeType       `json:"change_type"`
-	PageId           runtime.Optional[string] `json:"page_id"`
-	Summary          string                   `json:"summary"`
+	// CategoryId (OPTIONAL) Optional. Existing category involved in this change.
+	CategoryId runtime.Optional[string] `json:"category_id"`
+	// ChangeType Required. Closed change kind; non-empty categories and pages are never deleted.
+	ChangeType CategoryChangeType `json:"change_type"`
+	// PageId (OPTIONAL) Optional. Page involved in a MOVE_PAGE change.
+	PageId runtime.Optional[string] `json:"page_id"`
+	// Summary Required. User-understandable change summary.
+	Summary string `json:"summary"`
+	// TargetCategoryId (OPTIONAL) Optional. Destination category when the change has one.
 	TargetCategoryId runtime.Optional[string] `json:"target_category_id"`
 }
 
@@ -754,6 +1597,7 @@ func (v *CategoryChange) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryChangeType CategoryChangeType identifies a safe, proposed category-tree change.
 type CategoryChangeType string
 
 const (
@@ -778,37 +1622,70 @@ func (v CategoryChangeType) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"CATEGORY_CHANGE_TYPE_UNSPECIFIED", "CATEGORY_CHANGE_TYPE_CREATE", "CATEGORY_CHANGE_TYPE_RENAME", "CATEGORY_CHANGE_TYPE_MOVE_PAGE", "CATEGORY_CHANGE_TYPE_MOVE_CATEGORY", "CATEGORY_CHANGE_TYPE_MERGE", "CATEGORY_CHANGE_TYPE_DELETE_EMPTY"})
 }
 
+// CategoryDeletionPreview CategoryDeletionPreview is a signed, short-lived exact impact snapshot for
+//
+//	deleting one category subtree and all pages contained in it.
 type CategoryDeletionPreview struct {
-	AffectedActiveEstimateCount               int64                     `json:"affected_active_estimate_count"`
-	AffectedAiCallCount                       int64                     `json:"affected_ai_call_count"`
-	AffectedBriefRevisionCount                int64                     `json:"affected_brief_revision_count"`
-	AffectedCategories                        []*CategoryDeletionTarget `json:"affected_categories"`
-	AffectedCategoryOrganizationEstimateCount int64                     `json:"affected_category_organization_estimate_count"`
-	AffectedCategoryOrganizationJobCount      int64                     `json:"affected_category_organization_job_count"`
-	AffectedCategoryPlanCount                 int64                     `json:"affected_category_plan_count"`
-	AffectedExportCount                       int64                     `json:"affected_export_count"`
-	AffectedExternalSourceCount               int64                     `json:"affected_external_source_count"`
-	AffectedExternalTempCopyCount             int64                     `json:"affected_external_temp_copy_count"`
-	AffectedFailureContextCount               int64                     `json:"affected_failure_context_count"`
-	AffectedGenerationPlanCount               int64                     `json:"affected_generation_plan_count"`
-	AffectedGenerationPlanStepCount           int64                     `json:"affected_generation_plan_step_count"`
-	AffectedJobCount                          int64                     `json:"affected_job_count"`
-	AffectedJobInputCount                     int64                     `json:"affected_job_input_count"`
-	AffectedMaterialCount                     int64                     `json:"affected_material_count"`
-	AffectedPageCount                         int64                     `json:"affected_page_count"`
-	AffectedPages                             []*PageDeletionTarget     `json:"affected_pages"`
-	AffectedProvisionalCandidateCount         int64                     `json:"affected_provisional_candidate_count"`
-	AffectedReplanDecisionCount               int64                     `json:"affected_replan_decision_count"`
-	AffectedReviewReportCount                 int64                     `json:"affected_review_report_count"`
-	AffectedSourceCount                       int64                     `json:"affected_source_count"`
-	AffectedToolCallCount                     int64                     `json:"affected_tool_call_count"`
-	AffectedVersionCount                      int64                     `json:"affected_version_count"`
-	ConfirmationToken                         string                    `json:"confirmation_token"`
-	DescendantCategoryCount                   int64                     `json:"descendant_category_count"`
-	DirectChildCount                          int64                     `json:"direct_child_count"`
-	ExpiresAt                                 Timestamp                 `json:"expires_at"`
-	ImpactFingerprint                         string                    `json:"impact_fingerprint"`
-	TreeEtag                                  string                    `json:"tree_etag"`
+	// AffectedActiveEstimateCount Required. Active generation estimates that will be invalidated.
+	AffectedActiveEstimateCount int64 `json:"affected_active_estimate_count"`
+	// AffectedAiCallCount Required. Logical AI call slots included in the deletion scope.
+	AffectedAiCallCount int64 `json:"affected_ai_call_count"`
+	// AffectedBriefRevisionCount Required. Complete brief revisions included in the deletion scope.
+	AffectedBriefRevisionCount int64 `json:"affected_brief_revision_count"`
+	// AffectedCategories Required. Exact root and descendant categories in stable order.
+	AffectedCategories []*CategoryDeletionTarget `json:"affected_categories"`
+	// AffectedCategoryOrganizationEstimateCount Required. Category-organization estimates that will be invalidated.
+	AffectedCategoryOrganizationEstimateCount int64 `json:"affected_category_organization_estimate_count"`
+	// AffectedCategoryOrganizationJobCount Required. Category-organization jobs included in the deletion scope.
+	AffectedCategoryOrganizationJobCount int64 `json:"affected_category_organization_job_count"`
+	// AffectedCategoryPlanCount Required. Category plan storage objects included in the deletion scope.
+	AffectedCategoryPlanCount int64 `json:"affected_category_plan_count"`
+	// AffectedExportCount Required. PDF and PNG artifacts included in the deletion scope.
+	AffectedExportCount int64 `json:"affected_export_count"`
+	// AffectedExternalSourceCount Required. Future-reserved external source count; zero in the current release.
+	AffectedExternalSourceCount int64 `json:"affected_external_source_count"`
+	// AffectedExternalTempCopyCount Required. Registered external temporary copies included in the scope.
+	AffectedExternalTempCopyCount int64 `json:"affected_external_temp_copy_count"`
+	// AffectedFailureContextCount Required. Typed failure contexts included in the deletion scope.
+	AffectedFailureContextCount int64 `json:"affected_failure_context_count"`
+	// AffectedGenerationPlanCount Required. Generation plan revisions included in the deletion scope.
+	AffectedGenerationPlanCount int64 `json:"affected_generation_plan_count"`
+	// AffectedGenerationPlanStepCount Required. Structured generation plan steps included in the deletion scope.
+	AffectedGenerationPlanStepCount int64 `json:"affected_generation_plan_step_count"`
+	// AffectedJobCount Required. Logical jobs included in the deletion scope.
+	AffectedJobCount int64 `json:"affected_job_count"`
+	// AffectedJobInputCount Required. Frozen job inputs included in the deletion scope.
+	AffectedJobInputCount int64 `json:"affected_job_input_count"`
+	// AffectedMaterialCount Required. Materials included in the deletion scope.
+	AffectedMaterialCount int64 `json:"affected_material_count"`
+	// AffectedPageCount Required. Number of pages included in the category subtree.
+	AffectedPageCount int64 `json:"affected_page_count"`
+	// AffectedPages Required. Exact pages in the subtree in stable order.
+	AffectedPages []*PageDeletionTarget `json:"affected_pages"`
+	// AffectedProvisionalCandidateCount Required. Unpublished candidates included in the deletion scope.
+	AffectedProvisionalCandidateCount int64 `json:"affected_provisional_candidate_count"`
+	// AffectedReplanDecisionCount Required. Structured replan decisions included in the deletion scope.
+	AffectedReplanDecisionCount int64 `json:"affected_replan_decision_count"`
+	// AffectedReviewReportCount Required. Structured review reports included in the deletion scope.
+	AffectedReviewReportCount int64 `json:"affected_review_report_count"`
+	// AffectedSourceCount Required. Material and inline-text sources included in the deletion scope.
+	AffectedSourceCount int64 `json:"affected_source_count"`
+	// AffectedToolCallCount Required. Future-reserved tool call count; zero in the current release.
+	AffectedToolCallCount int64 `json:"affected_tool_call_count"`
+	// AffectedVersionCount Required. Published versions included in the deletion scope.
+	AffectedVersionCount int64 `json:"affected_version_count"`
+	// ConfirmationToken Required. Short-lived confirmation capability; never log or persist in telemetry.
+	ConfirmationToken string `json:"confirmation_token"`
+	// DescendantCategoryCount Required. Number of all descendant categories.
+	DescendantCategoryCount int64 `json:"descendant_category_count"`
+	// DirectChildCount Required. Number of direct child categories.
+	DirectChildCount int64 `json:"direct_child_count"`
+	// ExpiresAt Required. Expiry of the confirmation token and impact snapshot.
+	ExpiresAt Timestamp `json:"expires_at"`
+	// ImpactFingerprint Required. SHA-256 of the complete canonical subtree deletion scope.
+	ImpactFingerprint string `json:"impact_fingerprint"`
+	// TreeEtag Required. Category tree version observed by this preview.
+	TreeEtag string `json:"tree_etag"`
 }
 
 func (v CategoryDeletionPreview) MarshalJSON() ([]byte, error) {
@@ -878,29 +1755,54 @@ func (v *CategoryDeletionPreview) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryDeletionResult CategoryDeletionResult confirms immediate access revocation for a category
+//
+//	subtree and the exact content scope accepted for asynchronous cleanup.
 type CategoryDeletionResult struct {
-	AcceptedAt                                Timestamp `json:"accepted_at"`
-	AffectedActiveEstimateCount               int64     `json:"affected_active_estimate_count"`
-	AffectedAiCallCount                       int64     `json:"affected_ai_call_count"`
-	AffectedBriefRevisionCount                int64     `json:"affected_brief_revision_count"`
-	AffectedCategoryOrganizationEstimateCount int64     `json:"affected_category_organization_estimate_count"`
-	AffectedCategoryOrganizationJobCount      int64     `json:"affected_category_organization_job_count"`
-	AffectedCategoryPlanCount                 int64     `json:"affected_category_plan_count"`
-	AffectedExportCount                       int64     `json:"affected_export_count"`
-	AffectedExternalTempCopyCount             int64     `json:"affected_external_temp_copy_count"`
-	AffectedFailureContextCount               int64     `json:"affected_failure_context_count"`
-	AffectedJobCount                          int64     `json:"affected_job_count"`
-	AffectedJobInputCount                     int64     `json:"affected_job_input_count"`
-	AffectedMaterialCount                     int64     `json:"affected_material_count"`
-	AffectedPageCount                         int64     `json:"affected_page_count"`
-	AffectedProvisionalCandidateCount         int64     `json:"affected_provisional_candidate_count"`
-	AffectedReplanDecisionCount               int64     `json:"affected_replan_decision_count"`
-	AffectedReviewReportCount                 int64     `json:"affected_review_report_count"`
-	AffectedSourceCount                       int64     `json:"affected_source_count"`
-	AffectedToolCallCount                     int64     `json:"affected_tool_call_count"`
-	AffectedVersionCount                      int64     `json:"affected_version_count"`
-	CategoryId                                string    `json:"category_id"`
-	DeletedCategoryCount                      int64     `json:"deleted_category_count"`
+	// AcceptedAt Required. Time logical access revocation became effective.
+	AcceptedAt Timestamp `json:"accepted_at"`
+	// AffectedActiveEstimateCount Required. Active generation estimates atomically invalidated.
+	AffectedActiveEstimateCount int64 `json:"affected_active_estimate_count"`
+	// AffectedAiCallCount Required. Logical AI call slots accepted for cleanup.
+	AffectedAiCallCount int64 `json:"affected_ai_call_count"`
+	// AffectedBriefRevisionCount Required. Complete brief revisions accepted for deletion.
+	AffectedBriefRevisionCount int64 `json:"affected_brief_revision_count"`
+	// AffectedCategoryOrganizationEstimateCount Required. Category-organization estimates atomically invalidated.
+	AffectedCategoryOrganizationEstimateCount int64 `json:"affected_category_organization_estimate_count"`
+	// AffectedCategoryOrganizationJobCount Required. Category-organization jobs canceled or access-revoked.
+	AffectedCategoryOrganizationJobCount int64 `json:"affected_category_organization_job_count"`
+	// AffectedCategoryPlanCount Required. Category plan storage objects accepted for cleanup.
+	AffectedCategoryPlanCount int64 `json:"affected_category_plan_count"`
+	// AffectedExportCount Required. PDF and PNG artifacts accepted for deletion.
+	AffectedExportCount int64 `json:"affected_export_count"`
+	// AffectedExternalTempCopyCount Required. Registered external temporary copies accepted for cleanup.
+	AffectedExternalTempCopyCount int64 `json:"affected_external_temp_copy_count"`
+	// AffectedFailureContextCount Required. Typed failure contexts accepted for deletion.
+	AffectedFailureContextCount int64 `json:"affected_failure_context_count"`
+	// AffectedJobCount Required. Logical jobs accepted for deletion.
+	AffectedJobCount int64 `json:"affected_job_count"`
+	// AffectedJobInputCount Required. Frozen job inputs accepted for deletion.
+	AffectedJobInputCount int64 `json:"affected_job_input_count"`
+	// AffectedMaterialCount Required. Materials accepted for deletion.
+	AffectedMaterialCount int64 `json:"affected_material_count"`
+	// AffectedPageCount Required. Pages accepted for deletion.
+	AffectedPageCount int64 `json:"affected_page_count"`
+	// AffectedProvisionalCandidateCount Required. Unpublished candidates accepted for deletion.
+	AffectedProvisionalCandidateCount int64 `json:"affected_provisional_candidate_count"`
+	// AffectedReplanDecisionCount Required. Structured replan decisions accepted for cleanup.
+	AffectedReplanDecisionCount int64 `json:"affected_replan_decision_count"`
+	// AffectedReviewReportCount Required. Structured review reports accepted for cleanup.
+	AffectedReviewReportCount int64 `json:"affected_review_report_count"`
+	// AffectedSourceCount Required. Material and inline-text sources accepted for deletion.
+	AffectedSourceCount int64 `json:"affected_source_count"`
+	// AffectedToolCallCount Required. Future-reserved tool calls; zero in the current release.
+	AffectedToolCallCount int64 `json:"affected_tool_call_count"`
+	// AffectedVersionCount Required. Published versions accepted for deletion.
+	AffectedVersionCount int64 `json:"affected_version_count"`
+	// CategoryId Required. Opaque deleted root category identifier.
+	CategoryId string `json:"category_id"`
+	// DeletedCategoryCount Required. Root and descendant categories accepted for deletion.
+	DeletedCategoryCount int64 `json:"deleted_category_count"`
 }
 
 func (v CategoryDeletionResult) MarshalJSON() ([]byte, error) {
@@ -954,10 +1856,16 @@ func (v *CategoryDeletionResult) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryDeletionTarget CategoryDeletionTarget is one exact category node included in a signed
+//
+//	category-deletion preview.
 type CategoryDeletionTarget struct {
+	// CategoryId Required. Opaque category identifier to delete.
 	CategoryId string `json:"category_id"`
-	Etag       string `json:"etag"`
-	Name       string `json:"name"`
+	// Etag Required. Category revision incorporated into the impact fingerprint.
+	Etag string `json:"etag"`
+	// Name Required. Current user-visible name shown for confirmation.
+	Name string `json:"name"`
 }
 
 func (v CategoryDeletionTarget) MarshalJSON() ([]byte, error) {
@@ -973,11 +1881,18 @@ func (v *CategoryDeletionTarget) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryOrganizationApplyResult CategoryOrganizationApplyResult confirms application of a previously
+//
+//	settled preview without a second charge.
 type CategoryOrganizationApplyResult struct {
-	AppliedAt          Timestamp    `json:"applied_at"`
-	AppliedChangeCount int64        `json:"applied_change_count"`
-	CostSummary        *CostSummary `json:"cost_summary"`
-	TreeEtag           string       `json:"tree_etag"`
+	// AppliedAt Required. Time application committed.
+	AppliedAt Timestamp `json:"applied_at"`
+	// AppliedChangeCount Required. Number of concrete changes applied.
+	AppliedChangeCount int64 `json:"applied_change_count"`
+	// CostSummary Required. Same reconciled cost summary returned by the preview.
+	CostSummary *CostSummary `json:"cost_summary"`
+	// TreeEtag Required. Category tree version after application.
+	TreeEtag string `json:"tree_etag"`
 }
 
 func (v CategoryOrganizationApplyResult) MarshalJSON() ([]byte, error) {
@@ -995,20 +1910,36 @@ func (v *CategoryOrganizationApplyResult) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryOrganizationEstimate CategoryOrganizationEstimate is a durable, short-lived estimate for one
+//
+//	explicitly confirmed asynchronous category-organization preview.
 type CategoryOrganizationEstimate struct {
-	AuthorizedMaxCredit       string                   `json:"authorized_max_credit"`
-	BalanceSufficient         bool                     `json:"balance_sufficient"`
+	// AuthorizedMaxCredit Required. Maximum permitted user net charge for this operation.
+	AuthorizedMaxCredit string `json:"authorized_max_credit"`
+	// BalanceSufficient Required. Whether the balance covers authorized_max_credit.
+	BalanceSufficient bool `json:"balance_sufficient"`
+	// ConsumedOrganizationJobId (OPTIONAL) Conditional. Present when CONSUMED and identifies the unique organization job.
 	ConsumedOrganizationJobId runtime.Optional[string] `json:"consumed_organization_job_id"`
-	CreatedAt                 Timestamp                `json:"created_at"`
-	CurrentBalanceCredit      string                   `json:"current_balance_credit"`
-	EstimateId                string                   `json:"estimate_id"`
-	EstimatedAiCredit         string                   `json:"estimated_ai_credit"`
-	ExpiresAt                 Timestamp                `json:"expires_at"`
-	InputFingerprint          string                   `json:"input_fingerprint"`
-	PricingVersion            string                   `json:"pricing_version"`
-	ScopeCategoryId           runtime.Optional[string] `json:"scope_category_id"`
-	State                     EstimateState            `json:"state"`
-	TreeEtag                  string                   `json:"tree_etag"`
+	// CreatedAt Required. Durable estimate creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// CurrentBalanceCredit Required. Wallet balance snapshot at estimate creation.
+	CurrentBalanceCredit string `json:"current_balance_credit"`
+	// EstimateId Required. Opaque estimate identifier.
+	EstimateId string `json:"estimate_id"`
+	// EstimatedAiCredit Required. Estimated AI credits for the complete preview operation.
+	EstimatedAiCredit string `json:"estimated_ai_credit"`
+	// ExpiresAt Required. Time after which a new estimate is required.
+	ExpiresAt Timestamp `json:"expires_at"`
+	// InputFingerprint Required. SHA-256 of the frozen instruction, scope, and tree_etag.
+	InputFingerprint string `json:"input_fingerprint"`
+	// PricingVersion Required. Public AI pricing contract version.
+	PricingVersion string `json:"pricing_version"`
+	// ScopeCategoryId (OPTIONAL) Optional. Root of the affected subtree; absent means the full tree.
+	ScopeCategoryId runtime.Optional[string] `json:"scope_category_id"`
+	// State Required. Current estimate lifecycle state.
+	State EstimateState `json:"state"`
+	// TreeEtag Required. Category tree version observed during estimation.
+	TreeEtag string `json:"tree_etag"`
 }
 
 func (v CategoryOrganizationEstimate) MarshalJSON() ([]byte, error) {
@@ -1044,19 +1975,34 @@ func (v *CategoryOrganizationEstimate) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryOrganizationJob CategoryOrganizationJob is the authoritative asynchronous fact for one
+//
+//	explicitly confirmed, paid category-organization preview.
 type CategoryOrganizationJob struct {
-	AppliedAt                runtime.Optional[Timestamp]                        `json:"applied_at"`
-	BillingIntentId          string                                             `json:"billing_intent_id"`
-	CompletedAt              runtime.Optional[Timestamp]                        `json:"completed_at"`
-	CostSummary              *CostSummary                                       `json:"cost_summary"`
-	CreatedAt                Timestamp                                          `json:"created_at"`
-	EstimateId               string                                             `json:"estimate_id"`
-	Failure                  runtime.Optional[*JobFailure]                      `json:"failure"`
-	OrganizationJobId        string                                             `json:"organization_job_id"`
-	PreviewState             runtime.Optional[CategoryOrganizationPreviewState] `json:"preview_state"`
-	PreviewUnavailableReason runtime.Optional[string]                           `json:"preview_unavailable_reason"`
-	Status                   JobStatus                                          `json:"status"`
-	UpdatedAt                Timestamp                                          `json:"updated_at"`
+	// AppliedAt (OPTIONAL) Conditional. Required after apply; retained in the EXPIRED projection.
+	AppliedAt runtime.Optional[Timestamp] `json:"applied_at"`
+	// BillingIntentId Required. Logical user-confirmation billing intent, not an operation or attempt ID.
+	BillingIntentId string `json:"billing_intent_id"`
+	// CompletedAt (OPTIONAL) Conditional. Required in SUCCEEDED or FAILED; apply and expiry do not change it.
+	CompletedAt runtime.Optional[Timestamp] `json:"completed_at"`
+	// CostSummary Required. CATEGORY_ORGANIZATION estimate and reconciled settlement summary.
+	CostSummary *CostSummary `json:"cost_summary"`
+	// CreatedAt Required. Logical job creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// EstimateId Required. Opaque estimate atomically consumed by this job.
+	EstimateId string `json:"estimate_id"`
+	// Failure (OPTIONAL) Conditional. Required in FAILED and contains only safe failure details.
+	Failure runtime.Optional[*JobFailure] `json:"failure"`
+	// OrganizationJobId Required. Opaque logical organization job identifier.
+	OrganizationJobId string `json:"organization_job_id"`
+	// PreviewState (OPTIONAL) Conditional. Required in SUCCEEDED and absent before planning succeeds.
+	PreviewState runtime.Optional[CategoryOrganizationPreviewState] `json:"preview_state"`
+	// PreviewUnavailableReason (OPTIONAL) Conditional. Required when preview_state is EXPIRED.
+	PreviewUnavailableReason runtime.Optional[string] `json:"preview_unavailable_reason"`
+	// Status Required. Public asynchronous job lifecycle.
+	Status JobStatus `json:"status"`
+	// UpdatedAt Required. Time the authoritative job fact last changed.
+	UpdatedAt Timestamp `json:"updated_at"`
 }
 
 func (v CategoryOrganizationJob) MarshalJSON() ([]byte, error) {
@@ -1090,16 +2036,29 @@ func (v *CategoryOrganizationJob) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryOrganizationPreview CategoryOrganizationPreview is the durable, settled snapshot produced by a
+//
+//	successful category organization job. It contains safe changes but never the
+//	user's original instruction, prompts, private reasoning, or provider output.
 type CategoryOrganizationPreview struct {
-	AppliedAt         runtime.Optional[Timestamp] `json:"applied_at"`
-	BillingIntentId   string                      `json:"billing_intent_id"`
-	Changes           []*CategoryChange           `json:"changes"`
-	CostSummary       *CostSummary                `json:"cost_summary"`
-	EstimateId        string                      `json:"estimate_id"`
-	ExpiresAt         Timestamp                   `json:"expires_at"`
-	OrganizationJobId string                      `json:"organization_job_id"`
-	Summary           string                      `json:"summary"`
-	TreeEtag          string                      `json:"tree_etag"`
+	// AppliedAt (OPTIONAL) Conditional. Required after successful apply and absent before apply.
+	AppliedAt runtime.Optional[Timestamp] `json:"applied_at"`
+	// BillingIntentId Required. Logical user-confirmation billing intent.
+	BillingIntentId string `json:"billing_intent_id"`
+	// Changes Required. Ordered concrete changes; may be empty when no change is needed.
+	Changes []*CategoryChange `json:"changes"`
+	// CostSummary Required. Reconciled CATEGORY_ORGANIZATION cost summary.
+	CostSummary *CostSummary `json:"cost_summary"`
+	// EstimateId Required. Estimate consumed by the organization job.
+	EstimateId string `json:"estimate_id"`
+	// ExpiresAt Required. Durable preview expiry time.
+	ExpiresAt Timestamp `json:"expires_at"`
+	// OrganizationJobId Required. Organization job identifier and preview snapshot identity.
+	OrganizationJobId string `json:"organization_job_id"`
+	// Summary Required. User-understandable overall change summary.
+	Summary string `json:"summary"`
+	// TreeEtag Required. Category tree version from which this preview was generated.
+	TreeEtag string `json:"tree_etag"`
 }
 
 func (v CategoryOrganizationPreview) MarshalJSON() ([]byte, error) {
@@ -1127,6 +2086,9 @@ func (v *CategoryOrganizationPreview) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryOrganizationPreviewState CategoryOrganizationPreviewState is the lifecycle of a successful
+//
+//	category-organization preview.
 type CategoryOrganizationPreviewState string
 
 const (
@@ -1149,10 +2111,17 @@ func (v CategoryOrganizationPreviewState) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"CATEGORY_ORGANIZATION_PREVIEW_STATE_UNSPECIFIED", "CATEGORY_ORGANIZATION_PREVIEW_STATE_READY", "CATEGORY_ORGANIZATION_PREVIEW_STATE_APPLYING", "CATEGORY_ORGANIZATION_PREVIEW_STATE_APPLIED", "CATEGORY_ORGANIZATION_PREVIEW_STATE_EXPIRED"})
 }
 
+// CategoryPreference CategoryPreference is the user-scoped singleton containing explicitly saved
+//
+//	long-lived category rules. It never receives one-time organization prompts.
 type CategoryPreference struct {
-	Etag      string                      `json:"etag"`
-	Revision  string                      `json:"revision"`
-	RulesText string                      `json:"rules_text"`
+	// Etag Required. Optimistic concurrency validator.
+	Etag string `json:"etag"`
+	// Revision Required. Monotonic singleton revision; zero means never configured.
+	Revision string `json:"revision"`
+	// RulesText Required. Complete saved rules; an empty string explicitly means no rules.
+	RulesText string `json:"rules_text"`
+	// UpdatedAt (OPTIONAL) Optional. Last explicit save or clear time; absent when never configured.
 	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
@@ -1171,10 +2140,16 @@ func (v *CategoryPreference) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CategoryPreferenceSnapshot CategoryPreferenceSnapshot is the immutable category preference captured in
+//
+//	a generation estimate and its resulting job input.
 type CategoryPreferenceSnapshot struct {
-	Revision    string `json:"revision"`
+	// Revision Required. Monotonic preference revision; zero means never configured.
+	Revision string `json:"revision"`
+	// RulesSha256 Required. SHA-256 of rules_text, including the stable digest of empty text.
 	RulesSha256 string `json:"rules_sha256"`
-	RulesText   string `json:"rules_text"`
+	// RulesText Required. Complete normalized rules; an empty string means no rules.
+	RulesText string `json:"rules_text"`
 }
 
 func (v CategoryPreferenceSnapshot) MarshalJSON() ([]byte, error) {
@@ -1207,10 +2182,29 @@ func (v *ChangePasswordRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ChangePasswordResponse = any
+
+// CheckRequest CheckRequest carries one authorization question.
 type CheckRequest struct {
-	Action   runtime.Optional[string] `json:"action"`
+	// Action Required. Verb-style action name. Common values:
+	//    "read"       — any active member
+	//    "update"     — admin or owner
+	//    "delete"     — owner only
+	//    "transfer"   — owner only
+	//    "rotate"     — admin or owner (for credentials)
+	//
+	//  Convention: action names are lowercase ASCII; service-specific actions
+	//  SHOULD be namespaced (e.g. "credentials:rotate"). The full action
+	//  taxonomy is documented per service in their respective READMEs.
+	Action runtime.Optional[string] `json:"action"`
+	// Resource Required. Dotted "type:id" form, e.g.:
+	//    "app:app01abc..."         (Application)
+	//    "org:org01xyz..."         (Organization)
+	//    "workspace:wsp..."        (Workspace)
+	//    "credential:key..."       (API Key)
 	Resource runtime.Optional[string] `json:"resource"`
-	UserId   runtime.Optional[string] `json:"user_id"`
+	// UserId Required. The principal whose permissions are being tested. Opaque
+	//  entity-id with `usr` prefix; legacy formats also accepted.
+	UserId runtime.Optional[string] `json:"user_id"`
 }
 
 func (v CheckRequest) MarshalJSON() ([]byte, error) {
@@ -1226,10 +2220,23 @@ func (v *CheckRequest) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CheckResponse CheckResponse carries the decision plus a human-readable explanation.
 type CheckResponse struct {
-	Allow         runtime.Optional[bool]   `json:"allow"`
+	// Allow True if the principal is authorized.
+	Allow runtime.Optional[bool] `json:"allow"`
+	// EffectiveRole Effective role observed at decision time. Empty when allow=false and
+	//  user is not a member of the resource. Useful for audit logs.
 	EffectiveRole runtime.Optional[string] `json:"effective_role"`
-	Reason        runtime.Optional[string] `json:"reason"`
+	// Reason Short machine-readable reason code. Values:
+	//    "OK"                       — allowed
+	//    "NOT_A_MEMBER"             — user not in resource's membership table
+	//    "INSUFFICIENT_ROLE"        — user is a member but role too low
+	//    "RESOURCE_TYPE_UNKNOWN"    — service does not recognize the resource type
+	//    "CACHE_NOT_READY"          — app_members cache not yet synced (transient)
+	//    "RESOURCE_NOT_FOUND"       — resource id does not exist
+	//
+	//  Loggable by callers; not user-facing.
+	Reason runtime.Optional[string] `json:"reason"`
 }
 
 func (v CheckResponse) MarshalJSON() ([]byte, error) {
@@ -1280,6 +2287,14 @@ func (v *CheckUserExistsResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ClaimAvatarRetirementRequest Only a verified internal media caller may claim a fence. IAM atomically locks
+//
+//	the media guard and checks ALL references, including restorable users.
+//	In-use: FAILED_PRECONDITION / AVATAR_IN_USE. Different operation:
+//	ABORTED / AVATAR_RETIREMENT_CONFLICT. Disabled rollout:
+//	FAILED_PRECONDITION / AVATAR_RETIREMENT_DISABLED. Invalid fields:
+//	INVALID_ARGUMENT with BadRequest field violations. Matching RETIRING or
+//	RETIRED claims are idempotent; only RETIRING authorizes new deletion work.
 type ClaimAvatarRetirementRequest struct {
 	MediaId     runtime.Optional[string] `json:"media_id"`
 	OperationId runtime.Optional[string] `json:"operation_id"`
@@ -1307,6 +2322,7 @@ func (v *ClaimAvatarRetirementResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "retirement", Value: &v.Retirement, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// ClientCredentialStatus ClientCredentialStatus represents the lifecycle state of one OAuth client.
 type ClientCredentialStatus string
 
 const (
@@ -1328,6 +2344,7 @@ func (v ClientCredentialStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"CLIENT_CREDENTIAL_STATUS_UNSPECIFIED", "CLIENT_CREDENTIAL_STATUS_ACTIVE", "CLIENT_CREDENTIAL_STATUS_DISABLED", "CLIENT_CREDENTIAL_STATUS_DELETED"})
 }
 
+// ClientCredentialType ClientCredentialType describes whether an OAuth client can keep a secret.
 type ClientCredentialType string
 
 const (
@@ -1348,6 +2365,11 @@ func (v ClientCredentialType) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"CLIENT_CREDENTIAL_TYPE_UNSPECIFIED", "CLIENT_CREDENTIAL_TYPE_CONFIDENTIAL", "CLIENT_CREDENTIAL_TYPE_PUBLIC"})
 }
 
+// CompleteAvatarRetirementRequest Call only after all objects are deleted and Media metadata is soft-deleted.
+//
+//	Matching RETIRING -> RETIRED; matching RETIRED is idempotent. Missing claim
+//	is NOT_FOUND, mismatched operation is ABORTED. Never creates a new fence.
+//	A lost response is resolved through Get/retry, never through an unfence RPC.
 type CompleteAvatarRetirementRequest struct {
 	MediaId     runtime.Optional[string] `json:"media_id"`
 	OperationId runtime.Optional[string] `json:"operation_id"`
@@ -1376,8 +2398,10 @@ func (v *CompleteAvatarRetirementResponse) UnmarshalJSON(data []byte) error {
 }
 
 type CompleteUploadRequest struct {
+	// UploadId Required. OPEN or idempotently completed upload identifier.
 	UploadId string `json:"upload_id"`
-	UserId   string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v CompleteUploadRequest) MarshalJSON() ([]byte, error) {
@@ -1392,8 +2416,10 @@ func (v *CompleteUploadRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CompleteUploadResponse struct {
+	// Material (OPTIONAL) Optional. Required only when upload.status is COMPLETED.
 	Material runtime.Optional[*Material] `json:"material"`
-	Upload   *UploadSession              `json:"upload"`
+	// Upload Required. Durable terminal upload fact after completion processing.
+	Upload *UploadSession `json:"upload"`
 }
 
 func (v CompleteUploadResponse) MarshalJSON() ([]byte, error) {
@@ -1407,7 +2433,11 @@ func (v *CompleteUploadResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ConfirmUploadRequest ConfirmUploadRequest 确认预签名上传已完成。
+//
+//	服务端将验证文件是否存在，并提取尺寸、时长等元信息。
 type ConfirmUploadRequest struct {
+	// AssetId 预分配的素材 ID（来自 GenerateUploadUrlResponse）。
 	AssetId runtime.Optional[string] `json:"asset_id"`
 }
 
@@ -1419,6 +2449,7 @@ func (v *ConfirmUploadRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ConfirmUploadResponse struct {
+	// Asset 确认后的完整素材信息。
 	Asset runtime.Optional[*Asset] `json:"asset"`
 }
 
@@ -1429,13 +2460,20 @@ func (v *ConfirmUploadResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "asset", Value: &v.Asset, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// ContentBudgetSummary ContentBudgetSummary explains the current single-page readability budget.
 type ContentBudgetSummary struct {
-	AllowedOrientations []Orientation    `json:"allowed_orientations"`
-	ConflictCount       int64            `json:"conflict_count"`
-	CurrentOrientation  Orientation      `json:"current_orientation"`
-	FitStatus           ContentFitStatus `json:"fit_status"`
-	Summary             string           `json:"summary"`
-	TargetPageCount     int64            `json:"target_page_count"`
+	// AllowedOrientations Required. Orientations that may resolve the current conflict.
+	AllowedOrientations []Orientation `json:"allowed_orientations"`
+	// ConflictCount Required. Number of conflicts in the enclosing context.
+	ConflictCount int64 `json:"conflict_count"`
+	// CurrentOrientation Required. Current selected page orientation.
+	CurrentOrientation Orientation `json:"current_orientation"`
+	// FitStatus Required. Current content fit status.
+	FitStatus ContentFitStatus `json:"fit_status"`
+	// Summary Required. Safe explanation of why the readable budget cannot be met.
+	Summary string `json:"summary"`
+	// TargetPageCount Required. Target page count; fixed to one in P1.
+	TargetPageCount int64 `json:"target_page_count"`
 }
 
 func (v ContentBudgetSummary) MarshalJSON() ([]byte, error) {
@@ -1457,9 +2495,12 @@ func (v *ContentBudgetSummary) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ContentChunk ContentChunk carries a piece of LLM-generated text.
 type ContentChunk struct {
-	Index runtime.Optional[int64]  `json:"index"`
-	Text  runtime.Optional[string] `json:"text"`
+	// Index 片段序号（从 0 开始），用于客户端排序和校验。
+	Index runtime.Optional[int64] `json:"index"`
+	// Text 文本内容片段。
+	Text runtime.Optional[string] `json:"text"`
 }
 
 func (v ContentChunk) MarshalJSON() ([]byte, error) {
@@ -1473,10 +2514,16 @@ func (v *ContentChunk) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ContentConflict ContentConflict identifies one user-understandable conflict that prevents the
+//
+//	complete source set from fitting a readable single-page result.
 type ContentConflict struct {
-	ConflictId  string                     `json:"conflict_id"`
+	// ConflictId Required. Stable identifier within the enclosing decision context.
+	ConflictId string `json:"conflict_id"`
+	// MaterialIds (OPTIONAL) Optional. Source material identifiers when the conflict is attributable.
 	MaterialIds runtime.Optional[[]string] `json:"material_ids"`
-	Summary     string                     `json:"summary"`
+	// Summary Required. Safe conflict explanation without prompts or internal scoring.
+	Summary string `json:"summary"`
 }
 
 func (v ContentConflict) MarshalJSON() ([]byte, error) {
@@ -1492,6 +2539,9 @@ func (v *ContentConflict) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ContentDecisionAction ContentDecisionAction identifies an explicit choice offered to resolve a
+//
+//	single-page content conflict.
 type ContentDecisionAction string
 
 const (
@@ -1514,15 +2564,27 @@ func (v ContentDecisionAction) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"CONTENT_DECISION_ACTION_UNSPECIFIED", "CONTENT_DECISION_ACTION_PRIORITIZE", "CONTENT_DECISION_ACTION_CONDENSE", "CONTENT_DECISION_ACTION_OMIT", "CONTENT_DECISION_ACTION_CHANGE_ORIENTATION"})
 }
 
+// ContentDecisionContext ContentDecisionContext is the durable, typed user decision state associated
+//
+//	with a failed job and immutable input. It contains only safe summaries and
+//	explicit choices, never prompts or private reasoning.
 type ContentDecisionContext struct {
-	ActionToken             string                   `json:"action_token"`
-	ActionTokenExpiresAt    Timestamp                `json:"action_token_expires_at"`
-	BasePageContentRevision string                   `json:"base_page_content_revision"`
-	Budget                  *ContentBudgetSummary    `json:"budget"`
-	Conflicts               []*ContentConflict       `json:"conflicts"`
-	ContextDigest           string                   `json:"context_digest"`
-	ContextId               string                   `json:"context_id"`
-	Options                 []*ContentDecisionOption `json:"options"`
+	// ActionToken Required. Short-lived signed token authorizing only the listed options.
+	ActionToken string `json:"action_token"`
+	// ActionTokenExpiresAt Required. Expiry of action_token; the durable context may remain valid.
+	ActionTokenExpiresAt Timestamp `json:"action_token_expires_at"`
+	// BasePageContentRevision Required. Page content revision at which the conflict was produced.
+	BasePageContentRevision string `json:"base_page_content_revision"`
+	// Budget Required. Current single-page content budget summary.
+	Budget *ContentBudgetSummary `json:"budget"`
+	// Conflicts Required. Conflicting content groups; at least one.
+	Conflicts []*ContentConflict `json:"conflicts"`
+	// ContextDigest Required. SHA-256 of the complete durable failure context.
+	ContextDigest string `json:"context_digest"`
+	// ContextId Required. Durable context identifier bound to the failed job and input.
+	ContextId string `json:"context_id"`
+	// Options Required. Stable client choices; at least one.
+	Options []*ContentDecisionOption `json:"options"`
 }
 
 func (v ContentDecisionContext) MarshalJSON() ([]byte, error) {
@@ -1548,12 +2610,20 @@ func (v *ContentDecisionContext) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ContentDecisionOption ContentDecisionOption is an explicit, stable choice that the client may
+//
+//	submit for one content decision context.
 type ContentDecisionOption struct {
-	Action      ContentDecisionAction         `json:"action"`
-	Label       string                        `json:"label"`
-	OptionId    string                        `json:"option_id"`
+	// Action Required. Explicit content trade-off action.
+	Action ContentDecisionAction `json:"action"`
+	// Label Required. Short client display label.
+	Label string `json:"label"`
+	// OptionId Required. Stable identifier scoped to the enclosing context.
+	OptionId string `json:"option_id"`
+	// Orientation (OPTIONAL) Conditional. Required only for CHANGE_ORIENTATION.
 	Orientation runtime.Optional[Orientation] `json:"orientation"`
-	Summary     string                        `json:"summary"`
+	// Summary Required. Safe expected trade-off summary.
+	Summary string `json:"summary"`
 }
 
 func (v ContentDecisionOption) MarshalJSON() ([]byte, error) {
@@ -1573,6 +2643,9 @@ func (v *ContentDecisionOption) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ContentFitStatus ContentFitStatus describes whether input fits the single-page content
+//
+//	budget. The current decision flow only publishes OVER_CONTENT_BUDGET.
 type ContentFitStatus string
 
 const (
@@ -1592,6 +2665,7 @@ func (v ContentFitStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"CONTENT_FIT_STATUS_UNSPECIFIED", "CONTENT_FIT_STATUS_OVER_CONTENT_BUDGET"})
 }
 
+// ContentFormat ContentFormat indicates the format of the content body.
 type ContentFormat string
 
 const (
@@ -1612,10 +2686,18 @@ func (v ContentFormat) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"CONTENT_FORMAT_UNSPECIFIED", "CONTENT_FORMAT_MARKDOWN", "CONTENT_FORMAT_HTML"})
 }
 
+// ConvertToHtmlRequest ConvertToHtmlRequest 将 Markdown 内容转换为 HTML 格式。
+//
+//	支持生成 Canvas 绘图（用于图表、流程图等可视化元素）。
+//	article_id 和 content 二选一。
 type ConvertToHtmlRequest struct {
-	ArticleId     runtime.Optional[string] `json:"article_id"`
-	Content       runtime.Optional[string] `json:"content"`
-	EnableCanvas  runtime.Optional[bool]   `json:"enable_canvas"`
+	// ArticleId 待转换的文章 ID，与 content 互斥。
+	ArticleId runtime.Optional[string] `json:"article_id"`
+	// Content 待转换的原始 Markdown 文本，与 article_id 互斥。
+	Content runtime.Optional[string] `json:"content"`
+	// EnableCanvas 是否为图表/流程图等元素生成 Canvas 绘图代码。
+	EnableCanvas runtime.Optional[bool] `json:"enable_canvas"`
+	// TemplateStyle 视觉模板风格，例如 "modern"（现代）、"classic"（经典）、"minimal"（极简）。
 	TemplateStyle runtime.Optional[string] `json:"template_style"`
 }
 
@@ -1634,10 +2716,14 @@ func (v *ConvertToHtmlRequest) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ConvertToHtmlResponse ConvertToHtmlResponse 是 ConvertToHtml 的流式响应。
 type ConvertToHtmlResponse struct {
-	Article runtime.Optional[*Article]    `json:"article"`
-	Done    runtime.Optional[bool]        `json:"done"`
-	Event   runtime.Optional[StreamEvent] `json:"event"`
+	// Article 转换后的完整文章实体（format=HTML），仅在 done=true 时填充。
+	Article runtime.Optional[*Article] `json:"article"`
+	// Done 是否转换完毕。
+	Done runtime.Optional[bool] `json:"done"`
+	// Event 流式事件，携带内容片段、状态更新、Token 用量或错误信息。
+	Event runtime.Optional[StreamEvent] `json:"event"`
 }
 
 func (v ConvertToHtmlResponse) MarshalJSON() ([]byte, error) {
@@ -1653,6 +2739,9 @@ func (v *ConvertToHtmlResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CostComponent CostComponent identifies the metered component represented by a ledger
+//
+//	entry. TOOL is future-reserved and is never produced in the current release.
 type CostComponent string
 
 const (
@@ -1675,13 +2764,20 @@ func (v CostComponent) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"COST_COMPONENT_UNSPECIFIED", "COST_COMPONENT_AI", "COST_COMPONENT_FILE", "COST_COMPONENT_STORAGE", "COST_COMPONENT_TOOL"})
 }
 
+// CostLedgerEntryRef CostLedgerEntryRef is a safe reference to an immutable wallet ledger entry.
 type CostLedgerEntryRef struct {
-	Component           CostComponent       `json:"component"`
-	CreditDelta         string              `json:"credit_delta"`
-	EntryType           CostLedgerEntryType `json:"entry_type"`
-	OccurredAt          Timestamp           `json:"occurred_at"`
-	Purpose             CostPurpose         `json:"purpose"`
-	WalletLedgerEntryId string              `json:"wallet_ledger_entry_id"`
+	// Component Required. Metered component represented by this entry.
+	Component CostComponent `json:"component"`
+	// CreditDelta Required. Signed effect on user net consumption; compensation is negative.
+	CreditDelta string `json:"credit_delta"`
+	// EntryType Required. Consume or compensation entry type.
+	EntryType CostLedgerEntryType `json:"entry_type"`
+	// OccurredAt Required. Wallet ledger occurrence time.
+	OccurredAt Timestamp `json:"occurred_at"`
+	// Purpose Required. Purpose inherited from the enclosing cost summary.
+	Purpose CostPurpose `json:"purpose"`
+	// WalletLedgerEntryId Required. Opaque wallet ledger entry identifier.
+	WalletLedgerEntryId string `json:"wallet_ledger_entry_id"`
 }
 
 func (v CostLedgerEntryRef) MarshalJSON() ([]byte, error) {
@@ -1703,6 +2799,7 @@ func (v *CostLedgerEntryRef) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CostLedgerEntryType CostLedgerEntryType identifies the effect of a wallet ledger entry.
 type CostLedgerEntryType string
 
 const (
@@ -1723,6 +2820,7 @@ func (v CostLedgerEntryType) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"COST_LEDGER_ENTRY_TYPE_UNSPECIFIED", "COST_LEDGER_ENTRY_TYPE_CONSUME", "COST_LEDGER_ENTRY_TYPE_COMPENSATION"})
 }
 
+// CostPurpose CostPurpose classifies the user-visible purpose of a cost summary.
 type CostPurpose string
 
 const (
@@ -1748,6 +2846,7 @@ func (v CostPurpose) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"COST_PURPOSE_UNSPECIFIED", "COST_PURPOSE_CREATE_PAGE", "COST_PURPOSE_REGENERATE_PAGE", "COST_PURPOSE_RETRY_JOB", "COST_PURPOSE_FILE_UPLOAD", "COST_PURPOSE_CATEGORY_ORGANIZATION", "COST_PURPOSE_STORAGE_PERIOD", "COST_PURPOSE_STORAGE_ADJUSTMENT"})
 }
 
+// CostSettlementStatus CostSettlementStatus is the reconciled lifecycle of a cost summary.
 type CostSettlementStatus string
 
 const (
@@ -1770,28 +2869,53 @@ func (v CostSettlementStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"COST_SETTLEMENT_STATUS_UNSPECIFIED", "COST_SETTLEMENT_STATUS_RESERVED", "COST_SETTLEMENT_STATUS_SETTLED", "COST_SETTLEMENT_STATUS_RELEASED", "COST_SETTLEMENT_STATUS_SETTLEMENT_PENDING"})
 }
 
+// CostSummary CostSummary is the user-visible, reconciled estimate and settlement summary.
+//
+//	It deliberately excludes physical model names, provider keys, request IDs,
+//	internal rate keys, and billing operation identifiers.
 type CostSummary struct {
-	ActualAiCredit          runtime.Optional[string]                    `json:"actual_ai_credit"`
-	ActualFileCredit        runtime.Optional[string]                    `json:"actual_file_credit"`
-	ActualToolCredit        runtime.Optional[string]                    `json:"actual_tool_credit"`
-	ActualTotalCredit       runtime.Optional[string]                    `json:"actual_total_credit"`
-	AuthorizedLimitExceeded runtime.Optional[bool]                      `json:"authorized_limit_exceeded"`
-	AuthorizedMaxCredit     runtime.Optional[string]                    `json:"authorized_max_credit"`
-	EstimatedAiCredit       string                                      `json:"estimated_ai_credit"`
-	EstimatedFileCredit     string                                      `json:"estimated_file_credit"`
-	EstimatedToolCredit     string                                      `json:"estimated_tool_credit"`
-	EstimatedTotalCredit    string                                      `json:"estimated_total_credit"`
-	NetAdjustmentCredit     runtime.Optional[string]                    `json:"net_adjustment_credit"`
-	PeriodEnd               runtime.Optional[Timestamp]                 `json:"period_end"`
-	PeriodStart             runtime.Optional[Timestamp]                 `json:"period_start"`
-	PricingVersion          string                                      `json:"pricing_version"`
-	Purpose                 CostPurpose                                 `json:"purpose"`
-	ReleasedAt              runtime.Optional[Timestamp]                 `json:"released_at"`
-	SettledAt               runtime.Optional[Timestamp]                 `json:"settled_at"`
-	SettlementStatus        CostSettlementStatus                        `json:"settlement_status"`
-	StorageStatement        runtime.Optional[*StorageStatementSnapshot] `json:"storage_statement"`
-	UpdatedAt               Timestamp                                   `json:"updated_at"`
-	WalletLedgerEntries     runtime.Optional[[]*CostLedgerEntryRef]     `json:"wallet_ledger_entries"`
+	// ActualAiCredit (OPTIONAL) Conditional. Required in SETTLED or RELEASED.
+	ActualAiCredit runtime.Optional[string] `json:"actual_ai_credit"`
+	// ActualFileCredit (OPTIONAL) Conditional. Required in SETTLED or RELEASED.
+	ActualFileCredit runtime.Optional[string] `json:"actual_file_credit"`
+	// ActualToolCredit (OPTIONAL) Conditional. Required in SETTLED or RELEASED; zero in the current release.
+	ActualToolCredit runtime.Optional[string] `json:"actual_tool_credit"`
+	// ActualTotalCredit (OPTIONAL) Conditional. Required in SETTLED or RELEASED; sum of actual components.
+	ActualTotalCredit runtime.Optional[string] `json:"actual_total_credit"`
+	// AuthorizedLimitExceeded (OPTIONAL) Conditional. Required whenever authorized_max_credit is present.
+	AuthorizedLimitExceeded runtime.Optional[bool] `json:"authorized_limit_exceeded"`
+	// AuthorizedMaxCredit (OPTIONAL) Conditional. Required for user-confirmed paid operations.
+	AuthorizedMaxCredit runtime.Optional[string] `json:"authorized_max_credit"`
+	// EstimatedAiCredit Required. Public AI estimate; zero when not applicable.
+	EstimatedAiCredit string `json:"estimated_ai_credit"`
+	// EstimatedFileCredit Required. Public file-service estimate; zero when not applicable.
+	EstimatedFileCredit string `json:"estimated_file_credit"`
+	// EstimatedToolCredit Required. Future-reserved tool estimate; zero in the current release.
+	EstimatedToolCredit string `json:"estimated_tool_credit"`
+	// EstimatedTotalCredit Required. Sum of all public estimated components.
+	EstimatedTotalCredit string `json:"estimated_total_credit"`
+	// NetAdjustmentCredit (OPTIONAL) Conditional. Required only for STORAGE_ADJUSTMENT; signed net adjustment.
+	NetAdjustmentCredit runtime.Optional[string] `json:"net_adjustment_credit"`
+	// PeriodEnd (OPTIONAL) Conditional. Required for STORAGE_PERIOD or STORAGE_ADJUSTMENT.
+	PeriodEnd runtime.Optional[Timestamp] `json:"period_end"`
+	// PeriodStart (OPTIONAL) Conditional. Required for STORAGE_PERIOD or STORAGE_ADJUSTMENT.
+	PeriodStart runtime.Optional[Timestamp] `json:"period_start"`
+	// PricingVersion Required. Public pricing contract version.
+	PricingVersion string `json:"pricing_version"`
+	// Purpose Required. User-visible operation purpose.
+	Purpose CostPurpose `json:"purpose"`
+	// ReleasedAt (OPTIONAL) Conditional. Required only when settlement_status is RELEASED.
+	ReleasedAt runtime.Optional[Timestamp] `json:"released_at"`
+	// SettledAt (OPTIONAL) Conditional. Required only when settlement_status is SETTLED.
+	SettledAt runtime.Optional[Timestamp] `json:"settled_at"`
+	// SettlementStatus Required. Aggregate settlement lifecycle.
+	SettlementStatus CostSettlementStatus `json:"settlement_status"`
+	// StorageStatement (OPTIONAL) Conditional. Required for STORAGE_PERIOD or STORAGE_ADJUSTMENT.
+	StorageStatement runtime.Optional[*StorageStatementSnapshot] `json:"storage_statement"`
+	// UpdatedAt Required. Time this aggregate summary last changed.
+	UpdatedAt Timestamp `json:"updated_at"`
+	// WalletLedgerEntries (OPTIONAL) Conditional. Required in SETTLED or RELEASED; may be an empty list.
+	WalletLedgerEntries runtime.Optional[[]*CostLedgerEntryRef] `json:"wallet_ledger_entries"`
 }
 
 func (v CostSummary) MarshalJSON() ([]byte, error) {
@@ -1844,11 +2968,100 @@ func (v *CostSummary) UnmarshalJSON(data []byte) error {
 }
 
 type CreateAPIKeyRequest struct {
-	AllowedScopes runtime.Optional[[]string]  `json:"allowed_scopes"`
-	AppId         runtime.Optional[string]    `json:"app_id"`
-	ExpiresAt     runtime.Optional[Timestamp] `json:"expires_at"`
-	Name          runtime.Optional[string]    `json:"name"`
-	RateLimit     runtime.Optional[int64]     `json:"rate_limit"`
+	AllowedScopes runtime.Optional[[]string] `json:"allowed_scopes"`
+	AppId         runtime.Optional[string]   `json:"app_id"`
+	// ExpiresAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	Name      runtime.Optional[string]    `json:"name"`
+	RateLimit runtime.Optional[int64]     `json:"rate_limit"`
 }
 
 func (v CreateAPIKeyRequest) MarshalJSON() ([]byte, error) {
@@ -1869,8 +3082,10 @@ func (v *CreateAPIKeyRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreateAPIKeyResponse struct {
+	// ApiKey APIKey represents a developer's API key credential.
 	ApiKey runtime.Optional[*APIKey] `json:"api_key"`
-	Key    runtime.Optional[string]  `json:"key"`
+	// Key Full key returned in plaintext only on creation
+	Key runtime.Optional[string] `json:"key"`
 }
 
 func (v CreateAPIKeyResponse) MarshalJSON() ([]byte, error) {
@@ -1885,14 +3100,23 @@ func (v *CreateAPIKeyResponse) UnmarshalJSON(data []byte) error {
 }
 
 type CreateApplicationRequest struct {
-	AllowedIdentities runtime.Optional[[]IdentityType]  `json:"allowed_identities"`
-	AllowedScopes     runtime.Optional[[]string]        `json:"allowed_scopes"`
-	AppName           runtime.Optional[string]          `json:"app_name"`
-	AppType           runtime.Optional[ApplicationType] `json:"app_type"`
-	Description       runtime.Optional[string]          `json:"description"`
-	HomepageUrl       runtime.Optional[string]          `json:"homepage_url"`
-	LogoUrl           runtime.Optional[string]          `json:"logo_url"`
-	RedirectUris      runtime.Optional[[]string]        `json:"redirect_uris"`
+	// AllowedIdentities Optional. Empty defaults to the ApplicationType-based mapping; see
+	//  OAuthApplication.allowed_identities for the rules.
+	AllowedIdentities runtime.Optional[[]IdentityType] `json:"allowed_identities"`
+	AllowedScopes     runtime.Optional[[]string]       `json:"allowed_scopes"`
+	// AppName Deprecated: pass display fields via the developer center. Accepted
+	//  here for legacy direct callers; will be removed in a future major
+	//  version.
+	AppName runtime.Optional[string] `json:"app_name"`
+	// AppType ApplicationType describes the kind of OAuth client application.
+	AppType runtime.Optional[ApplicationType] `json:"app_type"`
+	// Description Deprecated: same as app_name.
+	Description runtime.Optional[string] `json:"description"`
+	// HomepageUrl Deprecated: same as app_name.
+	HomepageUrl runtime.Optional[string] `json:"homepage_url"`
+	// LogoUrl Deprecated: same as app_name.
+	LogoUrl      runtime.Optional[string]   `json:"logo_url"`
+	RedirectUris runtime.Optional[[]string] `json:"redirect_uris"`
 }
 
 func (v CreateApplicationRequest) MarshalJSON() ([]byte, error) {
@@ -1919,8 +3143,16 @@ func (v *CreateApplicationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreateApplicationResponse struct {
-	Application  runtime.Optional[*OAuthApplication] `json:"application"`
-	ClientSecret runtime.Optional[string]            `json:"client_secret"`
+	// Application OAuthApplication represents a registered third-party application.
+	//
+	//  Display fields (`app_name`, `description`, `homepage_url`, `logo_url`)
+	//  on this message are deprecated; the developer center is the
+	//  authoritative source for application display metadata. The fields
+	//  remain populated on read for backward compatibility and will be
+	//  removed in a future major version.
+	Application runtime.Optional[*OAuthApplication] `json:"application"`
+	// ClientSecret Returned in plaintext only on creation
+	ClientSecret runtime.Optional[string] `json:"client_secret"`
 }
 
 func (v CreateApplicationResponse) MarshalJSON() ([]byte, error) {
@@ -1934,13 +3166,20 @@ func (v *CreateApplicationResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CreateArticleRequest CreateArticleRequest 基于主题和要求，调用 LLM 生成一篇 Markdown 格式的图文。
 type CreateArticleRequest struct {
-	Language      runtime.Optional[string]   `json:"language"`
-	ProjectId     runtime.Optional[string]   `json:"project_id"`
+	// Language 输出语言，BCP 47 格式，例如 "zh-CN"、"en-US"。
+	Language runtime.Optional[string] `json:"language"`
+	// ProjectId 所属项目 ID。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// ReferenceUrls 参考资料 URL 列表，LLM 可参考这些内容进行创作。
 	ReferenceUrls runtime.Optional[[]string] `json:"reference_urls"`
-	Requirements  runtime.Optional[string]   `json:"requirements"`
-	Style         runtime.Optional[string]   `json:"style"`
-	Topic         runtime.Optional[string]   `json:"topic"`
+	// Requirements 补充要求或指令，例如 "控制在3000字以内"、"包含数据图表"。
+	Requirements runtime.Optional[string] `json:"requirements"`
+	// Style 写作风格，例如 "professional"（专业）、"casual"（轻松）、"technical"（技术向）。
+	Style runtime.Optional[string] `json:"style"`
+	// Topic 创作主题/题目，例如 "2024年AI发展趋势"。
+	Topic runtime.Optional[string] `json:"topic"`
 }
 
 func (v CreateArticleRequest) MarshalJSON() ([]byte, error) {
@@ -1962,10 +3201,14 @@ func (v *CreateArticleRequest) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CreateArticleResponse CreateArticleResponse 是 CreateArticle 的流式响应。
 type CreateArticleResponse struct {
-	Article runtime.Optional[*Article]    `json:"article"`
-	Done    runtime.Optional[bool]        `json:"done"`
-	Event   runtime.Optional[StreamEvent] `json:"event"`
+	// Article 完整的文章实体，仅在 done=true 时填充。
+	Article runtime.Optional[*Article] `json:"article"`
+	// Done 是否生成完毕。客户端收到 done=true 后应关闭流。
+	Done runtime.Optional[bool] `json:"done"`
+	// Event 流式事件，携带内容片段、状态更新、Token 用量或错误信息。
+	Event runtime.Optional[StreamEvent] `json:"event"`
 }
 
 func (v CreateArticleResponse) MarshalJSON() ([]byte, error) {
@@ -1982,13 +3225,21 @@ func (v *CreateArticleResponse) UnmarshalJSON(data []byte) error {
 }
 
 type CreateGenerationRequest struct {
-	ClientReference runtime.Optional[string]      `json:"client_reference"`
-	Instruction     string                        `json:"instruction"`
-	MaterialIds     runtime.Optional[[]string]    `json:"material_ids"`
-	Orientation     runtime.Optional[Orientation] `json:"orientation"`
-	Title           runtime.Optional[string]      `json:"title"`
-	UiLocale        runtime.Optional[string]      `json:"ui_locale"`
-	UserId          string                        `json:"user_id"`
+	// ClientReference (OPTIONAL) Optional. Client-local draft correlation value, at most 128 characters.
+	ClientReference runtime.Optional[string] `json:"client_reference"`
+	// Instruction Required. The complete production requirement, including any source text
+	//  the user wants PinPage to use. It is never interpreted as a money budget.
+	Instruction string `json:"instruction"`
+	// MaterialIds (OPTIONAL) Optional. Complete set of READY materials attached to this generation.
+	MaterialIds runtime.Optional[[]string] `json:"material_ids"`
+	// Orientation (OPTIONAL) Optional. Defaults to AUTO.
+	Orientation runtime.Optional[Orientation] `json:"orientation"`
+	// Title (OPTIONAL) Optional. Candidate page title.
+	Title runtime.Optional[string] `json:"title"`
+	// UiLocale (OPTIONAL) Optional. Actual UI locale; valid Accept-Language takes precedence.
+	UiLocale runtime.Optional[string] `json:"ui_locale"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v CreateGenerationRequest) MarshalJSON() ([]byte, error) {
@@ -2013,8 +3264,10 @@ func (v *CreateGenerationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreateGenerationResponse struct {
-	Job  *JobSummary `json:"job"`
-	Page *Page       `json:"page"`
+	// Job Required. Newly created logical generation job.
+	Job *JobSummary `json:"job"`
+	// Page Required. Newly created page.
+	Page *Page `json:"page"`
 }
 
 func (v CreateGenerationResponse) MarshalJSON() ([]byte, error) {
@@ -2029,14 +3282,15 @@ func (v *CreateGenerationResponse) UnmarshalJSON(data []byte) error {
 }
 
 type CreateOAuthClientRequest struct {
-	AllowedGrantTypes runtime.Optional[[]GrantType]          `json:"allowed_grant_types"`
-	AllowedIdentities runtime.Optional[[]IdentityType]       `json:"allowed_identities"`
-	AllowedScopes     runtime.Optional[[]string]             `json:"allowed_scopes"`
-	AppId             runtime.Optional[string]               `json:"app_id"`
-	ClientType        runtime.Optional[ClientCredentialType] `json:"client_type"`
-	Description       runtime.Optional[string]               `json:"description"`
-	Name              runtime.Optional[string]               `json:"name"`
-	RedirectUris      runtime.Optional[[]string]             `json:"redirect_uris"`
+	AllowedGrantTypes runtime.Optional[[]GrantType]    `json:"allowed_grant_types"`
+	AllowedIdentities runtime.Optional[[]IdentityType] `json:"allowed_identities"`
+	AllowedScopes     runtime.Optional[[]string]       `json:"allowed_scopes"`
+	AppId             runtime.Optional[string]         `json:"app_id"`
+	// ClientType ClientCredentialType describes whether an OAuth client can keep a secret.
+	ClientType   runtime.Optional[ClientCredentialType] `json:"client_type"`
+	Description  runtime.Optional[string]               `json:"description"`
+	Name         runtime.Optional[string]               `json:"name"`
+	RedirectUris runtime.Optional[[]string]             `json:"redirect_uris"`
 }
 
 func (v CreateOAuthClientRequest) MarshalJSON() ([]byte, error) {
@@ -2063,8 +3317,15 @@ func (v *CreateOAuthClientRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreateOAuthClientResponse struct {
-	Client       runtime.Optional[*OAuthClient] `json:"client"`
-	ClientSecret runtime.Optional[string]       `json:"client_secret"`
+	// Client OAuthClient is one credential atom owned by IAM. An application may own
+	//  multiple clients; app_id and client_id must therefore be used together for
+	//  every management operation.
+	//
+	//  Secret material and secret hashes are deliberately absent from this read
+	//  model. Plaintext is returned exactly once by create and rotate responses.
+	Client runtime.Optional[*OAuthClient] `json:"client"`
+	// ClientSecret Plaintext returned once; empty for public clients.
+	ClientSecret runtime.Optional[string] `json:"client_secret"`
 }
 
 func (v CreateOAuthClientResponse) MarshalJSON() ([]byte, error) {
@@ -2079,9 +3340,13 @@ func (v *CreateOAuthClientResponse) UnmarshalJSON(data []byte) error {
 }
 
 type CreateOrganizationRequest struct {
+	// Metadata Optional. Free-form JSON object. Server validates it parses as JSON.
 	Metadata runtime.Optional[string] `json:"metadata"`
-	Name     runtime.Optional[string] `json:"name"`
-	Slug     runtime.Optional[string] `json:"slug"`
+	// Name Required. Display name. 1-128 chars.
+	Name runtime.Optional[string] `json:"name"`
+	// Slug Required. URL-friendly slug. Server validates ^[a-z0-9-]{3,40}$ and
+	//  returns ALREADY_EXISTS on conflict. Globally unique across all orgs.
+	Slug runtime.Optional[string] `json:"slug"`
 }
 
 func (v CreateOrganizationRequest) MarshalJSON() ([]byte, error) {
@@ -2098,6 +3363,13 @@ func (v *CreateOrganizationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreateOrganizationResponse struct {
+	// Organization Organization is one of the two concrete tenant forms (the other is
+	//  Workspace).
+	//
+	//  `org_id` is an opaque entity-id with the `org` prefix and shares the
+	//  platform-wide `tenant_id` value space with workspace ids. Consumers
+	//  must treat it as opaque — no parsing, no length assumptions,
+	//  byte-exact case-sensitive comparison.
 	Organization runtime.Optional[*Organization] `json:"organization"`
 }
 
@@ -2109,8 +3381,11 @@ func (v *CreateOrganizationResponse) UnmarshalJSON(data []byte) error {
 }
 
 type CreatePresetRequest struct {
-	Config     runtime.Optional[string] `json:"config"`
-	Name       runtime.Optional[string] `json:"name"`
+	// Config 自定义配置，JSON 格式。
+	Config runtime.Optional[string] `json:"config"`
+	// Name 预设名称。
+	Name runtime.Optional[string] `json:"name"`
+	// TemplateId 基于的系统模板 ID。
 	TemplateId runtime.Optional[string] `json:"template_id"`
 }
 
@@ -2128,6 +3403,7 @@ func (v *CreatePresetRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreatePresetResponse struct {
+	// Preset Preset 用户自定义排版预设，基于系统模板微调。
 	Preset runtime.Optional[*Preset] `json:"preset"`
 }
 
@@ -2139,10 +3415,15 @@ func (v *CreatePresetResponse) UnmarshalJSON(data []byte) error {
 }
 
 type CreateProjectRequest struct {
-	Description runtime.Optional[string]            `json:"description"`
-	Metadata    runtime.Optional[map[string]string] `json:"metadata"`
-	Name        runtime.Optional[string]            `json:"name"`
-	Tags        runtime.Optional[[]string]          `json:"tags"`
+	// Description 项目描述。
+	Description runtime.Optional[string] `json:"description"`
+	// Metadata 扩展元数据，用于存储业务自定义信息（如来源、优先级等），
+	//  避免频繁变更表结构。
+	Metadata runtime.Optional[map[string]string] `json:"metadata"`
+	// Name 项目名称。
+	Name runtime.Optional[string] `json:"name"`
+	// Tags 项目标签，用于分类和检索。
+	Tags runtime.Optional[[]string] `json:"tags"`
 }
 
 func (v CreateProjectRequest) MarshalJSON() ([]byte, error) {
@@ -2177,6 +3458,9 @@ func (v *CreateProjectRequestMetadataEntry) UnmarshalJSON(data []byte) error {
 }
 
 type CreateProjectResponse struct {
+	// Project Project groups related creative content together.
+	//  Project 是创作的顶层聚合单元，一个项目包含多篇文章、多个视频任务和多个素材。
+	//  典型场景：一次营销活动、一个专题系列、一期内容排期。
 	Project runtime.Optional[*Project] `json:"project"`
 }
 
@@ -2213,6 +3497,7 @@ func (v *CreateScopeRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreateScopeResponse struct {
+	// Scope Scope defines a permission boundary for OAuth access control.
 	Scope runtime.Optional[*Scope] `json:"scope"`
 }
 
@@ -2224,6 +3509,7 @@ func (v *CreateScopeResponse) UnmarshalJSON(data []byte) error {
 }
 
 type CreateSessionRequest struct {
+	// DeviceInfo DeviceInfo describes the client device.
 	DeviceInfo runtime.Optional[*DeviceInfo] `json:"device_info"`
 	Ip         runtime.Optional[string]      `json:"ip"`
 	Port       runtime.Optional[int64]       `json:"port"`
@@ -2243,9 +3529,10 @@ func (v *CreateSessionRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreateSessionResponse struct {
-	CsrfToken runtime.Optional[string]     `json:"csrf_token"`
-	SessionId runtime.Optional[string]     `json:"session_id"`
-	Tokens    runtime.Optional[*TokenPair] `json:"tokens"`
+	CsrfToken runtime.Optional[string] `json:"csrf_token"`
+	SessionId runtime.Optional[string] `json:"session_id"`
+	// Tokens TokenPair contains access and refresh tokens returned after authentication.
+	Tokens runtime.Optional[*TokenPair] `json:"tokens"`
 }
 
 func (v CreateSessionResponse) MarshalJSON() ([]byte, error) {
@@ -2262,9 +3549,12 @@ func (v *CreateSessionResponse) UnmarshalJSON(data []byte) error {
 }
 
 type CreateUploadRequest struct {
+	// ConfirmedAuthorizedMaxCredit Required. Exact parent-estimate maximum net charge confirmed by the user.
 	ConfirmedAuthorizedMaxCredit string `json:"confirmed_authorized_max_credit"`
-	EstimateItemId               string `json:"estimate_item_id"`
-	UserId                       string `json:"user_id"`
+	// EstimateItemId Required. Available item in an unexpired upload estimate.
+	EstimateItemId string `json:"estimate_item_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v CreateUploadRequest) MarshalJSON() ([]byte, error) {
@@ -2281,7 +3571,9 @@ func (v *CreateUploadRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreateUploadResponse struct {
-	Upload         *UploadSession  `json:"upload"`
+	// Upload Required. Newly created durable multipart session.
+	Upload *UploadSession `json:"upload"`
+	// UploadEstimate Required. Parent estimate after atomic item consumption.
 	UploadEstimate *UploadEstimate `json:"upload_estimate"`
 }
 
@@ -2296,14 +3588,26 @@ func (v *CreateUploadResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CreateVideoRequest CreateVideoRequest 基于脚本和素材合成视频。
+//
+//	支持两种模式：
+//	  1. 指定 task_id —— 使用已有 VideoTask 中 LLM 生成的脚本
+//	  2. 指定 project_id + script —— 直接提供脚本创建视频
 type CreateVideoRequest struct {
-	AssetIds  runtime.Optional[[]string]   `json:"asset_ids"`
-	Height    runtime.Optional[int64]      `json:"height"`
-	ProjectId runtime.Optional[string]     `json:"project_id"`
-	Script    runtime.Optional[string]     `json:"script"`
-	Style     runtime.Optional[VideoStyle] `json:"style"`
-	TaskId    runtime.Optional[string]     `json:"task_id"`
-	Width     runtime.Optional[int64]      `json:"width"`
+	// AssetIds 需要包含在视频中的素材 ID 列表（图片、音频等）。
+	AssetIds runtime.Optional[[]string] `json:"asset_ids"`
+	// Height 输出分辨率高度（像素），默认 1080。
+	Height runtime.Optional[int64] `json:"height"`
+	// ProjectId 所属项目 ID，与 task_id 互斥时使用。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// Script 直接提供的视频脚本文本，与 task_id 互斥时使用。
+	Script runtime.Optional[string] `json:"script"`
+	// Style 视频风格。
+	Style runtime.Optional[VideoStyle] `json:"style"`
+	// TaskId 已有的视频任务 ID（包含 LLM 生成的脚本），与 project_id+script 互斥。
+	TaskId runtime.Optional[string] `json:"task_id"`
+	// Width 输出分辨率宽度（像素），默认 1920。
+	Width runtime.Optional[int64] `json:"width"`
 }
 
 func (v CreateVideoRequest) MarshalJSON() ([]byte, error) {
@@ -2327,7 +3631,12 @@ func (v *CreateVideoRequest) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CreateVideoResponse CreateVideoResponse 返回创建的视频任务。
+//
+//	视频合成为异步操作，通过 GetVideoTask 轮询进度。
 type CreateVideoResponse struct {
+	// Task VideoTask represents a video generation job.
+	//  视频生成是异步任务，客户端提交后通过轮询 GetVideoTask 获取进度。
 	Task runtime.Optional[*VideoTask] `json:"task"`
 }
 
@@ -2358,8 +3667,10 @@ func (v *CreateWebhookRequest) UnmarshalJSON(data []byte) error {
 }
 
 type CreateWebhookResponse struct {
-	SigningSecret runtime.Optional[string]   `json:"signing_secret"`
-	Webhook       runtime.Optional[*Webhook] `json:"webhook"`
+	// SigningSecret Returned in plaintext only on creation
+	SigningSecret runtime.Optional[string] `json:"signing_secret"`
+	// Webhook Webhook represents a registered webhook endpoint.
+	Webhook runtime.Optional[*Webhook] `json:"webhook"`
 }
 
 func (v CreateWebhookResponse) MarshalJSON() ([]byte, error) {
@@ -2373,15 +3684,26 @@ func (v *CreateWebhookResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// CurrentVersionSummary CurrentVersionSummary is the lightweight projection of a page's current,
+//
+//	fully published version. It never includes the HTML body.
 type CurrentVersionSummary struct {
-	HtmlSha256            string      `json:"html_sha256"`
-	Orientation           Orientation `json:"orientation"`
-	PngExportId           string      `json:"png_export_id"`
-	PngSha256             string      `json:"png_sha256"`
-	PngSizeBytes          string      `json:"png_size_bytes"`
-	ThumbnailUrl          string      `json:"thumbnail_url"`
-	ThumbnailUrlExpiresAt Timestamp   `json:"thumbnail_url_expires_at"`
-	VersionId             string      `json:"version_id"`
+	// HtmlSha256 Required. SHA-256 of the complete normalized HTML.
+	HtmlSha256 string `json:"html_sha256"`
+	// Orientation Required. Published A4 page orientation.
+	Orientation Orientation `json:"orientation"`
+	// PngExportId Required. Opaque identifier of the persisted PNG artifact.
+	PngExportId string `json:"png_export_id"`
+	// PngSha256 Required. SHA-256 of the persisted PNG used for the thumbnail.
+	PngSha256 string `json:"png_sha256"`
+	// PngSizeBytes Required. Actual persisted PNG size in bytes.
+	PngSizeBytes string `json:"png_size_bytes"`
+	// ThumbnailUrl Required. Short-lived, owner-authorized thumbnail URL or ticket.
+	ThumbnailUrl string `json:"thumbnail_url"`
+	// ThumbnailUrlExpiresAt Required. Expiry time of thumbnail_url.
+	ThumbnailUrlExpiresAt Timestamp `json:"thumbnail_url_expires_at"`
+	// VersionId Required. Opaque current version identifier.
+	VersionId string `json:"version_id"`
 }
 
 func (v CurrentVersionSummary) MarshalJSON() ([]byte, error) {
@@ -2463,9 +3785,12 @@ type DeleteAssetResponse = any
 type DeleteAvatarRequest = any
 type DeleteAvatarResponse = any
 type DeleteCategoryRequest struct {
-	CategoryId        string `json:"category_id"`
+	// CategoryId Required. Root category to revoke and delete with its subtree.
+	CategoryId string `json:"category_id"`
+	// ImpactFingerprint Required. Exact aggregate impact fingerprint from the adjacent preview.
 	ImpactFingerprint string `json:"impact_fingerprint"`
-	UserId            string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v DeleteCategoryRequest) MarshalJSON() ([]byte, error) {
@@ -2482,6 +3807,7 @@ func (v *DeleteCategoryRequest) UnmarshalJSON(data []byte) error {
 }
 
 type DeleteCategoryResponse struct {
+	// DeletionResult Required. Safe category-subtree deletion receipt.
 	DeletionResult *CategoryDeletionResult `json:"deletion_result"`
 }
 
@@ -2493,8 +3819,10 @@ func (v *DeleteCategoryResponse) UnmarshalJSON(data []byte) error {
 }
 
 type DeleteMaterialRequest struct {
+	// MaterialId Required. Unbound material whose access is revoked.
 	MaterialId string `json:"material_id"`
-	UserId     string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v DeleteMaterialRequest) MarshalJSON() ([]byte, error) {
@@ -2509,6 +3837,7 @@ func (v *DeleteMaterialRequest) UnmarshalJSON(data []byte) error {
 }
 
 type DeleteMaterialResponse struct {
+	// DeletionResult Required. Safe access-revocation receipt.
 	DeletionResult *MaterialDeletionResult `json:"deletion_result"`
 }
 
@@ -2549,11 +3878,16 @@ func (v *DeleteOrganizationRequest) UnmarshalJSON(data []byte) error {
 
 type DeleteOrganizationResponse = any
 type DeletePageRequest struct {
-	ExpectedContentRevision string                   `json:"expected_content_revision"`
-	ImpactFingerprint       string                   `json:"impact_fingerprint"`
-	PageEtag                runtime.Optional[string] `json:"page_etag"`
-	PageId                  string                   `json:"page_id"`
-	UserId                  string                   `json:"user_id"`
+	// ExpectedContentRevision Required. Content revision returned by the adjacent preview.
+	ExpectedContentRevision string `json:"expected_content_revision"`
+	// ImpactFingerprint Required. Exact impact fingerprint returned by the adjacent preview.
+	ImpactFingerprint string `json:"impact_fingerprint"`
+	// PageEtag (OPTIONAL) Optional. Exact representation validator requested by the client.
+	PageEtag runtime.Optional[string] `json:"page_etag"`
+	// PageId Required. Page to revoke and delete.
+	PageId string `json:"page_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v DeletePageRequest) MarshalJSON() ([]byte, error) {
@@ -2574,6 +3908,7 @@ func (v *DeletePageRequest) UnmarshalJSON(data []byte) error {
 }
 
 type DeletePageResponse struct {
+	// DeletionResult Required. Safe logical-deletion receipt and physical-cleanup deadline.
 	DeletionResult *PageDeletionResult `json:"deletion_result"`
 }
 
@@ -2596,6 +3931,10 @@ func (v *DeletePresetRequest) UnmarshalJSON(data []byte) error {
 }
 
 type DeletePresetResponse = any
+
+// DeleteProjectRequest DeleteProjectRequest 删除项目。
+//
+//	注意：将级联删除项目下的所有文章、视频任务和素材。
 type DeleteProjectRequest struct {
 	ProjectId runtime.Optional[string] `json:"project_id"`
 }
@@ -2608,6 +3947,8 @@ func (v *DeleteProjectRequest) UnmarshalJSON(data []byte) error {
 }
 
 type DeleteProjectResponse = any
+
+// DeleteVideoTaskRequest DeleteVideoTaskRequest 删除视频任务及其生成的视频文件。
 type DeleteVideoTaskRequest struct {
 	TaskId runtime.Optional[string] `json:"task_id"`
 }
@@ -2632,6 +3973,8 @@ func (v *DeleteWebhookRequest) UnmarshalJSON(data []byte) error {
 }
 
 type DeleteWebhookResponse = any
+
+// DeliveryStatus DeliveryStatus represents the outcome of a webhook delivery attempt.
 type DeliveryStatus string
 
 const (
@@ -2653,6 +3996,7 @@ func (v DeliveryStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"DELIVERY_STATUS_UNSPECIFIED", "DELIVERY_STATUS_SUCCESS", "DELIVERY_STATUS_FAILED", "DELIVERY_STATUS_PENDING"})
 }
 
+// DeviceInfo DeviceInfo describes the client device.
 type DeviceInfo struct {
 	DeviceId   runtime.Optional[string] `json:"device_id"`
 	DeviceName runtime.Optional[string] `json:"device_name"`
@@ -2672,11 +4016,73 @@ func (v *DeviceInfo) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// Duration A Duration represents a signed, fixed-length span of time represented
+//
+//	as a count of seconds and fractions of seconds at nanosecond
+//	resolution. It is independent of any calendar and concepts like "day"
+//	or "month". It is related to Timestamp in that the difference between
+//	two Timestamp values is a Duration and it can be added or subtracted
+//	from a Timestamp. Range is approximately +-10,000 years.
+//
+//	# Examples
+//
+//	Example 1: Compute Duration from two Timestamps in pseudo code.
+//
+//	    Timestamp start = ...;
+//	    Timestamp end = ...;
+//	    Duration duration = ...;
+//
+//	    duration.seconds = end.seconds - start.seconds;
+//	    duration.nanos = end.nanos - start.nanos;
+//
+//	    if (duration.seconds < 0 && duration.nanos > 0) {
+//	      duration.seconds += 1;
+//	      duration.nanos -= 1000000000;
+//	    } else if (duration.seconds > 0 && duration.nanos < 0) {
+//	      duration.seconds -= 1;
+//	      duration.nanos += 1000000000;
+//	    }
+//
+//	Example 2: Compute Timestamp from Timestamp + Duration in pseudo code.
+//
+//	    Timestamp start = ...;
+//	    Duration duration = ...;
+//	    Timestamp end = ...;
+//
+//	    end.seconds = start.seconds + duration.seconds;
+//	    end.nanos = start.nanos + duration.nanos;
+//
+//	    if (end.nanos < 0) {
+//	      end.seconds -= 1;
+//	      end.nanos += 1000000000;
+//	    } else if (end.nanos >= 1000000000) {
+//	      end.seconds += 1;
+//	      end.nanos -= 1000000000;
+//	    }
+//
+//	Example 3: Compute Duration from datetime.timedelta in Python.
+//
+//	    td = datetime.timedelta(days=3, minutes=10)
+//	    duration = Duration()
+//	    duration.FromTimedelta(td)
+//
+//	# JSON Mapping
+//
+//	In JSON format, the Duration type is encoded as a string rather than an
+//	object, where the string ends in the suffix "s" (indicating seconds) and
+//	is preceded by the number of seconds, with nanoseconds expressed as
+//	fractional seconds. For example, 3 seconds with 0 nanoseconds should be
+//	encoded in JSON format as "3s", while 3 seconds and 1 nanosecond should
+//	be expressed in JSON format as "3.000000001s", and 3 seconds and 1
+//	microsecond should be expressed in JSON format as "3.000001s".
 type Duration = string
 type EstimateCategoryOrganizationRequest struct {
-	Instruction     string                   `json:"instruction"`
+	// Instruction Required. One-time organization instruction, from 1 to 2,000 characters.
+	Instruction string `json:"instruction"`
+	// ScopeCategoryId (OPTIONAL) Optional. Omit for the whole tree; otherwise restrict to this subtree.
 	ScopeCategoryId runtime.Optional[string] `json:"scope_category_id"`
-	UserId          string                   `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v EstimateCategoryOrganizationRequest) MarshalJSON() ([]byte, error) {
@@ -2693,6 +4099,7 @@ func (v *EstimateCategoryOrganizationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type EstimateCategoryOrganizationResponse struct {
+	// OrganizationEstimate Required. Durable no-charge category organization estimate.
 	OrganizationEstimate *CategoryOrganizationEstimate `json:"organization_estimate"`
 }
 
@@ -2704,25 +4111,44 @@ func (v *EstimateCategoryOrganizationResponse) UnmarshalJSON(data []byte) error 
 }
 
 type EstimateGenerationRequest struct {
-	AddMaterialIds               runtime.Optional[[]string]                `json:"add_material_ids"`
-	BaseJobId                    runtime.Optional[string]                  `json:"base_job_id"`
-	BriefInstruction             runtime.Optional[string]                  `json:"brief_instruction"`
-	ContentDecisionActionToken   runtime.Optional[string]                  `json:"content_decision_action_token"`
-	ContentDecisionContextDigest runtime.Optional[string]                  `json:"content_decision_context_digest"`
-	ContentDecisionContextId     runtime.Optional[string]                  `json:"content_decision_context_id"`
-	ContentDecisionNote          runtime.Optional[string]                  `json:"content_decision_note"`
-	ContentDecisionOptionIds     runtime.Optional[[]string]                `json:"content_decision_option_ids"`
-	ExternalInformationMode      runtime.Optional[ExternalInformationMode] `json:"external_information_mode"`
-	InlineText                   runtime.Optional[string]                  `json:"inline_text"`
-	InlineTextChange             runtime.Optional[*InlineTextChange]       `json:"inline_text_change"`
-	MaterialIds                  runtime.Optional[[]string]                `json:"material_ids"`
-	Operation                    GenerationOperation                       `json:"operation"`
-	Orientation                  runtime.Optional[Orientation]             `json:"orientation"`
-	PageId                       runtime.Optional[string]                  `json:"page_id"`
-	RemoveMaterialIds            runtime.Optional[[]string]                `json:"remove_material_ids"`
-	SourceJobId                  runtime.Optional[string]                  `json:"source_job_id"`
-	Title                        runtime.Optional[string]                  `json:"title"`
-	UserId                       string                                    `json:"user_id"`
+	// AddMaterialIds (OPTIONAL) Optional. Materials added to a regeneration baseline.
+	AddMaterialIds runtime.Optional[[]string] `json:"add_material_ids"`
+	// BaseJobId (OPTIONAL) Optional. Regeneration baseline job when the selected branch requires one.
+	BaseJobId runtime.Optional[string] `json:"base_job_id"`
+	// BriefInstruction (OPTIONAL) Optional. Required for create and an optional delta for regeneration.
+	BriefInstruction runtime.Optional[string] `json:"brief_instruction"`
+	// ContentDecisionActionToken (OPTIONAL) Optional. Required with content_decision_context_id and never logged.
+	ContentDecisionActionToken runtime.Optional[string] `json:"content_decision_action_token"`
+	// ContentDecisionContextDigest (OPTIONAL) Optional. Required with content_decision_context_id.
+	ContentDecisionContextDigest runtime.Optional[string] `json:"content_decision_context_digest"`
+	// ContentDecisionContextId (OPTIONAL) Optional. Required when resolving a durable content-decision context.
+	ContentDecisionContextId runtime.Optional[string] `json:"content_decision_context_id"`
+	// ContentDecisionNote (OPTIONAL) Optional. Regeneration-only note accompanying selected option identifiers.
+	ContentDecisionNote runtime.Optional[string] `json:"content_decision_note"`
+	// ContentDecisionOptionIds (OPTIONAL) Optional. Required and non-empty with content_decision_context_id.
+	ContentDecisionOptionIds runtime.Optional[[]string] `json:"content_decision_option_ids"`
+	// ExternalInformationMode (OPTIONAL) Optional. Required for create/regeneration and currently must be DISABLED.
+	ExternalInformationMode runtime.Optional[ExternalInformationMode] `json:"external_information_mode"`
+	// InlineText (OPTIONAL) Optional. Complete inline source for create; forbidden for other operations.
+	InlineText runtime.Optional[string] `json:"inline_text"`
+	// InlineTextChange (OPTIONAL) Optional. Typed inline-text delta for regeneration only.
+	InlineTextChange runtime.Optional[*InlineTextChange] `json:"inline_text_change"`
+	// MaterialIds (OPTIONAL) Optional. Complete create-time material set; conditionally non-empty.
+	MaterialIds runtime.Optional[[]string] `json:"material_ids"`
+	// Operation Required. CREATE_PAGE, REGENERATE_PAGE, or RETRY_JOB.
+	Operation GenerationOperation `json:"operation"`
+	// Orientation (OPTIONAL) Optional. Create or regeneration orientation; forbidden for retry.
+	Orientation runtime.Optional[Orientation] `json:"orientation"`
+	// PageId (OPTIONAL) Optional. Required for REGENERATE_PAGE and RETRY_JOB; forbidden for create.
+	PageId runtime.Optional[string] `json:"page_id"`
+	// RemoveMaterialIds (OPTIONAL) Optional. Materials removed from a regeneration baseline.
+	RemoveMaterialIds runtime.Optional[[]string] `json:"remove_material_ids"`
+	// SourceJobId (OPTIONAL) Optional. Required only for RETRY_JOB.
+	SourceJobId runtime.Optional[string] `json:"source_job_id"`
+	// Title (OPTIONAL) Optional. Create-only candidate title.
+	Title runtime.Optional[string] `json:"title"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v EstimateGenerationRequest) MarshalJSON() ([]byte, error) {
@@ -2771,6 +4197,7 @@ func (v *EstimateGenerationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type EstimateGenerationResponse struct {
+	// Estimate Required. Durable frozen estimate and input fingerprint.
 	Estimate *GenerationEstimate `json:"estimate"`
 }
 
@@ -2781,6 +4208,9 @@ func (v *EstimateGenerationResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "estimate", Value: &v.Estimate, Required: true, Nullable: false, Enum: []string{}})
 }
 
+// EstimateState EstimateState is the lifecycle of a generation or category-organization
+//
+//	estimate.
 type EstimateState string
 
 const (
@@ -2803,8 +4233,10 @@ func (v EstimateState) MarshalJSON() ([]byte, error) {
 }
 
 type EstimateUploadRequest struct {
-	Files  []*UploadEstimateDeclaration `json:"files"`
-	UserId string                       `json:"user_id"`
+	// Files Required. One to ten declarations with at most 200 MB in aggregate.
+	Files []*UploadEstimateDeclaration `json:"files"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v EstimateUploadRequest) MarshalJSON() ([]byte, error) {
@@ -2819,6 +4251,7 @@ func (v *EstimateUploadRequest) UnmarshalJSON(data []byte) error {
 }
 
 type EstimateUploadResponse struct {
+	// UploadEstimate Required. Durable short-lived batch estimate; no charge has occurred.
 	UploadEstimate *UploadEstimate `json:"upload_estimate"`
 }
 
@@ -2846,6 +4279,7 @@ func (v *ExchangeSessionRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ExchangeSessionResponse struct {
+	// Tokens TokenPair contains access and refresh tokens returned after authentication.
 	Tokens runtime.Optional[*TokenPair] `json:"tokens"`
 	UserId runtime.Optional[string]     `json:"user_id"`
 }
@@ -2861,16 +4295,28 @@ func (v *ExchangeSessionResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ExportArtifact ExportArtifact is an immutable published artifact plus a freshly authorized
+//
+//	short-lived download ticket. It never exposes an object-storage key.
 type ExportArtifact struct {
-	DownloadUrl string       `json:"download_url"`
-	ExpiresAt   Timestamp    `json:"expires_at"`
-	ExportId    string       `json:"export_id"`
-	Format      ExportFormat `json:"format"`
-	Orientation Orientation  `json:"orientation"`
-	PageId      string       `json:"page_id"`
-	Sha256      string       `json:"sha256"`
-	SizeBytes   string       `json:"size_bytes"`
-	VersionId   string       `json:"version_id"`
+	// DownloadUrl Required. Short-lived owner-authorized download URL or ticket.
+	DownloadUrl string `json:"download_url"`
+	// ExpiresAt Required. Expiry time of download_url.
+	ExpiresAt Timestamp `json:"expires_at"`
+	// ExportId Required. Opaque export artifact identifier.
+	ExportId string `json:"export_id"`
+	// Format Required. PDF or PNG artifact format.
+	Format ExportFormat `json:"format"`
+	// Orientation Required. Orientation inherited from the source version.
+	Orientation Orientation `json:"orientation"`
+	// PageId Required. Opaque owning page identifier.
+	PageId string `json:"page_id"`
+	// Sha256 Required. SHA-256 of the validated artifact.
+	Sha256 string `json:"sha256"`
+	// SizeBytes Required. Actual persisted artifact size in bytes.
+	SizeBytes string `json:"size_bytes"`
+	// VersionId Required. Unique source version identifier.
+	VersionId string `json:"version_id"`
 }
 
 func (v ExportArtifact) MarshalJSON() ([]byte, error) {
@@ -2898,6 +4344,7 @@ func (v *ExportArtifact) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ExportFormat ExportFormat identifies an immutable published artifact format.
 type ExportFormat string
 
 const (
@@ -2918,6 +4365,10 @@ func (v ExportFormat) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"EXPORT_FORMAT_UNSPECIFIED", "EXPORT_FORMAT_PDF", "EXPORT_FORMAT_PNG"})
 }
 
+// ExternalInformationMode ExternalInformationMode controls whether external information may be used.
+//
+//	The current release only accepts DISABLED. The web-search values are
+//	future-reserved and must be rejected before any LLM, tool, or billing work.
 type ExternalInformationMode string
 
 const (
@@ -2939,15 +4390,222 @@ func (v ExternalInformationMode) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"EXTERNAL_INFORMATION_MODE_UNSPECIFIED", "EXTERNAL_INFORMATION_MODE_DISABLED", "EXTERNAL_INFORMATION_MODE_AUTO_WEB_SEARCH", "EXTERNAL_INFORMATION_MODE_REQUIRED_WEB_SEARCH"})
 }
 
+// FieldMask `FieldMask` represents a set of symbolic field paths, for example:
+//
+//	    paths: "f.a"
+//	    paths: "f.b.d"
+//
+//	Here `f` represents a field in some root message, `a` and `b`
+//	fields in the message found in `f`, and `d` a field found in the
+//	message in `f.b`.
+//
+//	Field masks are used to specify a subset of fields that should be
+//	returned by a get operation or modified by an update operation.
+//	Field masks also have a custom JSON encoding (see below).
+//
+//	# Field Masks in Projections
+//
+//	When used in the context of a projection, a response message or
+//	sub-message is filtered by the API to only contain those fields as
+//	specified in the mask. For example, if the mask in the previous
+//	example is applied to a response message as follows:
+//
+//	    f {
+//	      a : 22
+//	      b {
+//	        d : 1
+//	        x : 2
+//	      }
+//	      y : 13
+//	    }
+//	    z: 8
+//
+//	The result will not contain specific values for fields x,y and z
+//	(their value will be set to the default, and omitted in proto text
+//	output):
+//
+//
+//	    f {
+//	      a : 22
+//	      b {
+//	        d : 1
+//	      }
+//	    }
+//
+//	A repeated field is not allowed except at the last position of a
+//	paths string.
+//
+//	If a FieldMask object is not present in a get operation, the
+//	operation applies to all fields (as if a FieldMask of all fields
+//	had been specified).
+//
+//	Note that a field mask does not necessarily apply to the
+//	top-level response message. In case of a REST get operation, the
+//	field mask applies directly to the response, but in case of a REST
+//	list operation, the mask instead applies to each individual message
+//	in the returned resource list. In case of a REST custom method,
+//	other definitions may be used. Where the mask applies will be
+//	clearly documented together with its declaration in the API.  In
+//	any case, the effect on the returned resource/resources is required
+//	behavior for APIs.
+//
+//	# Field Masks in Update Operations
+//
+//	A field mask in update operations specifies which fields of the
+//	targeted resource are going to be updated. The API is required
+//	to only change the values of the fields as specified in the mask
+//	and leave the others untouched. If a resource is passed in to
+//	describe the updated values, the API ignores the values of all
+//	fields not covered by the mask.
+//
+//	If a repeated field is specified for an update operation, new values will
+//	be appended to the existing repeated field in the target resource. Note that
+//	a repeated field is only allowed in the last position of a `paths` string.
+//
+//	If a sub-message is specified in the last position of the field mask for an
+//	update operation, then new value will be merged into the existing sub-message
+//	in the target resource.
+//
+//	For example, given the target message:
+//
+//	    f {
+//	      b {
+//	        d: 1
+//	        x: 2
+//	      }
+//	      c: [1]
+//	    }
+//
+//	And an update message:
+//
+//	    f {
+//	      b {
+//	        d: 10
+//	      }
+//	      c: [2]
+//	    }
+//
+//	then if the field mask is:
+//
+//	 paths: ["f.b", "f.c"]
+//
+//	then the result will be:
+//
+//	    f {
+//	      b {
+//	        d: 10
+//	        x: 2
+//	      }
+//	      c: [1, 2]
+//	    }
+//
+//	An implementation may provide options to override this default behavior for
+//	repeated and message fields.
+//
+//	Note that libraries which implement FieldMask resolution have various
+//	different behaviors in the face of empty masks or the special "*" mask.
+//	When implementing a service you should confirm these cases have the
+//	appropriate behavior in the underlying FieldMask library that you desire,
+//	and you may need to special case those cases in your application code if
+//	the underlying field mask library behavior differs from your intended
+//	service semantics.
+//
+//	Update methods implementing https://google.aip.dev/134
+//	- MUST support the special value * meaning "full replace"
+//	- MUST treat an omitted field mask as "replace fields which are present".
+//
+//	Other methods implementing https://google.aip.dev/157
+//	- SHOULD support the special value "*" to mean "get all".
+//	- MUST treat an omitted field mask to mean "get all", unless otherwise
+//	documented.
+//
+//	## Considerations for HTTP REST
+//
+//	The HTTP kind of an update operation which uses a field mask must
+//	be set to PATCH instead of PUT in order to satisfy HTTP semantics
+//	(PUT must only be used for full updates).
+//
+//	# JSON Encoding of Field Masks
+//
+//	In JSON, a field mask is encoded as a single string where paths are
+//	separated by a comma. Fields name in each path are converted
+//	to/from lower-camel naming conventions.
+//
+//	As an example, consider the following message declarations:
+//
+//	    message Profile {
+//	      User user = 1;
+//	      Photo photo = 2;
+//	    }
+//	    message User {
+//	      string display_name = 1;
+//	      string address = 2;
+//	    }
+//
+//	In proto a field mask for `Profile` may look as such:
+//
+//	    mask {
+//	      paths: "user.display_name"
+//	      paths: "photo"
+//	    }
+//
+//	In JSON, the same mask is represented as below:
+//
+//	    {
+//	      mask: "user.displayName,photo"
+//	    }
+//
+//	# Field Masks and Oneof Fields
+//
+//	Field masks treat fields in oneofs just as regular fields. Consider the
+//	following message:
+//
+//	    message SampleMessage {
+//	      oneof test_oneof {
+//	        string name = 4;
+//	        SubMessage sub_message = 9;
+//	      }
+//	    }
+//
+//	The field mask can be:
+//
+//	    mask {
+//	      paths: "name"
+//	    }
+//
+//	Or:
+//
+//	    mask {
+//	      paths: "sub_message"
+//	    }
+//
+//	Note that oneof type names ("test_oneof" in this case) cannot be used in
+//	paths.
+//
+//	## Field Mask Verification
+//
+//	The implementation of any API method which has a FieldMask type field in the
+//	request should verify the included field paths, and return an
+//	`INVALID_ARGUMENT` error if any path is unmappable.
 type FieldMask = string
+
+// GenerateScriptRequest GenerateScriptRequest 基于主题或已有文章，调用 LLM 生成视频脚本。
 type GenerateScriptRequest struct {
-	ArticleId             runtime.Optional[string]     `json:"article_id"`
-	Language              runtime.Optional[string]     `json:"language"`
-	ProjectId             runtime.Optional[string]     `json:"project_id"`
-	Requirements          runtime.Optional[string]     `json:"requirements"`
-	Style                 runtime.Optional[VideoStyle] `json:"style"`
-	TargetDurationSeconds runtime.Optional[int64]      `json:"target_duration_seconds"`
-	Topic                 runtime.Optional[string]     `json:"topic"`
+	// ArticleId 从已有文章派生脚本，与 topic 二选一。
+	//  指定后 LLM 会基于文章内容改编为视频脚本。
+	ArticleId runtime.Optional[string] `json:"article_id"`
+	// Language 输出语言，BCP 47 格式。
+	Language runtime.Optional[string] `json:"language"`
+	// ProjectId 所属项目 ID。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// Requirements 补充要求，例如 "面向初学者"、"突出产品优势"。
+	Requirements runtime.Optional[string] `json:"requirements"`
+	// Style 视频风格，决定脚本的结构和节奏。
+	Style runtime.Optional[VideoStyle] `json:"style"`
+	// TargetDurationSeconds 目标视频时长（秒），LLM 会据此控制脚本篇幅。
+	TargetDurationSeconds runtime.Optional[int64] `json:"target_duration_seconds"`
+	// Topic 视频主题，与 article_id 二选一。
+	Topic runtime.Optional[string] `json:"topic"`
 }
 
 func (v GenerateScriptRequest) MarshalJSON() ([]byte, error) {
@@ -2971,10 +4629,14 @@ func (v *GenerateScriptRequest) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// GenerateScriptResponse GenerateScriptResponse 是 GenerateScript 的流式响应。
 type GenerateScriptResponse struct {
-	Done  runtime.Optional[bool]        `json:"done"`
+	// Done 是否生成完毕。
+	Done runtime.Optional[bool] `json:"done"`
+	// Event 流式事件，携带内容片段、状态更新、Token 用量或错误信息。
 	Event runtime.Optional[StreamEvent] `json:"event"`
-	Task  runtime.Optional[*VideoTask]  `json:"task"`
+	// Task 完整的视频任务实体，仅在 done=true 时填充。
+	Task runtime.Optional[*VideoTask] `json:"task"`
 }
 
 func (v GenerateScriptResponse) MarshalJSON() ([]byte, error) {
@@ -2990,10 +4652,17 @@ func (v *GenerateScriptResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// GenerateUploadUrlRequest GenerateUploadUrlRequest 为大文件生成预签名上传 URL。
+//
+//	客户端获取 URL 后，直接向对象存储（OSS/S3）上传文件，
+//	上传完成后调用 ConfirmUpload 确认，服务端再提取文件元信息。
 type GenerateUploadUrlRequest struct {
+	// ContentType MIME 类型。
 	ContentType runtime.Optional[string] `json:"content_type"`
-	Filename    runtime.Optional[string] `json:"filename"`
-	ProjectId   runtime.Optional[string] `json:"project_id"`
+	// Filename 原始文件名。
+	Filename runtime.Optional[string] `json:"filename"`
+	// ProjectId 所属项目 ID。
+	ProjectId runtime.Optional[string] `json:"project_id"`
 }
 
 func (v GenerateUploadUrlRequest) MarshalJSON() ([]byte, error) {
@@ -3010,9 +4679,12 @@ func (v *GenerateUploadUrlRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GenerateUploadUrlResponse struct {
-	AssetId   runtime.Optional[string]    `json:"asset_id"`
+	// AssetId 预分配的素材 ID，后续 ConfirmUpload 使用。
+	AssetId runtime.Optional[string] `json:"asset_id"`
+	// ExpiresAt 预签名 URL 过期时间，通常为 30 分钟。
 	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
-	UploadUrl runtime.Optional[string]    `json:"upload_url"`
+	// UploadUrl 预签名上传 URL，客户端使用 HTTP PUT 上传文件。
+	UploadUrl runtime.Optional[string] `json:"upload_url"`
 }
 
 func (v GenerateUploadUrlResponse) MarshalJSON() ([]byte, error) {
@@ -3028,30 +4700,56 @@ func (v *GenerateUploadUrlResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// GenerationEstimate GenerationEstimate is a durable, short-lived snapshot that authorizes one
+//
+//	generation job with exactly the frozen input and maximum exposure shown.
 type GenerationEstimate struct {
-	AuthorizedMaxCredit        string                      `json:"authorized_max_credit"`
-	BalanceSufficient          bool                        `json:"balance_sufficient"`
-	BaseBriefRevisionId        runtime.Optional[string]    `json:"base_brief_revision_id"`
-	BaseJobId                  runtime.Optional[string]    `json:"base_job_id"`
-	BasePageContentRevision    runtime.Optional[string]    `json:"base_page_content_revision"`
-	BaseVersionId              runtime.Optional[string]    `json:"base_version_id"`
+	// AuthorizedMaxCredit Required. Maximum permitted user net charge for this operation.
+	AuthorizedMaxCredit string `json:"authorized_max_credit"`
+	// BalanceSufficient Required. Whether the balance covers authorized_max_credit.
+	BalanceSufficient bool `json:"balance_sufficient"`
+	// BaseBriefRevisionId (OPTIONAL) Conditional. Present when a successful version brief is the selected baseline.
+	BaseBriefRevisionId runtime.Optional[string] `json:"base_brief_revision_id"`
+	// BaseJobId (OPTIONAL) Conditional. REGENERATE_PAGE baseline job when required by the selected branch.
+	BaseJobId runtime.Optional[string] `json:"base_job_id"`
+	// BasePageContentRevision (OPTIONAL) Conditional. Required for REGENERATE_PAGE or RETRY_JOB.
+	BasePageContentRevision runtime.Optional[string] `json:"base_page_content_revision"`
+	// BaseVersionId (OPTIONAL) Conditional. Present when the target page has a current version.
+	BaseVersionId runtime.Optional[string] `json:"base_version_id"`
+	// CategoryPreferenceSnapshot Required. Immutable preference snapshot used by the resulting job.
 	CategoryPreferenceSnapshot *CategoryPreferenceSnapshot `json:"category_preference_snapshot"`
-	ConsumedJobId              runtime.Optional[string]    `json:"consumed_job_id"`
-	CreatedAt                  Timestamp                   `json:"created_at"`
-	CurrentBalanceCredit       string                      `json:"current_balance_credit"`
-	EstimateId                 string                      `json:"estimate_id"`
-	EstimatedAiCredit          string                      `json:"estimated_ai_credit"`
-	EstimatedFileCredit        string                      `json:"estimated_file_credit"`
-	EstimatedToolCredit        string                      `json:"estimated_tool_credit"`
-	EstimatedTotalCredit       string                      `json:"estimated_total_credit"`
-	ExpiresAt                  Timestamp                   `json:"expires_at"`
-	InputFingerprint           string                      `json:"input_fingerprint"`
-	Operation                  GenerationOperation         `json:"operation"`
-	PageId                     runtime.Optional[string]    `json:"page_id"`
-	PricingVersion             string                      `json:"pricing_version"`
-	SourceJobId                runtime.Optional[string]    `json:"source_job_id"`
-	State                      EstimateState               `json:"state"`
-	ToolPolicySnapshot         *ToolPolicySnapshot         `json:"tool_policy_snapshot"`
+	// ConsumedJobId (OPTIONAL) Conditional. Present when CONSUMED and identifies the unique logical job.
+	ConsumedJobId runtime.Optional[string] `json:"consumed_job_id"`
+	// CreatedAt Required. Durable estimate creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// CurrentBalanceCredit Required. Wallet balance snapshot at estimate creation.
+	CurrentBalanceCredit string `json:"current_balance_credit"`
+	// EstimateId Required. Opaque estimate identifier.
+	EstimateId string `json:"estimate_id"`
+	// EstimatedAiCredit Required. Estimated AI credits for the complete logical job.
+	EstimatedAiCredit string `json:"estimated_ai_credit"`
+	// EstimatedFileCredit Required. Estimated file-service credits.
+	EstimatedFileCredit string `json:"estimated_file_credit"`
+	// EstimatedToolCredit Required. Future-reserved tool estimate; zero in the current release.
+	EstimatedToolCredit string `json:"estimated_tool_credit"`
+	// EstimatedTotalCredit Required. Sum of all public estimated components.
+	EstimatedTotalCredit string `json:"estimated_total_credit"`
+	// ExpiresAt Required. Time after which a new estimate is required.
+	ExpiresAt Timestamp `json:"expires_at"`
+	// InputFingerprint Required. SHA-256 of the complete frozen input and authorization snapshot.
+	InputFingerprint string `json:"input_fingerprint"`
+	// Operation Required. Generation operation authorized by this estimate.
+	Operation GenerationOperation `json:"operation"`
+	// PageId (OPTIONAL) Conditional. Required for regeneration or retry of an existing page.
+	PageId runtime.Optional[string] `json:"page_id"`
+	// PricingVersion Required. Public pricing contract version.
+	PricingVersion string `json:"pricing_version"`
+	// SourceJobId (OPTIONAL) Conditional. Required for RETRY_JOB and absent for other operations.
+	SourceJobId runtime.Optional[string] `json:"source_job_id"`
+	// State Required. Current estimate lifecycle state.
+	State EstimateState `json:"state"`
+	// ToolPolicySnapshot Required. Immutable, server-selected tool policy snapshot.
+	ToolPolicySnapshot *ToolPolicySnapshot `json:"tool_policy_snapshot"`
 }
 
 func (v GenerationEstimate) MarshalJSON() ([]byte, error) {
@@ -3107,6 +4805,7 @@ func (v *GenerationEstimate) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// GenerationOperation GenerationOperation identifies the user-visible generation operation.
 type GenerationOperation string
 
 const (
@@ -3128,6 +4827,7 @@ func (v GenerationOperation) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"GENERATION_OPERATION_UNSPECIFIED", "GENERATION_OPERATION_CREATE_PAGE", "GENERATION_OPERATION_REGENERATE_PAGE", "GENERATION_OPERATION_RETRY_JOB"})
 }
 
+// GenerationPlanStatus GenerationPlanStatus is the safe, derived status of the active plan.
 type GenerationPlanStatus string
 
 const (
@@ -3150,6 +4850,9 @@ func (v GenerationPlanStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"GENERATION_PLAN_STATUS_UNSPECIFIED", "GENERATION_PLAN_STATUS_EXECUTING", "GENERATION_PLAN_STATUS_REVIEWING", "GENERATION_PLAN_STATUS_COMPLETED", "GENERATION_PLAN_STATUS_FAILED"})
 }
 
+// GenerationPlanStepKind GenerationPlanStepKind is the closed set of structured plan step kinds.
+//
+//	WEB_RESEARCH is future-reserved and is rejected in the current release.
 type GenerationPlanStepKind string
 
 const (
@@ -3178,6 +4881,7 @@ func (v GenerationPlanStepKind) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"GENERATION_PLAN_STEP_KIND_UNSPECIFIED", "GENERATION_PLAN_STEP_KIND_UNDERSTAND", "GENERATION_PLAN_STEP_KIND_SYNTHESIZE", "GENERATION_PLAN_STEP_KIND_PAGE_SPEC", "GENERATION_PLAN_STEP_KIND_COMPILE", "GENERATION_PLAN_STEP_KIND_RENDER", "GENERATION_PLAN_STEP_KIND_VALIDATE", "GENERATION_PLAN_STEP_KIND_REVIEW", "GENERATION_PLAN_STEP_KIND_REPAIR", "GENERATION_PLAN_STEP_KIND_FINALIZE", "GENERATION_PLAN_STEP_KIND_WEB_RESEARCH"})
 }
 
+// GenerationPlanStepStatus GenerationPlanStepStatus is the safe, derived status of a plan step.
 type GenerationPlanStepStatus string
 
 const (
@@ -3201,11 +4905,19 @@ func (v GenerationPlanStepStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"GENERATION_PLAN_STEP_STATUS_UNSPECIFIED", "GENERATION_PLAN_STEP_STATUS_PENDING", "GENERATION_PLAN_STEP_STATUS_RUNNING", "GENERATION_PLAN_STEP_STATUS_SUCCEEDED", "GENERATION_PLAN_STEP_STATUS_SKIPPED", "GENERATION_PLAN_STEP_STATUS_FAILED"})
 }
 
+// GenerationPlanStepSummary GenerationPlanStepSummary is a safe, user-facing projection of one durable
+//
+//	plan step. It excludes prompts, private reasoning, search queries, raw tool
+//	parameters and results, provider errors, and content-bearing checkpoints.
 type GenerationPlanStepSummary struct {
-	Kind           GenerationPlanStepKind   `json:"kind"`
-	SequenceNumber int64                    `json:"sequence_number"`
-	Status         GenerationPlanStepStatus `json:"status"`
-	Summary        string                   `json:"summary"`
+	// Kind Required. Closed step kind; WEB_RESEARCH is future-reserved and disabled.
+	Kind GenerationPlanStepKind `json:"kind"`
+	// SequenceNumber Required. Stable one-based order within the current plan revision.
+	SequenceNumber int64 `json:"sequence_number"`
+	// Status Required. Safe status derived from the durable step checkpoint.
+	Status GenerationPlanStepStatus `json:"status"`
+	// Summary Required. User-understandable goal or result summary, at most 200 characters.
+	Summary string `json:"summary"`
 }
 
 func (v GenerationPlanStepSummary) MarshalJSON() ([]byte, error) {
@@ -3223,15 +4935,26 @@ func (v *GenerationPlanStepSummary) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// GenerationPlanSummary GenerationPlanSummary is a safe projection of the active durable generation
+//
+//	plan revision, not an editable resource or a chain-of-thought transcript.
 type GenerationPlanSummary struct {
-	ExternalSourceCount int64                        `json:"external_source_count"`
-	PlanId              string                       `json:"plan_id"`
-	ReplanCount         int64                        `json:"replan_count"`
-	Revision            int64                        `json:"revision"`
-	Status              GenerationPlanStatus         `json:"status"`
-	Steps               []*GenerationPlanStepSummary `json:"steps"`
-	UpdatedAt           Timestamp                    `json:"updated_at"`
-	WebSearchUsed       bool                         `json:"web_search_used"`
+	// ExternalSourceCount Required. Future-reserved projection; zero in the current release.
+	ExternalSourceCount int64 `json:"external_source_count"`
+	// PlanId Required. Opaque plan identifier used only for observation within this job.
+	PlanId string `json:"plan_id"`
+	// ReplanCount Required. Number of replacement revisions already committed.
+	ReplanCount int64 `json:"replan_count"`
+	// Revision Required. Immutable plan revision, starting at one.
+	Revision int64 `json:"revision"`
+	// Status Required. Safe, derived current plan status.
+	Status GenerationPlanStatus `json:"status"`
+	// Steps Required. Ordered safe steps for the current revision; at least one.
+	Steps []*GenerationPlanStepSummary `json:"steps"`
+	// UpdatedAt Required. Time the current plan checkpoint last changed.
+	UpdatedAt Timestamp `json:"updated_at"`
+	// WebSearchUsed Required. Future-reserved projection; false in the current release.
+	WebSearchUsed bool `json:"web_search_used"`
 }
 
 func (v GenerationPlanSummary) MarshalJSON() ([]byte, error) {
@@ -3258,14 +4981,22 @@ func (v *GenerationPlanSummary) UnmarshalJSON(data []byte) error {
 }
 
 type GenerationProgressEvent struct {
+	// DurationMs (OPTIONAL) Optional. duration ms.
 	DurationMs runtime.Optional[string] `json:"duration_ms"`
-	EventId    string                   `json:"event_id"`
-	EventSeq   string                   `json:"event_seq"`
-	Message    *ProgressMessage         `json:"message"`
-	OccurredAt Timestamp                `json:"occurred_at"`
-	RecordedAt Timestamp                `json:"recorded_at"`
-	Status     string                   `json:"status"`
-	StepId     string                   `json:"step_id"`
+	// EventId Required. event id.
+	EventId string `json:"event_id"`
+	// EventSeq Required. event seq.
+	EventSeq string `json:"event_seq"`
+	// Message Required. message.
+	Message *ProgressMessage `json:"message"`
+	// OccurredAt Required. occurred at.
+	OccurredAt Timestamp `json:"occurred_at"`
+	// RecordedAt Required. recorded at.
+	RecordedAt Timestamp `json:"recorded_at"`
+	// Status Required. status.
+	Status string `json:"status"`
+	// StepId Required. step id.
+	StepId string `json:"step_id"`
 }
 
 func (v GenerationProgressEvent) MarshalJSON() ([]byte, error) {
@@ -3292,13 +5023,20 @@ func (v *GenerationProgressEvent) UnmarshalJSON(data []byte) error {
 }
 
 type GenerationProgressStep struct {
-	CompletedAt     runtime.Optional[Timestamp] `json:"completed_at"`
-	FailedAt        runtime.Optional[Timestamp] `json:"failed_at"`
-	Message         *ProgressMessage            `json:"message"`
+	// CompletedAt (OPTIONAL) Optional. completed at.
+	CompletedAt runtime.Optional[Timestamp] `json:"completed_at"`
+	// FailedAt (OPTIONAL) Optional. failed at.
+	FailedAt runtime.Optional[Timestamp] `json:"failed_at"`
+	// Message Required. message.
+	Message *ProgressMessage `json:"message"`
+	// ResumeStartedAt (OPTIONAL) Optional. resume started at.
 	ResumeStartedAt runtime.Optional[Timestamp] `json:"resume_started_at"`
-	StartedAt       runtime.Optional[Timestamp] `json:"started_at"`
-	Status          string                      `json:"status"`
-	StepId          string                      `json:"step_id"`
+	// StartedAt (OPTIONAL) Optional. started at.
+	StartedAt runtime.Optional[Timestamp] `json:"started_at"`
+	// Status Required. status.
+	Status string `json:"status"`
+	// StepId Required. step id.
+	StepId string `json:"step_id"`
 }
 
 func (v GenerationProgressStep) MarshalJSON() ([]byte, error) {
@@ -3334,6 +5072,13 @@ func (v *GetApplicationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetApplicationResponse struct {
+	// Application OAuthApplication represents a registered third-party application.
+	//
+	//  Display fields (`app_name`, `description`, `homepage_url`, `logo_url`)
+	//  on this message are deprecated; the developer center is the
+	//  authoritative source for application display metadata. The fields
+	//  remain populated on read for backward compatibility and will be
+	//  removed in a future major version.
 	Application runtime.Optional[*OAuthApplication] `json:"application"`
 }
 
@@ -3356,6 +5101,8 @@ func (v *GetArticleRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetArticleResponse struct {
+	// Article Article represents a piece of text content (article, post, etc.).
+	//  Article 是图文创作的核心实体，同一篇文章可能同时存在 Markdown 和 HTML 两个版本。
 	Article runtime.Optional[*Article] `json:"article"`
 }
 
@@ -3378,6 +5125,8 @@ func (v *GetAssetRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetAssetResponse struct {
+	// Asset Asset represents an uploaded media resource.
+	//  素材可被文章引用、视频合成使用，生命周期跟随所属项目。
 	Asset runtime.Optional[*Asset] `json:"asset"`
 }
 
@@ -3390,9 +5139,13 @@ func (v *GetAssetResponse) UnmarshalJSON(data []byte) error {
 
 type GetAvatarRequest = any
 type GetAvatarResponse struct {
-	AvatarUrl   runtime.Optional[string]            `json:"avatar_url"`
-	ExpiresAt   runtime.Optional[Timestamp]         `json:"expires_at"`
-	MediaId     runtime.Optional[string]            `json:"media_id"`
+	// AvatarUrl Pre-signed URL for the 1024×1024 WebP primary variant.
+	AvatarUrl runtime.Optional[string] `json:"avatar_url"`
+	// ExpiresAt Common expiration for avatar_url and all variant_urls.
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	// MediaId Opaque platform.Media id (prefix `med`).
+	MediaId runtime.Optional[string] `json:"media_id"`
+	// VariantUrls Variant key -> pre-signed URL for smaller renditions.
 	VariantUrls runtime.Optional[map[string]string] `json:"variant_urls"`
 }
 
@@ -3427,6 +5180,10 @@ func (v *GetAvatarResponseVariantUrlsEntry) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// GetAvatarRetirementRequest Resolve unknown results by querying the same media_id AND operation_id.
+//
+//	No claimed record: NOT_FOUND / AVATAR_RETIREMENT_NOT_FOUND. A mismatched
+//	operation is ABORTED; callers must never adopt another operation's fence.
 type GetAvatarRetirementRequest struct {
 	MediaId     runtime.Optional[string] `json:"media_id"`
 	OperationId runtime.Optional[string] `json:"operation_id"`
@@ -3455,8 +5212,10 @@ func (v *GetAvatarRetirementResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetCategoryOrganizationJobRequest struct {
+	// OrganizationJobId Required. Opaque user-requested organization job identifier.
 	OrganizationJobId string `json:"organization_job_id"`
-	UserId            string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v GetCategoryOrganizationJobRequest) MarshalJSON() ([]byte, error) {
@@ -3471,6 +5230,7 @@ func (v *GetCategoryOrganizationJobRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetCategoryOrganizationJobResponse struct {
+	// OrganizationJob Required. Current durable organization job fact.
 	OrganizationJob *CategoryOrganizationJob `json:"organization_job"`
 }
 
@@ -3482,8 +5242,10 @@ func (v *GetCategoryOrganizationJobResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetCategoryOrganizationPreviewRequest struct {
+	// OrganizationJobId Required. Successful organization job identifier.
 	OrganizationJobId string `json:"organization_job_id"`
-	UserId            string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v GetCategoryOrganizationPreviewRequest) MarshalJSON() ([]byte, error) {
@@ -3498,6 +5260,7 @@ func (v *GetCategoryOrganizationPreviewRequest) UnmarshalJSON(data []byte) error
 }
 
 type GetCategoryOrganizationPreviewResponse struct {
+	// Preview Required. Durable settled organization preview.
 	Preview *CategoryOrganizationPreview `json:"preview"`
 }
 
@@ -3509,6 +5272,7 @@ func (v *GetCategoryOrganizationPreviewResponse) UnmarshalJSON(data []byte) erro
 }
 
 type GetCategoryPreferenceRequest struct {
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string `json:"user_id"`
 }
 
@@ -3520,6 +5284,7 @@ func (v *GetCategoryPreferenceRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetCategoryPreferenceResponse struct {
+	// CategoryPreference Required. Current singleton, including an explicit empty rule set.
 	CategoryPreference *CategoryPreference `json:"category_preference"`
 }
 
@@ -3532,7 +5297,8 @@ func (v *GetCategoryPreferenceResponse) UnmarshalJSON(data []byte) error {
 
 type GetConsentInfoRequest struct {
 	ClientId runtime.Optional[string] `json:"client_id"`
-	Scope    runtime.Optional[string] `json:"scope"`
+	// Scope Space-delimited requested scopes
+	Scope runtime.Optional[string] `json:"scope"`
 }
 
 func (v GetConsentInfoRequest) MarshalJSON() ([]byte, error) {
@@ -3547,9 +5313,10 @@ func (v *GetConsentInfoRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetConsentInfoResponse struct {
-	AppName                 runtime.Optional[string]         `json:"app_name"`
-	HomepageUrl             runtime.Optional[string]         `json:"homepage_url"`
-	LogoUrl                 runtime.Optional[string]         `json:"logo_url"`
+	AppName     runtime.Optional[string] `json:"app_name"`
+	HomepageUrl runtime.Optional[string] `json:"homepage_url"`
+	LogoUrl     runtime.Optional[string] `json:"logo_url"`
+	// PreviouslyGrantedScopes Scopes already authorized
 	PreviouslyGrantedScopes runtime.Optional[[]string]       `json:"previously_granted_scopes"`
 	RequestedScopes         runtime.Optional[[]*ScopeDetail] `json:"requested_scopes"`
 }
@@ -3571,13 +5338,22 @@ func (v *GetConsentInfoResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// GetGenerationProgressRequest History is append-only and paged under a fixed upper sequence. Current
+//
+//	state remains live on later pages; merge it by current_revision.
 type GetGenerationProgressRequest struct {
+	// AfterEventSeq (OPTIONAL) Optional. after event seq.
 	AfterEventSeq runtime.Optional[string] `json:"after_event_seq"`
-	JobId         string                   `json:"job_id"`
-	PageSize      runtime.Optional[int64]  `json:"page_size"`
-	PageToken     runtime.Optional[string] `json:"page_token"`
-	UiLocale      runtime.Optional[string] `json:"ui_locale"`
-	UserId        string                   `json:"user_id"`
+	// JobId Required. job id.
+	JobId string `json:"job_id"`
+	// PageSize (OPTIONAL) Optional. page size.
+	PageSize runtime.Optional[int64] `json:"page_size"`
+	// PageToken (OPTIONAL) Optional. page token.
+	PageToken runtime.Optional[string] `json:"page_token"`
+	// UiLocale (OPTIONAL) Optional. ui locale.
+	UiLocale runtime.Optional[string] `json:"ui_locale"`
+	// UserId Required. user id.
+	UserId string `json:"user_id"`
 }
 
 func (v GetGenerationProgressRequest) MarshalJSON() ([]byte, error) {
@@ -3600,26 +5376,48 @@ func (v *GetGenerationProgressRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetGenerationProgressResponse struct {
-	ContentLocale            runtime.Optional[string]   `json:"content_locale"`
-	ContentLocaleDisplayName runtime.Optional[string]   `json:"content_locale_display_name"`
-	ContentLocaleSource      runtime.Optional[string]   `json:"content_locale_source"`
-	ContentLocales           runtime.Optional[[]string] `json:"content_locales"`
-	CurrentRevision          string                     `json:"current_revision"`
-	Events                   []*GenerationProgressEvent `json:"events"`
-	HistoryUpperEventSeq     string                     `json:"history_upper_event_seq"`
-	InstructionLocale        runtime.Optional[string]   `json:"instruction_locale"`
-	Job                      *JobSummary                `json:"job"`
-	LastEventSeq             string                     `json:"last_event_seq"`
-	LocaleSource             runtime.Optional[string]   `json:"locale_source"`
-	LocaleStatus             string                     `json:"locale_status"`
-	NextPageToken            runtime.Optional[string]   `json:"next_page_token"`
-	PageTitle                string                     `json:"page_title"`
-	PollAfterMs              runtime.Optional[int64]    `json:"poll_after_ms"`
-	ProgressAvailable        bool                       `json:"progress_available"`
-	ResolvedUiLocale         string                     `json:"resolved_ui_locale"`
-	Steps                    []*GenerationProgressStep  `json:"steps"`
-	TitleOrigin              string                     `json:"title_origin"`
-	TitleRevision            string                     `json:"title_revision"`
+	// ContentLocale (OPTIONAL) Optional. content locale.
+	ContentLocale runtime.Optional[string] `json:"content_locale"`
+	// ContentLocaleDisplayName (OPTIONAL) Optional. Human-readable content language name(s), localized using
+	//  resolved_ui_locale, never the instruction language. Empty while metadata
+	//  is pending. Display only; existing locale and title fields are unchanged.
+	ContentLocaleDisplayName runtime.Optional[string] `json:"content_locale_display_name"`
+	// ContentLocaleSource (OPTIONAL) Optional. content locale source.
+	ContentLocaleSource runtime.Optional[string] `json:"content_locale_source"`
+	// ContentLocales (OPTIONAL) Optional. content locales.
+	ContentLocales runtime.Optional[[]string] `json:"content_locales"`
+	// CurrentRevision Required. current revision.
+	CurrentRevision string `json:"current_revision"`
+	// Events Required. events.
+	Events []*GenerationProgressEvent `json:"events"`
+	// HistoryUpperEventSeq Required. history upper event seq.
+	HistoryUpperEventSeq string `json:"history_upper_event_seq"`
+	// InstructionLocale (OPTIONAL) Optional. instruction locale.
+	InstructionLocale runtime.Optional[string] `json:"instruction_locale"`
+	// Job Required. job.
+	Job *JobSummary `json:"job"`
+	// LastEventSeq Required. last event seq.
+	LastEventSeq string `json:"last_event_seq"`
+	// LocaleSource (OPTIONAL) Optional. locale source.
+	LocaleSource runtime.Optional[string] `json:"locale_source"`
+	// LocaleStatus Required. locale status.
+	LocaleStatus string `json:"locale_status"`
+	// NextPageToken (OPTIONAL) Optional. next page token.
+	NextPageToken runtime.Optional[string] `json:"next_page_token"`
+	// PageTitle Required. page title.
+	PageTitle string `json:"page_title"`
+	// PollAfterMs (OPTIONAL) Optional. poll after ms.
+	PollAfterMs runtime.Optional[int64] `json:"poll_after_ms"`
+	// ProgressAvailable Required. progress available.
+	ProgressAvailable bool `json:"progress_available"`
+	// ResolvedUiLocale Required. resolved ui locale.
+	ResolvedUiLocale string `json:"resolved_ui_locale"`
+	// Steps Required. steps.
+	Steps []*GenerationProgressStep `json:"steps"`
+	// TitleOrigin Required. title origin.
+	TitleOrigin string `json:"title_origin"`
+	// TitleRevision Required. title revision.
+	TitleRevision string `json:"title_revision"`
 }
 
 func (v GetGenerationProgressResponse) MarshalJSON() ([]byte, error) {
@@ -3671,6 +5469,17 @@ func (v *GetGenerationProgressResponse) UnmarshalJSON(data []byte) error {
 
 type GetJWKSRequest = any
 type GetJWKSResponse struct {
+	// Keys 当前所有未退役的 ID Token 签名公钥。
+	//
+	//  顺序约定：keys[0] 是当前活跃签发 key（最新生效），后续元素是上一代
+	//  / 上上一代 key —— 它们仍保留在 JWKS 里，是为了让 rotation 期间还在
+	//  "外面活着"的旧 id_token 仍可被验证（typical TTL 1h，rotation 时窗
+	//  通常 24h）。客户端验签时按 JWT header 里的 kid 字段在本列表里查找
+	//  匹配项，不要假定 keys[0] 就是要用的 key。
+	//
+	//  accounts.appforges.com BFF 在 /.well-known/jwks.json 上直接转发
+	//  本 RPC 的响应（按 RFC 7517 §5 序列化为 JSON），并按 Cache-Control
+	//  设置约 24h 缓存。
 	Keys runtime.Optional[[]*JWK] `json:"keys"`
 }
 
@@ -3682,7 +5491,9 @@ func (v *GetJWKSResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetJobRequest struct {
-	JobId  string `json:"job_id"`
+	// JobId Required. Opaque job identifier.
+	JobId string `json:"job_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string `json:"user_id"`
 }
 
@@ -3698,6 +5509,7 @@ func (v *GetJobRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetJobResponse struct {
+	// Job Required. Current authoritative job fact.
 	Job *JobSummary `json:"job"`
 }
 
@@ -3753,8 +5565,10 @@ func (v *GetLoginHistoryResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetMaterialRequest struct {
+	// MaterialId Required. Opaque material identifier.
 	MaterialId string `json:"material_id"`
-	UserId     string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v GetMaterialRequest) MarshalJSON() ([]byte, error) {
@@ -3769,6 +5583,7 @@ func (v *GetMaterialRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetMaterialResponse struct {
+	// Material Required. Current authoritative material fact.
 	Material *Material `json:"material"`
 }
 
@@ -3796,6 +5611,12 @@ func (v *GetOAuthClientRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetOAuthClientResponse struct {
+	// Client OAuthClient is one credential atom owned by IAM. An application may own
+	//  multiple clients; app_id and client_id must therefore be used together for
+	//  every management operation.
+	//
+	//  Secret material and secret hashes are deliberately absent from this read
+	//  model. Plaintext is returned exactly once by create and rotate responses.
 	Client runtime.Optional[*OAuthClient] `json:"client"`
 }
 
@@ -3818,6 +5639,13 @@ func (v *GetOrganizationBySlugRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetOrganizationBySlugResponse struct {
+	// Organization Organization is one of the two concrete tenant forms (the other is
+	//  Workspace).
+	//
+	//  `org_id` is an opaque entity-id with the `org` prefix and shares the
+	//  platform-wide `tenant_id` value space with workspace ids. Consumers
+	//  must treat it as opaque — no parsing, no length assumptions,
+	//  byte-exact case-sensitive comparison.
 	Organization runtime.Optional[*Organization] `json:"organization"`
 }
 
@@ -3840,6 +5668,13 @@ func (v *GetOrganizationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetOrganizationResponse struct {
+	// Organization Organization is one of the two concrete tenant forms (the other is
+	//  Workspace).
+	//
+	//  `org_id` is an opaque entity-id with the `org` prefix and shares the
+	//  platform-wide `tenant_id` value space with workspace ids. Consumers
+	//  must treat it as opaque — no parsing, no length assumptions,
+	//  byte-exact case-sensitive comparison.
 	Organization runtime.Optional[*Organization] `json:"organization"`
 }
 
@@ -3851,9 +5686,13 @@ func (v *GetOrganizationResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetPageExportRequest struct {
-	ExportId  string `json:"export_id"`
-	PageId    string `json:"page_id"`
-	UserId    string `json:"user_id"`
+	// ExportId Required. Persisted artifact identifier belonging to version_id.
+	ExportId string `json:"export_id"`
+	// PageId Required. Owning page identifier.
+	PageId string `json:"page_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
+	// VersionId Required. Immutable source version identifier.
 	VersionId string `json:"version_id"`
 }
 
@@ -3873,6 +5712,7 @@ func (v *GetPageExportRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetPageExportResponse struct {
+	// Artifact Required. Artifact metadata and freshly authorized download ticket.
 	Artifact *ExportArtifact `json:"artifact"`
 }
 
@@ -3883,8 +5723,10 @@ func (v *GetPageExportResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "artifact", Value: &v.Artifact, Required: true, Nullable: false, Enum: []string{}})
 }
 
+// GetPagePromptRequest Empty revision selects the latest accepted requirement, even after render failure.
 type GetPagePromptRequest struct {
-	PageId           string                   `json:"page_id"`
+	PageId string `json:"page_id"`
+	// PromptRevisionId (OPTIONAL)
 	PromptRevisionId runtime.Optional[string] `json:"prompt_revision_id"`
 	UserId           string                   `json:"user_id"`
 }
@@ -3903,14 +5745,22 @@ func (v *GetPagePromptRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetPagePromptResponse struct {
-	CreatedAt        runtime.Optional[Timestamp] `json:"created_at"`
-	IsCurrentVersion runtime.Optional[bool]      `json:"is_current_version"`
-	JobId            runtime.Optional[string]    `json:"job_id"`
-	Markdown         runtime.Optional[string]    `json:"markdown"`
-	ParentRevisionId runtime.Optional[string]    `json:"parent_revision_id"`
-	PolicyVersion    runtime.Optional[string]    `json:"policy_version"`
-	PromptRevisionId runtime.Optional[string]    `json:"prompt_revision_id"`
-	Sha256           runtime.Optional[string]    `json:"sha256"`
+	// CreatedAt (OPTIONAL)
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// IsCurrentVersion (OPTIONAL)
+	IsCurrentVersion runtime.Optional[bool] `json:"is_current_version"`
+	// JobId (OPTIONAL)
+	JobId runtime.Optional[string] `json:"job_id"`
+	// Markdown (OPTIONAL)
+	Markdown runtime.Optional[string] `json:"markdown"`
+	// ParentRevisionId (OPTIONAL)
+	ParentRevisionId runtime.Optional[string] `json:"parent_revision_id"`
+	// PolicyVersion (OPTIONAL)
+	PolicyVersion runtime.Optional[string] `json:"policy_version"`
+	// PromptRevisionId (OPTIONAL)
+	PromptRevisionId runtime.Optional[string] `json:"prompt_revision_id"`
+	// Sha256 (OPTIONAL)
+	Sha256 runtime.Optional[string] `json:"sha256"`
 }
 
 func (v GetPagePromptResponse) MarshalJSON() ([]byte, error) {
@@ -3937,7 +5787,9 @@ func (v *GetPagePromptResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetPageRequest struct {
+	// PageId Required. Opaque page identifier.
 	PageId string `json:"page_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string `json:"user_id"`
 }
 
@@ -3953,6 +5805,7 @@ func (v *GetPageRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetPageResponse struct {
+	// Page Required. Current page fact without complete version HTML.
 	Page *Page `json:"page"`
 }
 
@@ -3964,8 +5817,11 @@ func (v *GetPageResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetPageVersionMetadataRequest struct {
-	PageId    string `json:"page_id"`
-	UserId    string `json:"user_id"`
+	// PageId Required. Owning page identifier.
+	PageId string `json:"page_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
+	// VersionId Required. Explicit published version belonging to page_id; never resolves latest.
 	VersionId string `json:"version_id"`
 }
 
@@ -3983,6 +5839,7 @@ func (v *GetPageVersionMetadataRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetPageVersionMetadataResponse struct {
+	// Metadata Required. Authoritative summary and artifacts, without content or storage locators.
 	Metadata *PageVersionMetadata `json:"metadata"`
 }
 
@@ -3994,8 +5851,11 @@ func (v *GetPageVersionMetadataResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetPageVersionRequest struct {
-	PageId    string `json:"page_id"`
-	UserId    string `json:"user_id"`
+	// PageId Required. Owning page identifier.
+	PageId string `json:"page_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
+	// VersionId Required. Version identifier that must belong to page_id.
 	VersionId string `json:"version_id"`
 }
 
@@ -4013,6 +5873,7 @@ func (v *GetPageVersionRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetPageVersionResponse struct {
+	// Version Required. Complete immutable published version.
 	Version *PageVersion `json:"version"`
 }
 
@@ -4025,21 +5886,213 @@ func (v *GetPageVersionResponse) UnmarshalJSON(data []byte) error {
 
 type GetProfileRequest = any
 type GetProfileResponse struct {
-	Avatar            runtime.Optional[string]    `json:"avatar"`
-	Bio               runtime.Optional[string]    `json:"bio"`
-	CreatedAt         runtime.Optional[Timestamp] `json:"created_at"`
-	DefaultApiVersion runtime.Optional[string]    `json:"default_api_version"`
-	Email             runtime.Optional[string]    `json:"email"`
-	EmailVerified     runtime.Optional[bool]      `json:"email_verified"`
-	HomeAddress       runtime.Optional[string]    `json:"home_address"`
-	Location          runtime.Optional[string]    `json:"location"`
-	Name              runtime.Optional[string]    `json:"name"`
-	Phone             runtime.Optional[string]    `json:"phone"`
-	PhoneVerified     runtime.Optional[bool]      `json:"phone_verified"`
-	UpdatedAt         runtime.Optional[Timestamp] `json:"updated_at"`
-	UserId            runtime.Optional[string]    `json:"user_id"`
-	Website           runtime.Optional[string]    `json:"website"`
-	WorkAddress       runtime.Optional[string]    `json:"work_address"`
+	Avatar runtime.Optional[string] `json:"avatar"`
+	Bio    runtime.Optional[string] `json:"bio"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// DefaultApiVersion User-level API version pin. Empty string means "no pin" — the caller
+	//  follows the platform default. When set, the value is a date in
+	//  "YYYY-MM-DD" form (e.g. "2026-04-01") and is validated against the
+	//  platform's published API version registry on every request.
+	DefaultApiVersion runtime.Optional[string] `json:"default_api_version"`
+	Email             runtime.Optional[string] `json:"email"`
+	EmailVerified     runtime.Optional[bool]   `json:"email_verified"`
+	// HomeAddress Home address — concrete street-level address (district + building +
+	//  unit + room), distinct from `location` which is a city-level locale
+	//  ("Beijing" / "San Francisco, CA"). Consumed by yihu (居家医疗呼叫)
+	//  as the default contact_address for home-visit service tickets; LLM
+	//  does NOT prompt the elderly user to dictate this over the phone —
+	//  they fill it once in account settings.
+	HomeAddress   runtime.Optional[string] `json:"home_address"`
+	Location      runtime.Optional[string] `json:"location"`
+	Name          runtime.Optional[string] `json:"name"`
+	Phone         runtime.Optional[string] `json:"phone"`
+	PhoneVerified runtime.Optional[bool]   `json:"phone_verified"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
+	UserId    runtime.Optional[string]    `json:"user_id"`
+	Website   runtime.Optional[string]    `json:"website"`
+	// WorkAddress Work address — workplace street-level address. yihu uses this as
+	//  contact_address when the LLM extracts address_type == "work" from
+	//  the conversation ("on my way to the office", "I'll be at work"
+	//  etc.).
+	WorkAddress runtime.Optional[string] `json:"work_address"`
 }
 
 func (v GetProfileResponse) MarshalJSON() ([]byte, error) {
@@ -4091,6 +6144,9 @@ func (v *GetProjectRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetProjectResponse struct {
+	// Project Project groups related creative content together.
+	//  Project 是创作的顶层聚合单元，一个项目包含多篇文章、多个视频任务和多个素材。
+	//  典型场景：一次营销活动、一个专题系列、一期内容排期。
 	Project runtime.Optional[*Project] `json:"project"`
 }
 
@@ -4101,6 +6157,9 @@ func (v *GetProjectResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "project", Value: &v.Project, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// GetProjectSummaryRequest GetProjectSummaryRequest 获取项目概览，包含各类内容的数量统计。
+//
+//	适用于项目列表页展示概要信息。
 type GetProjectSummaryRequest struct {
 	ProjectId runtime.Optional[string] `json:"project_id"`
 }
@@ -4113,11 +6172,16 @@ func (v *GetProjectSummaryRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetProjectSummaryResponse struct {
-	ArticleCount runtime.Optional[int64]    `json:"article_count"`
-	AssetCount   runtime.Optional[int64]    `json:"asset_count"`
-	Project      runtime.Optional[*Project] `json:"project"`
-	PublishCount runtime.Optional[int64]    `json:"publish_count"`
-	VideoCount   runtime.Optional[int64]    `json:"video_count"`
+	// ArticleCount 项目下的文章数量。
+	ArticleCount runtime.Optional[int64] `json:"article_count"`
+	// AssetCount 项目下的素材数量。
+	AssetCount runtime.Optional[int64] `json:"asset_count"`
+	// Project 项目基本信息。
+	Project runtime.Optional[*Project] `json:"project"`
+	// PublishCount 项目下的发布记录数量。
+	PublishCount runtime.Optional[int64] `json:"publish_count"`
+	// VideoCount 项目下的视频任务数量。
+	VideoCount runtime.Optional[int64] `json:"video_count"`
 }
 
 func (v GetProjectSummaryResponse) MarshalJSON() ([]byte, error) {
@@ -4137,7 +6201,11 @@ func (v *GetProjectSummaryResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// GetPromptTemplateRequest GetPromptTemplateRequest 获取模板对应的排版提示词。
+//
+//	用于在 LLM 生成/转换 HTML 时提供格式化指令。
 type GetPromptTemplateRequest struct {
+	// TemplateId 模板 ID 或预设 ID。
 	TemplateId runtime.Optional[string] `json:"template_id"`
 }
 
@@ -4149,8 +6217,11 @@ func (v *GetPromptTemplateRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetPromptTemplateResponse struct {
-	Name       runtime.Optional[string] `json:"name"`
-	Prompt     runtime.Optional[string] `json:"prompt"`
+	// Name 模板名称。
+	Name runtime.Optional[string] `json:"name"`
+	// Prompt 排版提示词文本，描述该模板的排版规则。
+	Prompt runtime.Optional[string] `json:"prompt"`
+	// TemplateId 模板 ID。
 	TemplateId runtime.Optional[string] `json:"template_id"`
 }
 
@@ -4168,6 +6239,7 @@ func (v *GetPromptTemplateResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetPublishStatusRequest struct {
+	// RecordId 发布记录 ID。
 	RecordId runtime.Optional[string] `json:"record_id"`
 }
 
@@ -4179,6 +6251,8 @@ func (v *GetPublishStatusRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetPublishStatusResponse struct {
+	// Record PublishRecord records a single publish attempt to a platform.
+	//  每次发布操作（无论成功或失败）都会产生一条记录，支持追溯和重试。
 	Record runtime.Optional[*PublishRecord] `json:"record"`
 }
 
@@ -4190,6 +6264,7 @@ func (v *GetPublishStatusResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetScopeRequest struct {
+	// Name Scope name, e.g. "creative:read"
 	Name runtime.Optional[string] `json:"name"`
 }
 
@@ -4201,6 +6276,7 @@ func (v *GetScopeRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetScopeResponse struct {
+	// Scope Scope defines a permission boundary for OAuth access control.
 	Scope runtime.Optional[*Scope] `json:"scope"`
 }
 
@@ -4213,8 +6289,97 @@ func (v *GetScopeResponse) UnmarshalJSON(data []byte) error {
 
 type GetSecuritySettingsRequest = any
 type GetSecuritySettingsResponse struct {
-	EmailVerified     runtime.Optional[bool]      `json:"email_verified"`
-	HasPassword       runtime.Optional[bool]      `json:"has_password"`
+	EmailVerified runtime.Optional[bool] `json:"email_verified"`
+	HasPassword   runtime.Optional[bool] `json:"has_password"`
+	// PasswordChangedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
 	PasswordChangedAt runtime.Optional[Timestamp] `json:"password_changed_at"`
 	PhoneVerified     runtime.Optional[bool]      `json:"phone_verified"`
 	TwoFactorEnabled  runtime.Optional[bool]      `json:"two_factor_enabled"`
@@ -4249,6 +6414,7 @@ func (v *GetSessionRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetSessionResponse struct {
+	// Session SessionInfo describes an active session.
 	Session runtime.Optional[*SessionInfo] `json:"session"`
 }
 
@@ -4260,6 +6426,7 @@ func (v *GetSessionResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetStorageProtectionRequest struct {
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string `json:"user_id"`
 }
 
@@ -4271,6 +6438,7 @@ func (v *GetStorageProtectionRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetStorageProtectionResponse struct {
+	// StorageProtection Required. Current user-scoped storage protection fact.
 	StorageProtection *AccountStorageProtection `json:"storage_protection"`
 }
 
@@ -4282,8 +6450,10 @@ func (v *GetStorageProtectionResponse) UnmarshalJSON(data []byte) error {
 }
 
 type GetUploadRequest struct {
+	// UploadId Required. Opaque PinPage upload identifier.
 	UploadId string `json:"upload_id"`
-	UserId   string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v GetUploadRequest) MarshalJSON() ([]byte, error) {
@@ -4298,8 +6468,10 @@ func (v *GetUploadRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetUploadResponse struct {
+	// Material (OPTIONAL) Optional. Required when the upload completed and created a material.
 	Material runtime.Optional[*Material] `json:"material"`
-	Upload   *UploadSession              `json:"upload"`
+	// Upload Required. Current durable upload session.
+	Upload *UploadSession `json:"upload"`
 }
 
 func (v GetUploadResponse) MarshalJSON() ([]byte, error) {
@@ -4313,7 +6485,13 @@ func (v *GetUploadResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// GetVersionHintRequest Lightweight API version pin lookup. Returns the user's
+//
+//	default_api_version without loading the full profile (no email / phone
+//	/ avatar etc.). Used by the platform's API-Version resolution chain.
 type GetVersionHintRequest struct {
+	// UserId Required. The user whose pin to look up. Opaque entity-id with `usr`
+	//  prefix.
 	UserId runtime.Optional[string] `json:"user_id"`
 }
 
@@ -4325,6 +6503,8 @@ func (v *GetVersionHintRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetVersionHintResponse struct {
+	// DefaultApiVersion Empty string when no pin is set (caller falls back to platform default).
+	//  Format: "YYYY-MM-DD".
 	DefaultApiVersion runtime.Optional[string] `json:"default_api_version"`
 }
 
@@ -4347,6 +6527,8 @@ func (v *GetVideoTaskRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetVideoTaskResponse struct {
+	// Task VideoTask represents a video generation job.
+	//  视频生成是异步任务，客户端提交后通过轮询 GetVideoTask 获取进度。
 	Task runtime.Optional[*VideoTask] `json:"task"`
 }
 
@@ -4369,6 +6551,7 @@ func (v *GetWebhookRequest) UnmarshalJSON(data []byte) error {
 }
 
 type GetWebhookResponse struct {
+	// Webhook Webhook represents a registered webhook endpoint.
 	Webhook runtime.Optional[*Webhook] `json:"webhook"`
 }
 
@@ -4379,6 +6562,7 @@ func (v *GetWebhookResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "webhook", Value: &v.Webhook, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// GrantType GrantType enumerates supported OAuth 2.0 grant types.
 type GrantType string
 
 const (
@@ -4400,6 +6584,7 @@ func (v GrantType) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"GRANT_TYPE_UNSPECIFIED", "GRANT_TYPE_AUTHORIZATION_CODE", "GRANT_TYPE_REFRESH_TOKEN", "GRANT_TYPE_CLIENT_CREDENTIALS"})
 }
 
+// IdentityType IdentityType identifies which kind of principal a token may carry.
 type IdentityType string
 
 const (
@@ -4421,8 +6606,11 @@ func (v IdentityType) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"IDENTITY_TYPE_UNSPECIFIED", "IDENTITY_TYPE_USER", "IDENTITY_TYPE_ORG", "IDENTITY_TYPE_WORKSPACE"})
 }
 
+// InlineTextChange InlineTextChange carries a regeneration-only inline-text delta.
 type InlineTextChange struct {
-	Mode InlineTextChangeMode     `json:"mode"`
+	// Mode Required. KEEP, REPLACE, or REMOVE.
+	Mode InlineTextChangeMode `json:"mode"`
+	// Text (OPTIONAL) Optional. Required and non-empty for REPLACE; forbidden otherwise.
 	Text runtime.Optional[string] `json:"text"`
 }
 
@@ -4437,6 +6625,7 @@ func (v *InlineTextChange) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// InlineTextChangeMode InlineTextChangeMode describes a typed change to baseline inline text.
 type InlineTextChangeMode string
 
 const (
@@ -4459,8 +6648,17 @@ func (v InlineTextChangeMode) MarshalJSON() ([]byte, error) {
 }
 
 type IntrospectTokenRequest struct {
-	ClientId       runtime.Optional[string] `json:"client_id"`
-	ClientSecret   runtime.Optional[string] `json:"client_secret"`
+	ClientId     runtime.Optional[string] `json:"client_id"`
+	ClientSecret runtime.Optional[string] `json:"client_secret"`
+	// IncludeProfile OIDC userinfo 优化：当 true 时，IntrospectTokenResponse.profile 会
+	//  一次回带 user 的标准 OIDC claims（name / email / phone_number /
+	//  picture / updated_at），让 BFF 的 /oauth2/userinfo 路由从两次 RPC
+	//  变一次（先 IntrospectToken，再 UserService.GetProfile → 现在合一）。
+	//  default false 保持向前兼容：旧调用方零感知，行为完全不变。
+	//
+	//  仅当 token active 且关联 user_id 时 profile 才会被填充；
+	//  client_credentials 类无 user 的 token 即使 include_profile=true
+	//  也不带 profile（保持 user_id 为空 + profile 缺省的语义一致）。
 	IncludeProfile runtime.Optional[bool]   `json:"include_profile"`
 	Token          runtime.Optional[string] `json:"token"`
 	TokenTypeHint  runtime.Optional[string] `json:"token_type_hint"`
@@ -4484,14 +6682,199 @@ func (v *IntrospectTokenRequest) UnmarshalJSON(data []byte) error {
 }
 
 type IntrospectTokenResponse struct {
-	Active    runtime.Optional[bool]         `json:"active"`
-	ClientId  runtime.Optional[string]       `json:"client_id"`
-	ExpiresAt runtime.Optional[Timestamp]    `json:"expires_at"`
-	IssuedAt  runtime.Optional[Timestamp]    `json:"issued_at"`
+	Active   runtime.Optional[bool]   `json:"active"`
+	ClientId runtime.Optional[string] `json:"client_id"`
+	// ExpiresAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	// IssuedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	IssuedAt runtime.Optional[Timestamp] `json:"issued_at"`
+	// Profile 仅当请求 include_profile=true 且 token 关联 user_id 时填充。
+	//  OIDC userinfo 标准 claims 子集——字段对齐 OIDC Core 1.0 §5.4。
+	//
+	//  平台铁律重申：本字段不是 access_token 的合法承载——客户端不要把
+	//  IntrospectTokenResponse 序列化后塞进 Authorization 头。profile 仅
+	//  用于 BFF 的 /oauth2/userinfo 端点直接序列化为 JSON 输出给浏览器。
 	Profile   runtime.Optional[*UserProfile] `json:"profile"`
 	Scope     runtime.Optional[string]       `json:"scope"`
 	TokenType runtime.Optional[string]       `json:"token_type"`
-	UserId    runtime.Optional[string]       `json:"user_id"`
+	// UserId Empty for client_credentials tokens
+	UserId runtime.Optional[string] `json:"user_id"`
 }
 
 func (v IntrospectTokenResponse) MarshalJSON() ([]byte, error) {
@@ -4517,12 +6900,28 @@ func (v *IntrospectTokenResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// JWK JWK (JSON Web Key, RFC 7517 §4) —— RSA 公钥子集。
+//
+//	平台 id_token 仅使用 RS256 签名算法，因此 kty 恒为 "RSA"、alg 恒为
+//	"RS256"、use 恒为 "sig"；这些字段保留在 message 里是为了在 JSON 序列化
+//	后符合 RFC 7517 标准格式（让通用 JWT / JWKS 验签库能直接消费）。
+//
+//	私钥永远不出 IAM 内核；本 message 只承载公钥。
 type JWK struct {
+	// Alg 恒为 "RS256"
 	Alg runtime.Optional[string] `json:"alg"`
-	E   runtime.Optional[string] `json:"e"`
+	// E RSA public exponent，base64url-encoded（RFC 7518 §6.3.1.2，无 padding）。
+	//  平台所有 RSA key 都用 65537，即 base64url("AQAB")。
+	E runtime.Optional[string] `json:"e"`
+	// Kid Key ID。JWT header 的 "kid" 字段必须与本字段精确匹配。kid 是 IAM
+	//  内部生成的 opaque 标识（典型形如 "iam-2026-05-key-1"），不可解析、
+	//  不可猜测。
 	Kid runtime.Optional[string] `json:"kid"`
+	// Kty 恒为 "RSA"
 	Kty runtime.Optional[string] `json:"kty"`
-	N   runtime.Optional[string] `json:"n"`
+	// N RSA modulus，base64url-encoded（RFC 7518 §6.3.1.1，无 padding）。
+	N runtime.Optional[string] `json:"n"`
+	// Use 恒为 "sig"
 	Use runtime.Optional[string] `json:"use"`
 }
 
@@ -4545,13 +6944,20 @@ func (v *JWK) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// JobFailure JobFailure is a safe terminal business failure projected by GetJob.
 type JobFailure struct {
+	// ContentDecisionContext (OPTIONAL) Conditional. Required only for PINPAGE_CONTENT_DECISION_REQUIRED.
 	ContentDecisionContext runtime.Optional[*ContentDecisionContext] `json:"content_decision_context"`
-	Message                string                                    `json:"message"`
-	Reason                 string                                    `json:"reason"`
-	RetryAfter             runtime.Optional[Duration]                `json:"retry_after"`
-	Retryable              bool                                      `json:"retryable"`
-	UserAction             JobFailureUserAction                      `json:"user_action"`
+	// Message Required. Safe explanation without source content or provider details.
+	Message string `json:"message"`
+	// Reason Required. Stable machine-readable reason used for client branching.
+	Reason string `json:"reason"`
+	// RetryAfter (OPTIONAL) Optional. Server-advised delay before the next user action.
+	RetryAfter runtime.Optional[Duration] `json:"retry_after"`
+	// Retryable Required. Whether the user may create a manual retry.
+	Retryable bool `json:"retryable"`
+	// UserAction Required. Safe user action; search actions are disabled in this release.
+	UserAction JobFailureUserAction `json:"user_action"`
 }
 
 func (v JobFailure) MarshalJSON() ([]byte, error) {
@@ -4573,6 +6979,10 @@ func (v *JobFailure) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// JobFailureUserAction JobFailureUserAction tells the client which user action may resolve a
+//
+//	terminal failure. Web-search actions are future-reserved and never returned
+//	in the current release.
 type JobFailureUserAction string
 
 const (
@@ -4598,6 +7008,9 @@ func (v JobFailureUserAction) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"JOB_FAILURE_USER_ACTION_UNSPECIFIED", "JOB_FAILURE_USER_ACTION_RETRY_SAME_INPUT", "JOB_FAILURE_USER_ACTION_CHANGE_INPUT", "JOB_FAILURE_USER_ACTION_CHOOSE_CONTENT", "JOB_FAILURE_USER_ACTION_RECHARGE", "JOB_FAILURE_USER_ACTION_CONTACT_SUPPORT", "JOB_FAILURE_USER_ACTION_ENABLE_WEB_SEARCH", "JOB_FAILURE_USER_ACTION_REFRESH_SOURCES"})
 }
 
+// JobStage JobStage is the current user-visible generation stage.
+//
+//	RESEARCHING is future-reserved and is never returned in the current release.
 type JobStage string
 
 const (
@@ -4626,6 +7039,7 @@ func (v JobStage) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"JOB_STAGE_UNSPECIFIED", "JOB_STAGE_PREFLIGHT", "JOB_STAGE_UNDERSTANDING", "JOB_STAGE_PLANNING", "JOB_STAGE_SYNTHESIZING", "JOB_STAGE_COMPOSING", "JOB_STAGE_RENDERING", "JOB_STAGE_VALIDATING", "JOB_STAGE_REVIEWING", "JOB_STAGE_FINALIZING", "JOB_STAGE_RESEARCHING"})
 }
 
+// JobStatus JobStatus is the public lifecycle of an asynchronous logical job.
 type JobStatus string
 
 const (
@@ -4648,21 +7062,39 @@ func (v JobStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"JOB_STATUS_UNSPECIFIED", "JOB_STATUS_QUEUED", "JOB_STATUS_RUNNING", "JOB_STATUS_SUCCEEDED", "JOB_STATUS_FAILED"})
 }
 
+// JobSummary JobSummary is the authoritative, user-visible fact for one logical
+//
+//	generation job. Broker redeliveries do not create additional resources.
 type JobSummary struct {
-	CompletedAt     runtime.Optional[Timestamp]              `json:"completed_at"`
-	CostSummary     runtime.Optional[*CostSummary]           `json:"cost_summary"`
-	CreatedAt       Timestamp                                `json:"created_at"`
-	ExecutionPlan   runtime.Optional[*GenerationPlanSummary] `json:"execution_plan"`
-	Failure         runtime.Optional[*JobFailure]            `json:"failure"`
-	JobId           string                                   `json:"job_id"`
-	Operation       GenerationOperation                      `json:"operation"`
-	PageId          string                                   `json:"page_id"`
-	ResultVersionId runtime.Optional[string]                 `json:"result_version_id"`
-	SequenceNumber  string                                   `json:"sequence_number"`
-	SourceJobId     runtime.Optional[string]                 `json:"source_job_id"`
-	Stage           runtime.Optional[JobStage]               `json:"stage"`
-	Status          JobStatus                                `json:"status"`
-	UpdatedAt       Timestamp                                `json:"updated_at"`
+	// CompletedAt (OPTIONAL) Conditional. Required in SUCCEEDED or FAILED.
+	CompletedAt runtime.Optional[Timestamp] `json:"completed_at"`
+	// CostSummary (OPTIONAL) Deprecated. LLM charging and quota admission are owned by Vertex and
+	//  Billing; PinPage no longer projects monetary state into generation jobs.
+	CostSummary runtime.Optional[*CostSummary] `json:"cost_summary"`
+	// CreatedAt Required. Logical job creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// ExecutionPlan (OPTIONAL) Conditional. Present after the first structured plan is committed.
+	ExecutionPlan runtime.Optional[*GenerationPlanSummary] `json:"execution_plan"`
+	// Failure (OPTIONAL) Conditional. Required in FAILED and absent in other states.
+	Failure runtime.Optional[*JobFailure] `json:"failure"`
+	// JobId Required. Opaque logical job identifier.
+	JobId string `json:"job_id"`
+	// Operation Required. User-visible generation operation.
+	Operation GenerationOperation `json:"operation"`
+	// PageId Required. Opaque owning page identifier.
+	PageId string `json:"page_id"`
+	// ResultVersionId (OPTIONAL) Conditional. Required in SUCCEEDED and absent in other states.
+	ResultVersionId runtime.Optional[string] `json:"result_version_id"`
+	// SequenceNumber Required. Monotonic event sequence within this logical job.
+	SequenceNumber string `json:"sequence_number"`
+	// SourceJobId (OPTIONAL) Conditional. Required for RETRY_JOB and identifies the failed source job.
+	SourceJobId runtime.Optional[string] `json:"source_job_id"`
+	// Stage (OPTIONAL) Optional. Current visible stage while applicable; RESEARCHING is disabled.
+	Stage runtime.Optional[JobStage] `json:"stage"`
+	// Status Required. Current public job lifecycle.
+	Status JobStatus `json:"status"`
+	// UpdatedAt Required. Time the authoritative job fact last changed.
+	UpdatedAt Timestamp `json:"updated_at"`
 }
 
 func (v JobSummary) MarshalJSON() ([]byte, error) {
@@ -4774,10 +7206,14 @@ func (v *ListApplicationsResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListArticlesRequest struct {
-	Format    runtime.Optional[ContentFormat] `json:"format"`
-	PageSize  runtime.Optional[int64]         `json:"page_size"`
-	PageToken runtime.Optional[string]        `json:"page_token"`
-	ProjectId runtime.Optional[string]        `json:"project_id"`
+	// Format 按内容格式过滤。
+	Format runtime.Optional[ContentFormat] `json:"format"`
+	// PageSize 每页返回数量，默认 20，最大 100。
+	PageSize runtime.Optional[int64] `json:"page_size"`
+	// PageToken 分页令牌，首次请求留空。
+	PageToken runtime.Optional[string] `json:"page_token"`
+	// ProjectId 按项目过滤。
+	ProjectId runtime.Optional[string] `json:"project_id"`
 }
 
 func (v ListArticlesRequest) MarshalJSON() ([]byte, error) {
@@ -4796,9 +7232,11 @@ func (v *ListArticlesRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ListArticlesResponse struct {
-	Articles      runtime.Optional[[]*Article] `json:"articles"`
-	NextPageToken runtime.Optional[string]     `json:"next_page_token"`
-	TotalCount    runtime.Optional[int64]      `json:"total_count"`
+	Articles runtime.Optional[[]*Article] `json:"articles"`
+	// NextPageToken 下一页令牌，为空表示没有更多数据。
+	NextPageToken runtime.Optional[string] `json:"next_page_token"`
+	// TotalCount 符合筛选条件的总数。
+	TotalCount runtime.Optional[int64] `json:"total_count"`
 }
 
 func (v ListArticlesResponse) MarshalJSON() ([]byte, error) {
@@ -4815,10 +7253,14 @@ func (v *ListArticlesResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListAssetsRequest struct {
-	PageSize  runtime.Optional[int64]     `json:"page_size"`
-	PageToken runtime.Optional[string]    `json:"page_token"`
-	ProjectId runtime.Optional[string]    `json:"project_id"`
-	Type      runtime.Optional[AssetType] `json:"type"`
+	// PageSize 每页返回数量，默认 20，最大 100。
+	PageSize runtime.Optional[int64] `json:"page_size"`
+	// PageToken 分页令牌。
+	PageToken runtime.Optional[string] `json:"page_token"`
+	// ProjectId 按项目过滤。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// Type 按素材类型过滤。
+	Type runtime.Optional[AssetType] `json:"type"`
 }
 
 func (v ListAssetsRequest) MarshalJSON() ([]byte, error) {
@@ -4891,10 +7333,14 @@ func (v *ListAuthorizedApplicationsResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListCategoriesRequest struct {
-	OrderBy          runtime.Optional[string]                              `json:"order_by"`
-	Pagination       runtime.Optional[*AppforgesCommonV1PaginationRequest] `json:"pagination"`
-	ParentCategoryId runtime.Optional[string]                              `json:"parent_category_id"`
-	UserId           string                                                `json:"user_id"`
+	// OrderBy (OPTIONAL) Optional. name asc (default) or updated_at desc.
+	OrderBy runtime.Optional[string] `json:"order_by"`
+	// Pagination (OPTIONAL) Optional. Shared page size and opaque page token; defaults to 20 items.
+	Pagination runtime.Optional[*AppforgesCommonV1PaginationRequest] `json:"pagination"`
+	// ParentCategoryId (OPTIONAL) Optional. Omit to list roots; otherwise list direct children of this node.
+	ParentCategoryId runtime.Optional[string] `json:"parent_category_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v ListCategoriesRequest) MarshalJSON() ([]byte, error) {
@@ -4913,7 +7359,9 @@ func (v *ListCategoriesRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ListCategoriesResponse struct {
-	Categories []*Category                          `json:"categories"`
+	// Categories Required. Direct child category nodes; empty when no node matches.
+	Categories []*Category `json:"categories"`
+	// Pagination Required. Shared pagination result.
 	Pagination *AppforgesCommonV1PaginationResponse `json:"pagination"`
 }
 
@@ -4929,7 +7377,8 @@ func (v *ListCategoriesResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListMembersRequest struct {
-	OrgId     runtime.Optional[string] `json:"org_id"`
+	OrgId runtime.Optional[string] `json:"org_id"`
+	// PageSize Server clamps to [1, 200]; default 50 when zero.
 	PageSize  runtime.Optional[int64]  `json:"page_size"`
 	PageToken runtime.Optional[string] `json:"page_token"`
 }
@@ -5002,7 +7451,9 @@ func (v *ListOAuthClientsResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListOrganizationsRequest struct {
-	PageSize  runtime.Optional[int64]  `json:"page_size"`
+	// PageSize Server clamps to [1, 100]; default 50 when zero.
+	PageSize runtime.Optional[int64] `json:"page_size"`
+	// PageToken Opaque cursor from a previous response.
 	PageToken runtime.Optional[string] `json:"page_token"`
 }
 
@@ -5018,6 +7469,7 @@ func (v *ListOrganizationsRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ListOrganizationsResponse struct {
+	// NextPageToken Empty when no more pages remain.
 	NextPageToken runtime.Optional[string]          `json:"next_page_token"`
 	Organizations runtime.Optional[[]*Organization] `json:"organizations"`
 }
@@ -5034,7 +7486,8 @@ func (v *ListOrganizationsResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListPageInstructionsRequest struct {
-	PageId     string                                                `json:"page_id"`
+	PageId string `json:"page_id"`
+	// Pagination (OPTIONAL)
 	Pagination runtime.Optional[*AppforgesCommonV1PaginationRequest] `json:"pagination"`
 	UserId     string                                                `json:"user_id"`
 }
@@ -5053,8 +7506,10 @@ func (v *ListPageInstructionsRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ListPageInstructionsResponse struct {
-	Instructions runtime.Optional[[]*PageInstruction]                   `json:"instructions"`
-	Pagination   runtime.Optional[*AppforgesCommonV1PaginationResponse] `json:"pagination"`
+	// Instructions (OPTIONAL)
+	Instructions runtime.Optional[[]*PageInstruction] `json:"instructions"`
+	// Pagination (OPTIONAL)
+	Pagination runtime.Optional[*AppforgesCommonV1PaginationResponse] `json:"pagination"`
 }
 
 func (v ListPageInstructionsResponse) MarshalJSON() ([]byte, error) {
@@ -5069,10 +7524,14 @@ func (v *ListPageInstructionsResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListPageVersionsRequest struct {
-	OrderBy    runtime.Optional[string]                              `json:"order_by"`
-	PageId     string                                                `json:"page_id"`
+	// OrderBy (OPTIONAL) Optional. sequence_number desc (default) or sequence_number asc.
+	OrderBy runtime.Optional[string] `json:"order_by"`
+	// PageId Required. Owning page identifier.
+	PageId string `json:"page_id"`
+	// Pagination (OPTIONAL) Optional. Shared page size and opaque page token; defaults to 20 items.
 	Pagination runtime.Optional[*AppforgesCommonV1PaginationRequest] `json:"pagination"`
-	UserId     string                                                `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v ListPageVersionsRequest) MarshalJSON() ([]byte, error) {
@@ -5091,8 +7550,10 @@ func (v *ListPageVersionsRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ListPageVersionsResponse struct {
+	// Pagination Required. Shared pagination result.
 	Pagination *AppforgesCommonV1PaginationResponse `json:"pagination"`
-	Versions   []*PageVersionSummary                `json:"versions"`
+	// Versions Required. Immutable version summaries without HTML.
+	Versions []*PageVersionSummary `json:"versions"`
 }
 
 func (v ListPageVersionsResponse) MarshalJSON() ([]byte, error) {
@@ -5107,10 +7568,14 @@ func (v *ListPageVersionsResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListPagesRequest struct {
-	CategoryId runtime.Optional[string]                              `json:"category_id"`
-	OrderBy    runtime.Optional[string]                              `json:"order_by"`
+	// CategoryId (OPTIONAL) Optional. Restrict results to one direct category.
+	CategoryId runtime.Optional[string] `json:"category_id"`
+	// OrderBy (OPTIONAL) Optional. created_at desc (default) or created_at asc.
+	OrderBy runtime.Optional[string] `json:"order_by"`
+	// Pagination (OPTIONAL) Optional. Shared page size and opaque page token; defaults to 20 items.
 	Pagination runtime.Optional[*AppforgesCommonV1PaginationRequest] `json:"pagination"`
-	UserId     string                                                `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v ListPagesRequest) MarshalJSON() ([]byte, error) {
@@ -5129,7 +7594,9 @@ func (v *ListPagesRequest) UnmarshalJSON(data []byte) error {
 }
 
 type ListPagesResponse struct {
-	Pages      []*PageSummary                       `json:"pages"`
+	// Pages Required. Lightweight page projections; empty when no page matches.
+	Pages []*PageSummary `json:"pages"`
+	// Pagination Required. Shared pagination result.
 	Pagination *AppforgesCommonV1PaginationResponse `json:"pagination"`
 }
 
@@ -5144,7 +7611,9 @@ func (v *ListPagesResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ListPlatformAccountsRequest ListPlatformAccountsRequest 查询已绑定的平台账号。
 type ListPlatformAccountsRequest struct {
+	// Platform 按平台过滤，不指定则返回所有平台的账号。
 	Platform runtime.Optional[Platform] `json:"platform"`
 }
 
@@ -5179,9 +7648,12 @@ func (v *ListPresetsResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListProjectsRequest struct {
-	PageSize  runtime.Optional[int64]         `json:"page_size"`
-	PageToken runtime.Optional[string]        `json:"page_token"`
-	Status    runtime.Optional[ProjectStatus] `json:"status"`
+	// PageSize 每页返回数量，默认 20，最大 100。
+	PageSize runtime.Optional[int64] `json:"page_size"`
+	// PageToken 分页令牌。
+	PageToken runtime.Optional[string] `json:"page_token"`
+	// Status 按项目状态过滤。
+	Status runtime.Optional[ProjectStatus] `json:"status"`
 }
 
 func (v ListProjectsRequest) MarshalJSON() ([]byte, error) {
@@ -5216,12 +7688,18 @@ func (v *ListProjectsResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ListPublishRecordsRequest ListPublishRecordsRequest 查询发布历史，支持按文章、平台、状态过滤。
 type ListPublishRecordsRequest struct {
-	ArticleId runtime.Optional[string]        `json:"article_id"`
-	PageSize  runtime.Optional[int64]         `json:"page_size"`
-	PageToken runtime.Optional[string]        `json:"page_token"`
-	Platform  runtime.Optional[Platform]      `json:"platform"`
-	Status    runtime.Optional[PublishStatus] `json:"status"`
+	// ArticleId 按文章 ID 过滤。
+	ArticleId runtime.Optional[string] `json:"article_id"`
+	// PageSize 每页返回数量，默认 20，最大 100。
+	PageSize runtime.Optional[int64] `json:"page_size"`
+	// PageToken 分页令牌。
+	PageToken runtime.Optional[string] `json:"page_token"`
+	// Platform 按平台过滤。
+	Platform runtime.Optional[Platform] `json:"platform"`
+	// Status 按发布状态过滤。
+	Status runtime.Optional[PublishStatus] `json:"status"`
 }
 
 func (v ListPublishRecordsRequest) MarshalJSON() ([]byte, error) {
@@ -5261,6 +7739,7 @@ func (v *ListPublishRecordsResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListScopesRequest struct {
+	// Category Optional filter by category
 	Category runtime.Optional[string] `json:"category"`
 }
 
@@ -5307,10 +7786,14 @@ func (v *ListTemplatesResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListVideoTasksRequest struct {
-	PageSize  runtime.Optional[int64]       `json:"page_size"`
-	PageToken runtime.Optional[string]      `json:"page_token"`
-	ProjectId runtime.Optional[string]      `json:"project_id"`
-	Status    runtime.Optional[VideoStatus] `json:"status"`
+	// PageSize 每页返回数量，默认 20，最大 100。
+	PageSize runtime.Optional[int64] `json:"page_size"`
+	// PageToken 分页令牌。
+	PageToken runtime.Optional[string] `json:"page_token"`
+	// ProjectId 按项目过滤。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// Status 按任务状态过滤。
+	Status runtime.Optional[VideoStatus] `json:"status"`
 }
 
 func (v ListVideoTasksRequest) MarshalJSON() ([]byte, error) {
@@ -5348,8 +7831,9 @@ func (v *ListVideoTasksResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListWebhookDeliveriesRequest struct {
-	PageSize  runtime.Optional[int64]          `json:"page_size"`
-	PageToken runtime.Optional[string]         `json:"page_token"`
+	PageSize  runtime.Optional[int64]  `json:"page_size"`
+	PageToken runtime.Optional[string] `json:"page_token"`
+	// Status Optional filter
 	Status    runtime.Optional[DeliveryStatus] `json:"status"`
 	WebhookId runtime.Optional[string]         `json:"webhook_id"`
 }
@@ -5426,15 +7910,107 @@ func (v *ListWebhooksResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// LoginHistoryEntry LoginHistoryEntry records a single login attempt.
 type LoginHistoryEntry struct {
+	// DeviceInfo DeviceInfo describes the client device.
 	DeviceInfo    runtime.Optional[*DeviceInfo] `json:"device_info"`
 	FailureReason runtime.Optional[string]      `json:"failure_reason"`
 	HistoryId     runtime.Optional[string]      `json:"history_id"`
 	Ip            runtime.Optional[string]      `json:"ip"`
 	Location      runtime.Optional[string]      `json:"location"`
-	LoginTime     runtime.Optional[Timestamp]   `json:"login_time"`
-	LoginType     runtime.Optional[LoginType]   `json:"login_type"`
-	Success       runtime.Optional[bool]        `json:"success"`
+	// LoginTime A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	LoginTime runtime.Optional[Timestamp] `json:"login_time"`
+	// LoginType LoginType describes how a login was performed.
+	LoginType runtime.Optional[LoginType] `json:"login_type"`
+	Success   runtime.Optional[bool]      `json:"success"`
 }
 
 func (v LoginHistoryEntry) MarshalJSON() ([]byte, error) {
@@ -5461,6 +8037,7 @@ func (v *LoginHistoryEntry) UnmarshalJSON(data []byte) error {
 }
 
 type LoginRequest struct {
+	// DeviceInfo DeviceInfo describes the client device.
 	DeviceInfo   runtime.Optional[*DeviceInfo] `json:"device_info"`
 	Email        runtime.Optional[string]      `json:"email"`
 	PasswordHash runtime.Optional[string]      `json:"password_hash"`
@@ -5483,10 +8060,12 @@ func (v *LoginRequest) UnmarshalJSON(data []byte) error {
 }
 
 type LoginResponse struct {
-	CsrfToken runtime.Optional[string]     `json:"csrf_token"`
-	SessionId runtime.Optional[string]     `json:"session_id"`
-	Tokens    runtime.Optional[*TokenPair] `json:"tokens"`
-	User      runtime.Optional[*UserBrief] `json:"user"`
+	CsrfToken runtime.Optional[string] `json:"csrf_token"`
+	SessionId runtime.Optional[string] `json:"session_id"`
+	// Tokens TokenPair contains access and refresh tokens returned after authentication.
+	Tokens runtime.Optional[*TokenPair] `json:"tokens"`
+	// User UserBrief is a minimal user representation returned in auth responses.
+	User runtime.Optional[*UserBrief] `json:"user"`
 }
 
 func (v LoginResponse) MarshalJSON() ([]byte, error) {
@@ -5504,6 +8083,7 @@ func (v *LoginResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// LoginType LoginType describes how a login was performed.
 type LoginType string
 
 const (
@@ -5527,12 +8107,14 @@ func (v LoginType) MarshalJSON() ([]byte, error) {
 }
 
 type LoginWithVerificationCodeRequest struct {
-	Code         runtime.Optional[string]           `json:"code"`
-	CodeVerifier runtime.Optional[string]           `json:"code_verifier"`
-	DeviceInfo   runtime.Optional[*DeviceInfo]      `json:"device_info"`
-	Target       runtime.Optional[string]           `json:"target"`
-	Txid         runtime.Optional[string]           `json:"txid"`
-	Type         runtime.Optional[VerificationType] `json:"type"`
+	Code         runtime.Optional[string] `json:"code"`
+	CodeVerifier runtime.Optional[string] `json:"code_verifier"`
+	// DeviceInfo DeviceInfo describes the client device.
+	DeviceInfo runtime.Optional[*DeviceInfo] `json:"device_info"`
+	Target     runtime.Optional[string]      `json:"target"`
+	Txid       runtime.Optional[string]      `json:"txid"`
+	// Type VerificationType indicates the channel for verification code delivery.
+	Type runtime.Optional[VerificationType] `json:"type"`
 }
 
 func (v LoginWithVerificationCodeRequest) MarshalJSON() ([]byte, error) {
@@ -5555,10 +8137,12 @@ func (v *LoginWithVerificationCodeRequest) UnmarshalJSON(data []byte) error {
 }
 
 type LoginWithVerificationCodeResponse struct {
-	CsrfToken runtime.Optional[string]     `json:"csrf_token"`
-	SessionId runtime.Optional[string]     `json:"session_id"`
-	Tokens    runtime.Optional[*TokenPair] `json:"tokens"`
-	User      runtime.Optional[*UserBrief] `json:"user"`
+	CsrfToken runtime.Optional[string] `json:"csrf_token"`
+	SessionId runtime.Optional[string] `json:"session_id"`
+	// Tokens TokenPair contains access and refresh tokens returned after authentication.
+	Tokens runtime.Optional[*TokenPair] `json:"tokens"`
+	// User UserBrief is a minimal user representation returned in auth responses.
+	User runtime.Optional[*UserBrief] `json:"user"`
 }
 
 func (v LoginWithVerificationCodeResponse) MarshalJSON() ([]byte, error) {
@@ -5580,11 +8164,14 @@ type LogoutRequest = any
 type LogoutResponse = any
 type LookupUserRequest = any
 type LookupUserResponse struct {
-	EmailMasked runtime.Optional[string]     `json:"email_masked"`
-	Name        runtime.Optional[string]     `json:"name"`
-	PhoneMasked runtime.Optional[string]     `json:"phone_masked"`
-	Status      runtime.Optional[UserStatus] `json:"status"`
-	UserId      runtime.Optional[string]     `json:"user_id"`
+	// EmailMasked Masked contact fields (e.g. "j***@example.com", "138****8000").
+	EmailMasked runtime.Optional[string] `json:"email_masked"`
+	Name        runtime.Optional[string] `json:"name"`
+	PhoneMasked runtime.Optional[string] `json:"phone_masked"`
+	// Status Account lifecycle status.
+	Status runtime.Optional[UserStatus] `json:"status"`
+	// UserId Opaque entity-id (`usr` prefix).
+	UserId runtime.Optional[string] `json:"user_id"`
 }
 
 func (v LookupUserResponse) MarshalJSON() ([]byte, error) {
@@ -5604,18 +8191,32 @@ func (v *LookupUserResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// Material Material is a validated, owner-scoped source asset created only after a
+//
+//	multipart upload is completed and the full object has been verified.
 type Material struct {
-	CostSummary       *CostSummary             `json:"cost_summary"`
-	CreatedAt         Timestamp                `json:"created_at"`
-	DetectedMediaType string                   `json:"detected_media_type"`
-	DisplayName       string                   `json:"display_name"`
-	FailureReason     runtime.Optional[string] `json:"failure_reason"`
-	MaterialId        string                   `json:"material_id"`
-	PageId            runtime.Optional[string] `json:"page_id"`
-	Sha256            string                   `json:"sha256"`
-	SizeBytes         string                   `json:"size_bytes"`
-	Status            MaterialStatus           `json:"status"`
-	UpdatedAt         Timestamp                `json:"updated_at"`
+	// CostSummary Required. File-service estimate and settlement summary.
+	CostSummary *CostSummary `json:"cost_summary"`
+	// CreatedAt Required. Material creation time after multipart completion.
+	CreatedAt Timestamp `json:"created_at"`
+	// DetectedMediaType Required. MIME detected from the complete uploaded object.
+	DetectedMediaType string `json:"detected_media_type"`
+	// DisplayName Required. Sanitized user-visible basename without a device path.
+	DisplayName string `json:"display_name"`
+	// FailureReason (OPTIONAL) Conditional. Required in REJECTED or FAILED; stable and provider-safe.
+	FailureReason runtime.Optional[string] `json:"failure_reason"`
+	// MaterialId Required. Opaque material identifier.
+	MaterialId string `json:"material_id"`
+	// PageId (OPTIONAL) Conditional. Present after the material is retained by a page.
+	PageId runtime.Optional[string] `json:"page_id"`
+	// Sha256 Required. Lowercase hexadecimal SHA-256 of the complete object.
+	Sha256 string `json:"sha256"`
+	// SizeBytes Required. Actual object size confirmed by storage.
+	SizeBytes string `json:"size_bytes"`
+	// Status Required. Current validation and parsing lifecycle state.
+	Status MaterialStatus `json:"status"`
+	// UpdatedAt Required. Time the material fact last changed.
+	UpdatedAt Timestamp `json:"updated_at"`
 }
 
 func (v Material) MarshalJSON() ([]byte, error) {
@@ -5647,9 +8248,14 @@ func (v *Material) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// MaterialDeletionResult MaterialDeletionResult confirms immediate access revocation for an unbound
+//
+//	material. Physical cleanup continues asynchronously.
 type MaterialDeletionResult struct {
+	// AcceptedAt Required. Time logical access revocation became effective.
 	AcceptedAt Timestamp `json:"accepted_at"`
-	MaterialId string    `json:"material_id"`
+	// MaterialId Required. Opaque deleted material identifier.
+	MaterialId string `json:"material_id"`
 }
 
 func (v MaterialDeletionResult) MarshalJSON() ([]byte, error) {
@@ -5663,6 +8269,7 @@ func (v *MaterialDeletionResult) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// MaterialStatus MaterialStatus is the public processing lifecycle of an uploaded material.
 type MaterialStatus string
 
 const (
@@ -5687,23 +8294,222 @@ func (v MaterialStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"MATERIAL_STATUS_UNSPECIFIED", "MATERIAL_STATUS_SCANNING", "MATERIAL_STATUS_PARSING", "MATERIAL_STATUS_READY", "MATERIAL_STATUS_REJECTED", "MATERIAL_STATUS_FAILED", "MATERIAL_STATUS_DELETED"})
 }
 
+// OAuthApplication OAuthApplication represents a registered third-party application.
+//
+//	Display fields (`app_name`, `description`, `homepage_url`, `logo_url`)
+//	on this message are deprecated; the developer center is the
+//	authoritative source for application display metadata. The fields
+//	remain populated on read for backward compatibility and will be
+//	removed in a future major version.
 type OAuthApplication struct {
-	AllowedGrantTypes  runtime.Optional[[]GrantType]       `json:"allowed_grant_types"`
-	AllowedIdentities  runtime.Optional[[]IdentityType]    `json:"allowed_identities"`
-	AllowedScopes      runtime.Optional[[]string]          `json:"allowed_scopes"`
-	AppId              runtime.Optional[string]            `json:"app_id"`
-	AppName            runtime.Optional[string]            `json:"app_name"`
-	AppType            runtime.Optional[ApplicationType]   `json:"app_type"`
-	ClientId           runtime.Optional[string]            `json:"client_id"`
-	ClientSecretMasked runtime.Optional[string]            `json:"client_secret_masked"`
-	CreatedAt          runtime.Optional[Timestamp]         `json:"created_at"`
-	Description        runtime.Optional[string]            `json:"description"`
-	HomepageUrl        runtime.Optional[string]            `json:"homepage_url"`
-	LogoUrl            runtime.Optional[string]            `json:"logo_url"`
-	OwnerId            runtime.Optional[string]            `json:"owner_id"`
-	RedirectUris       runtime.Optional[[]string]          `json:"redirect_uris"`
-	Status             runtime.Optional[ApplicationStatus] `json:"status"`
-	UpdatedAt          runtime.Optional[Timestamp]         `json:"updated_at"`
+	AllowedGrantTypes runtime.Optional[[]GrantType] `json:"allowed_grant_types"`
+	// AllowedIdentities Which identity forms (user / org / workspace) this Client may issue
+	//  tokens for. Empty list falls back to the historical
+	//  ApplicationType-based default — TYPE_WEB / TYPE_SPA / TYPE_MOBILE
+	//  issue user tokens only; TYPE_SERVICE issues org tokens only. New
+	//  clients SHOULD set this explicitly.
+	AllowedIdentities runtime.Optional[[]IdentityType] `json:"allowed_identities"`
+	AllowedScopes     runtime.Optional[[]string]       `json:"allowed_scopes"`
+	AppId             runtime.Optional[string]         `json:"app_id"`
+	// AppName Deprecated: read display fields from the developer center. Will be
+	//  removed in a future major version.
+	AppName runtime.Optional[string] `json:"app_name"`
+	// AppType ApplicationType describes the kind of OAuth client application.
+	AppType  runtime.Optional[ApplicationType] `json:"app_type"`
+	ClientId runtime.Optional[string]          `json:"client_id"`
+	// ClientSecretMasked Only last 4 chars visible, e.g. "****abcd"
+	ClientSecretMasked runtime.Optional[string] `json:"client_secret_masked"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// Description Deprecated: same as app_name.
+	Description runtime.Optional[string] `json:"description"`
+	// HomepageUrl Deprecated: same as app_name.
+	HomepageUrl runtime.Optional[string] `json:"homepage_url"`
+	// LogoUrl Deprecated: same as app_name.
+	LogoUrl runtime.Optional[string] `json:"logo_url"`
+	// OwnerId Developer user ID who owns this application
+	OwnerId      runtime.Optional[string]   `json:"owner_id"`
+	RedirectUris runtime.Optional[[]string] `json:"redirect_uris"`
+	// Status ApplicationStatus represents the lifecycle state of an OAuth application.
+	Status runtime.Optional[ApplicationStatus] `json:"status"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
 func (v OAuthApplication) MarshalJSON() ([]byte, error) {
@@ -5745,20 +8551,207 @@ func (v *OAuthApplication) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// OAuthClient OAuthClient is one credential atom owned by IAM. An application may own
+//
+//	multiple clients; app_id and client_id must therefore be used together for
+//	every management operation.
+//
+//	Secret material and secret hashes are deliberately absent from this read
+//	model. Plaintext is returned exactly once by create and rotate responses.
 type OAuthClient struct {
-	AllowedGrantTypes runtime.Optional[[]GrantType]            `json:"allowed_grant_types"`
-	AllowedIdentities runtime.Optional[[]IdentityType]         `json:"allowed_identities"`
-	AllowedScopes     runtime.Optional[[]string]               `json:"allowed_scopes"`
-	AppId             runtime.Optional[string]                 `json:"app_id"`
-	ClientId          runtime.Optional[string]                 `json:"client_id"`
-	ClientType        runtime.Optional[ClientCredentialType]   `json:"client_type"`
-	CreatedAt         runtime.Optional[Timestamp]              `json:"created_at"`
-	Description       runtime.Optional[string]                 `json:"description"`
-	HasClientSecret   runtime.Optional[bool]                   `json:"has_client_secret"`
-	Name              runtime.Optional[string]                 `json:"name"`
-	RedirectUris      runtime.Optional[[]string]               `json:"redirect_uris"`
-	Status            runtime.Optional[ClientCredentialStatus] `json:"status"`
-	UpdatedAt         runtime.Optional[Timestamp]              `json:"updated_at"`
+	AllowedGrantTypes runtime.Optional[[]GrantType]    `json:"allowed_grant_types"`
+	AllowedIdentities runtime.Optional[[]IdentityType] `json:"allowed_identities"`
+	AllowedScopes     runtime.Optional[[]string]       `json:"allowed_scopes"`
+	AppId             runtime.Optional[string]         `json:"app_id"`
+	ClientId          runtime.Optional[string]         `json:"client_id"`
+	// ClientType ClientCredentialType describes whether an OAuth client can keep a secret.
+	ClientType runtime.Optional[ClientCredentialType] `json:"client_type"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt       runtime.Optional[Timestamp] `json:"created_at"`
+	Description     runtime.Optional[string]    `json:"description"`
+	HasClientSecret runtime.Optional[bool]      `json:"has_client_secret"`
+	Name            runtime.Optional[string]    `json:"name"`
+	RedirectUris    runtime.Optional[[]string]  `json:"redirect_uris"`
+	// Status ClientCredentialStatus represents the lifecycle state of one OAuth client.
+	Status runtime.Optional[ClientCredentialStatus] `json:"status"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
 func (v OAuthClient) MarshalJSON() ([]byte, error) {
@@ -5795,6 +8788,7 @@ func (v *OAuthClient) UnmarshalJSON(data []byte) error {
 }
 
 type OpaqueLoginFinalizeRequest struct {
+	// DeviceInfo DeviceInfo describes the client device.
 	DeviceInfo runtime.Optional[*DeviceInfo] `json:"device_info"`
 	Ke3        runtime.Optional[string]      `json:"ke3"`
 	SessionId  runtime.Optional[string]      `json:"session_id"`
@@ -5814,8 +8808,10 @@ func (v *OpaqueLoginFinalizeRequest) UnmarshalJSON(data []byte) error {
 }
 
 type OpaqueLoginFinalizeResponse struct {
+	// Tokens TokenPair contains access and refresh tokens returned after authentication.
 	Tokens runtime.Optional[*TokenPair] `json:"tokens"`
-	User   runtime.Optional[*UserBrief] `json:"user"`
+	// User UserBrief is a minimal user representation returned in auth responses.
+	User runtime.Optional[*UserBrief] `json:"user"`
 }
 
 func (v OpaqueLoginFinalizeResponse) MarshalJSON() ([]byte, error) {
@@ -5890,6 +8886,7 @@ func (v *OpaqueRegisterFinalizeRequest) UnmarshalJSON(data []byte) error {
 }
 
 type OpaqueRegisterFinalizeResponse struct {
+	// User UserBrief is a minimal user representation returned in auth responses.
 	User runtime.Optional[*UserBrief] `json:"user"`
 }
 
@@ -5941,10 +8938,19 @@ func (v *OpaqueRegisterInitResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// OptimizeHtmlRequest OptimizeHtmlRequest 对已有的 HTML 内容进行格式和排版优化。
+//
+//	可指定 target_platform 以针对特定平台的 HTML 兼容性进行优化
+//	（例如微信公众号不支持外链图片、知乎有特定 CSS 限制等）。
+//	article_id 和 content 二选一。
 type OptimizeHtmlRequest struct {
-	ArticleId      runtime.Optional[string]   `json:"article_id"`
-	Content        runtime.Optional[string]   `json:"content"`
-	Instructions   runtime.Optional[string]   `json:"instructions"`
+	// ArticleId 待优化的文章 ID，与 content 互斥。
+	ArticleId runtime.Optional[string] `json:"article_id"`
+	// Content 待优化的原始 HTML 文本，与 article_id 互斥。
+	Content runtime.Optional[string] `json:"content"`
+	// Instructions 优化指令，例如 "适配暗色模式"、"优化移动端排版"。
+	Instructions runtime.Optional[string] `json:"instructions"`
+	// TargetPlatform 目标发布平台，指定后会针对该平台的 HTML 限制和最佳实践进行优化。
 	TargetPlatform runtime.Optional[Platform] `json:"target_platform"`
 }
 
@@ -5963,10 +8969,14 @@ func (v *OptimizeHtmlRequest) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// OptimizeHtmlResponse OptimizeHtmlResponse 是 OptimizeHtml 的流式响应。
 type OptimizeHtmlResponse struct {
-	Article runtime.Optional[*Article]    `json:"article"`
-	Done    runtime.Optional[bool]        `json:"done"`
-	Event   runtime.Optional[StreamEvent] `json:"event"`
+	// Article 优化后的完整文章实体，仅在 done=true 时填充。
+	Article runtime.Optional[*Article] `json:"article"`
+	// Done 是否优化完毕。
+	Done runtime.Optional[bool] `json:"done"`
+	// Event 流式事件，携带内容片段、状态更新、Token 用量或错误信息。
+	Event runtime.Optional[StreamEvent] `json:"event"`
 }
 
 func (v OptimizeHtmlResponse) MarshalJSON() ([]byte, error) {
@@ -5982,9 +8992,16 @@ func (v *OptimizeHtmlResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// OptimizeMarkdownRequest OptimizeMarkdownRequest 对已有的 Markdown 内容进行格式和排版优化。
+//
+//	article_id 和 content 二选一：指定 article_id 则从数据库加载，
+//	指定 content 则直接处理原始文本。
 type OptimizeMarkdownRequest struct {
-	ArticleId    runtime.Optional[string] `json:"article_id"`
-	Content      runtime.Optional[string] `json:"content"`
+	// ArticleId 待优化的文章 ID，与 content 互斥。
+	ArticleId runtime.Optional[string] `json:"article_id"`
+	// Content 待优化的原始 Markdown 文本，与 article_id 互斥。
+	Content runtime.Optional[string] `json:"content"`
+	// Instructions 优化指令，例如 "改善可读性"、"统一标题层级"、"添加目录"。
 	Instructions runtime.Optional[string] `json:"instructions"`
 }
 
@@ -6001,10 +9018,14 @@ func (v *OptimizeMarkdownRequest) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// OptimizeMarkdownResponse OptimizeMarkdownResponse 是 OptimizeMarkdown 的流式响应。
 type OptimizeMarkdownResponse struct {
-	Article runtime.Optional[*Article]    `json:"article"`
-	Done    runtime.Optional[bool]        `json:"done"`
-	Event   runtime.Optional[StreamEvent] `json:"event"`
+	// Article 优化后的完整文章实体，仅在 done=true 时填充。
+	Article runtime.Optional[*Article] `json:"article"`
+	// Done 是否优化完毕。
+	Done runtime.Optional[bool] `json:"done"`
+	// Event 流式事件，携带内容片段、状态更新、Token 用量或错误信息。
+	Event runtime.Optional[StreamEvent] `json:"event"`
 }
 
 func (v OptimizeMarkdownResponse) MarshalJSON() ([]byte, error) {
@@ -6020,15 +9041,215 @@ func (v *OptimizeMarkdownResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// Organization Organization is one of the two concrete tenant forms (the other is
+//
+//	Workspace).
+//
+//	`org_id` is an opaque entity-id with the `org` prefix and shares the
+//	platform-wide `tenant_id` value space with workspace ids. Consumers
+//	must treat it as opaque — no parsing, no length assumptions,
+//	byte-exact case-sensitive comparison.
 type Organization struct {
-	CreatedAt   runtime.Optional[Timestamp]          `json:"created_at"`
-	Metadata    runtime.Optional[string]             `json:"metadata"`
-	Name        runtime.Optional[string]             `json:"name"`
-	OrgId       runtime.Optional[string]             `json:"org_id"`
-	OwnerUserId runtime.Optional[string]             `json:"owner_user_id"`
-	Slug        runtime.Optional[string]             `json:"slug"`
-	Status      runtime.Optional[OrganizationStatus] `json:"status"`
-	UpdatedAt   runtime.Optional[Timestamp]          `json:"updated_at"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// Metadata Free-form JSON object. Pre-scrubbed of secrets at write time. Forward-
+	//  compatible across proto bumps without breaking consumers.
+	Metadata runtime.Optional[string] `json:"metadata"`
+	// Name Display name shown in dashboards and consent screens.
+	Name runtime.Optional[string] `json:"name"`
+	// OrgId Opaque entity-id with `org` prefix. Globally unique across the tenant_id
+	//  value space.
+	OrgId runtime.Optional[string] `json:"org_id"`
+	// OwnerUserId user_id of the initial creator. Transferable via UpdateOrganization +
+	//  server-side ownership-handoff workflow (TODO: dedicated TransferOwnership
+	//  RPC may land in a follow-up slice if needed; for now ownership is
+	//  transferred by promoting another member to owner via UpdateMemberRole
+	//  and then demoting the previous owner).
+	OwnerUserId runtime.Optional[string] `json:"owner_user_id"`
+	// Slug URL-friendly short name. Lowercase alphanumerics + dashes, 3-40 chars.
+	//  Globally unique. Used in URLs like /v1/orgs/{slug} when a developer
+	//  prefers slug-routed paths over org_id-routed ones.
+	Slug runtime.Optional[string] `json:"slug"`
+	// Status Lifecycle state. See OrganizationStatus enum.
+	Status runtime.Optional[OrganizationStatus] `json:"status"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
 func (v Organization) MarshalJSON() ([]byte, error) {
@@ -6054,14 +9275,203 @@ func (v *Organization) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// OrganizationMember OrganizationMember is a (org, user) edge with a role and lifecycle status.
+//
+//	The role taxonomy (owner / admin / member) is the SAME WORDS as the
+//	application-level membership role surfaced by the developer center;
+//	the two live at different scopes and do not transitively grant each
+//	other.
 type OrganizationMember struct {
-	CreatedAt runtime.Optional[Timestamp]                `json:"created_at"`
-	InvitedBy runtime.Optional[string]                   `json:"invited_by"`
-	OrgId     runtime.Optional[string]                   `json:"org_id"`
-	Role      runtime.Optional[OrganizationMemberRole]   `json:"role"`
-	Status    runtime.Optional[OrganizationMemberStatus] `json:"status"`
-	UpdatedAt runtime.Optional[Timestamp]                `json:"updated_at"`
-	UserId    runtime.Optional[string]                   `json:"user_id"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// InvitedBy user_id of the inviter (empty for the initial owner)
+	InvitedBy runtime.Optional[string] `json:"invited_by"`
+	OrgId     runtime.Optional[string] `json:"org_id"`
+	// Role OrganizationMemberRole governs the actions a member may take within the
+	//  organization. Authorization decisions are delegated to AuthZService.Check;
+	//  these values are the canonical role identifiers stored on the row.
+	Role runtime.Optional[OrganizationMemberRole] `json:"role"`
+	// Status OrganizationMemberStatus tracks the state of a membership edge.
+	Status runtime.Optional[OrganizationMemberStatus] `json:"status"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
+	UserId    runtime.Optional[string]    `json:"user_id"`
 }
 
 func (v OrganizationMember) MarshalJSON() ([]byte, error) {
@@ -6085,6 +9495,10 @@ func (v *OrganizationMember) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// OrganizationMemberRole OrganizationMemberRole governs the actions a member may take within the
+//
+//	organization. Authorization decisions are delegated to AuthZService.Check;
+//	these values are the canonical role identifiers stored on the row.
 type OrganizationMemberRole string
 
 const (
@@ -6106,6 +9520,7 @@ func (v OrganizationMemberRole) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"ORGANIZATION_MEMBER_ROLE_UNSPECIFIED", "ORGANIZATION_MEMBER_ROLE_OWNER", "ORGANIZATION_MEMBER_ROLE_ADMIN", "ORGANIZATION_MEMBER_ROLE_MEMBER"})
 }
 
+// OrganizationMemberStatus OrganizationMemberStatus tracks the state of a membership edge.
 type OrganizationMemberStatus string
 
 const (
@@ -6127,6 +9542,7 @@ func (v OrganizationMemberStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"ORGANIZATION_MEMBER_STATUS_UNSPECIFIED", "ORGANIZATION_MEMBER_STATUS_ACTIVE", "ORGANIZATION_MEMBER_STATUS_INVITED", "ORGANIZATION_MEMBER_STATUS_REMOVED"})
 }
 
+// OrganizationStatus OrganizationStatus is the lifecycle state of an organization.
 type OrganizationStatus string
 
 const (
@@ -6148,6 +9564,7 @@ func (v OrganizationStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"ORGANIZATION_STATUS_UNSPECIFIED", "ORGANIZATION_STATUS_ACTIVE", "ORGANIZATION_STATUS_SUSPENDED", "ORGANIZATION_STATUS_ARCHIVED"})
 }
 
+// Orientation Orientation is the requested or rendered A4 page orientation.
 type Orientation string
 
 const (
@@ -6169,18 +9586,30 @@ func (v Orientation) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"ORIENTATION_UNSPECIFIED", "ORIENTATION_AUTO", "ORIENTATION_PORTRAIT", "ORIENTATION_LANDSCAPE"})
 }
 
+// Page Page is the authoritative user-visible aggregate for one PinPage.
 type Page struct {
-	ActiveJobId      runtime.Optional[string] `json:"active_job_id"`
-	CategoryId       runtime.Optional[string] `json:"category_id"`
-	ContentRevision  string                   `json:"content_revision"`
-	CreatedAt        Timestamp                `json:"created_at"`
+	// ActiveJobId (OPTIONAL) Conditional. Present while exactly one user job is QUEUED or RUNNING.
+	ActiveJobId runtime.Optional[string] `json:"active_job_id"`
+	// CategoryId (OPTIONAL) Optional. Direct category identifier; absent when uncategorized.
+	CategoryId runtime.Optional[string] `json:"category_id"`
+	// ContentRevision Required. Monotonic content baseline revision used for publication CAS.
+	ContentRevision string `json:"content_revision"`
+	// CreatedAt Required. First submission time; regeneration does not change it.
+	CreatedAt Timestamp `json:"created_at"`
+	// CurrentVersionId (OPTIONAL) Optional. Current successful version; absent before first publication.
 	CurrentVersionId runtime.Optional[string] `json:"current_version_id"`
-	Etag             string                   `json:"etag"`
-	EventRevision    string                   `json:"event_revision"`
-	LatestJob        *JobSummary              `json:"latest_job"`
-	PageId           string                   `json:"page_id"`
-	Title            string                   `json:"title"`
-	UpdatedAt        Timestamp                `json:"updated_at"`
+	// Etag Required. Cache and representation validator for the current Page view.
+	Etag string `json:"etag"`
+	// EventRevision Required. Monotonic event revision for all client-visible changes.
+	EventRevision string `json:"event_revision"`
+	// LatestJob Required. Most recent logical generation job summary.
+	LatestJob *JobSummary `json:"latest_job"`
+	// PageId Required. Opaque page identifier.
+	PageId string `json:"page_id"`
+	// Title Required. User-visible title, from 1 to 200 Unicode characters.
+	Title string `json:"title"`
+	// UpdatedAt Required. Time page metadata or current-version pointer last changed.
+	UpdatedAt Timestamp `json:"updated_at"`
 }
 
 func (v Page) MarshalJSON() ([]byte, error) {
@@ -6212,34 +9641,64 @@ func (v *Page) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PageDeletionPreview PageDeletionPreview is a signed, short-lived exact impact snapshot used for
+//
+//	explicit page-deletion confirmation.
 type PageDeletionPreview struct {
-	ActiveEstimateCount               int64     `json:"active_estimate_count"`
-	AiCallCount                       int64     `json:"ai_call_count"`
-	BriefRevisionCount                int64     `json:"brief_revision_count"`
-	CategoryOrganizationEstimateCount int64     `json:"category_organization_estimate_count"`
-	CategoryOrganizationJobCount      int64     `json:"category_organization_job_count"`
-	CategoryPlanCount                 int64     `json:"category_plan_count"`
-	ConfirmationToken                 string    `json:"confirmation_token"`
-	ContentRevision                   string    `json:"content_revision"`
-	EventRevision                     string    `json:"event_revision"`
-	ExpiresAt                         Timestamp `json:"expires_at"`
-	ExportCount                       int64     `json:"export_count"`
-	ExternalSourceCount               int64     `json:"external_source_count"`
-	ExternalTempCopyCount             int64     `json:"external_temp_copy_count"`
-	FailureContextCount               int64     `json:"failure_context_count"`
-	GenerationPlanCount               int64     `json:"generation_plan_count"`
-	GenerationPlanStepCount           int64     `json:"generation_plan_step_count"`
-	ImpactFingerprint                 string    `json:"impact_fingerprint"`
-	JobCount                          int64     `json:"job_count"`
-	JobInputCount                     int64     `json:"job_input_count"`
-	MaterialCount                     int64     `json:"material_count"`
-	PageId                            string    `json:"page_id"`
-	ProvisionalCandidateCount         int64     `json:"provisional_candidate_count"`
-	ReplanDecisionCount               int64     `json:"replan_decision_count"`
-	ReviewReportCount                 int64     `json:"review_report_count"`
-	SourceCount                       int64     `json:"source_count"`
-	ToolCallCount                     int64     `json:"tool_call_count"`
-	VersionCount                      int64     `json:"version_count"`
+	// ActiveEstimateCount Required. Active estimates that will be invalidated.
+	ActiveEstimateCount int64 `json:"active_estimate_count"`
+	// AiCallCount Required. Logical AI call slots included in the deletion scope.
+	AiCallCount int64 `json:"ai_call_count"`
+	// BriefRevisionCount Required. Complete brief revisions included in the deletion scope.
+	BriefRevisionCount int64 `json:"brief_revision_count"`
+	// CategoryOrganizationEstimateCount Required. Category-organization estimates that will be invalidated.
+	CategoryOrganizationEstimateCount int64 `json:"category_organization_estimate_count"`
+	// CategoryOrganizationJobCount Required. Category-organization jobs included in the deletion scope.
+	CategoryOrganizationJobCount int64 `json:"category_organization_job_count"`
+	// CategoryPlanCount Required. Category plan storage objects included in the deletion scope.
+	CategoryPlanCount int64 `json:"category_plan_count"`
+	// ConfirmationToken Required. Short-lived confirmation capability; never log or persist in telemetry.
+	ConfirmationToken string `json:"confirmation_token"`
+	// ContentRevision Required. Page content revision bound into this preview.
+	ContentRevision string `json:"content_revision"`
+	// EventRevision Required. Page event revision observed by this preview.
+	EventRevision string `json:"event_revision"`
+	// ExpiresAt Required. Expiry of the confirmation token and impact snapshot.
+	ExpiresAt Timestamp `json:"expires_at"`
+	// ExportCount Required. PDF and PNG artifacts included in the deletion scope.
+	ExportCount int64 `json:"export_count"`
+	// ExternalSourceCount Required. Future-reserved external source count; zero in the current release.
+	ExternalSourceCount int64 `json:"external_source_count"`
+	// ExternalTempCopyCount Required. Registered external temporary copies included in the scope.
+	ExternalTempCopyCount int64 `json:"external_temp_copy_count"`
+	// FailureContextCount Required. Typed failure contexts included in the deletion scope.
+	FailureContextCount int64 `json:"failure_context_count"`
+	// GenerationPlanCount Required. Generation plan revisions included in the deletion scope.
+	GenerationPlanCount int64 `json:"generation_plan_count"`
+	// GenerationPlanStepCount Required. Structured plan steps included in the deletion scope.
+	GenerationPlanStepCount int64 `json:"generation_plan_step_count"`
+	// ImpactFingerprint Required. SHA-256 of the exact canonical deletion scope.
+	ImpactFingerprint string `json:"impact_fingerprint"`
+	// JobCount Required. Logical jobs included in the deletion scope.
+	JobCount int64 `json:"job_count"`
+	// JobInputCount Required. Frozen job inputs included in the deletion scope.
+	JobInputCount int64 `json:"job_input_count"`
+	// MaterialCount Required. Materials included in the deletion scope.
+	MaterialCount int64 `json:"material_count"`
+	// PageId Required. Opaque page identifier to delete.
+	PageId string `json:"page_id"`
+	// ProvisionalCandidateCount Required. Unpublished candidates included in the deletion scope.
+	ProvisionalCandidateCount int64 `json:"provisional_candidate_count"`
+	// ReplanDecisionCount Required. Structured replan decisions included in the deletion scope.
+	ReplanDecisionCount int64 `json:"replan_decision_count"`
+	// ReviewReportCount Required. Structured review reports included in the deletion scope.
+	ReviewReportCount int64 `json:"review_report_count"`
+	// SourceCount Required. Material and inline-text sources included in the deletion scope.
+	SourceCount int64 `json:"source_count"`
+	// ToolCallCount Required. Future-reserved tool call count; zero in the current release.
+	ToolCallCount int64 `json:"tool_call_count"`
+	// VersionCount Required. Published versions included in the deletion scope.
+	VersionCount int64 `json:"version_count"`
 }
 
 func (v PageDeletionPreview) MarshalJSON() ([]byte, error) {
@@ -6303,11 +9762,19 @@ func (v *PageDeletionPreview) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PageDeletionResult PageDeletionResult confirms immediate access revocation and the accepted
+//
+//	asynchronous physical-deletion deadline.
 type PageDeletionResult struct {
-	AcceptedAt          Timestamp `json:"accepted_at"`
-	ContentRevision     string    `json:"content_revision"`
-	EventRevision       string    `json:"event_revision"`
-	PageId              string    `json:"page_id"`
+	// AcceptedAt Required. Time logical access revocation became effective.
+	AcceptedAt Timestamp `json:"accepted_at"`
+	// ContentRevision Required. Content tombstone revision produced by the deletion transaction.
+	ContentRevision string `json:"content_revision"`
+	// EventRevision Required. Event tombstone revision produced by the deletion transaction.
+	EventRevision string `json:"event_revision"`
+	// PageId Required. Opaque deleted page identifier.
+	PageId string `json:"page_id"`
+	// PhysicalDeleteDueAt Required. Latest permitted physical deletion time for primary storage.
 	PhysicalDeleteDueAt Timestamp `json:"physical_delete_due_at"`
 }
 
@@ -6328,11 +9795,18 @@ func (v *PageDeletionResult) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PageDeletionTarget PageDeletionTarget is one exact page included in a signed category subtree
+//
+//	deletion preview.
 type PageDeletionTarget struct {
-	ContentRevision          string `json:"content_revision"`
+	// ContentRevision Required. Page content revision incorporated into the impact fingerprint.
+	ContentRevision string `json:"content_revision"`
+	// DeletionScopeFingerprint Required. SHA-256 of this page's complete canonical deletion scope.
 	DeletionScopeFingerprint string `json:"deletion_scope_fingerprint"`
-	PageId                   string `json:"page_id"`
-	Title                    string `json:"title"`
+	// PageId Required. Opaque page identifier to delete.
+	PageId string `json:"page_id"`
+	// Title Required. Current user-visible title shown for confirmation.
+	Title string `json:"title"`
 }
 
 func (v PageDeletionTarget) MarshalJSON() ([]byte, error) {
@@ -6351,9 +9825,12 @@ func (v *PageDeletionTarget) UnmarshalJSON(data []byte) error {
 }
 
 type PageInstruction struct {
-	CreatedAt   runtime.Optional[Timestamp] `json:"created_at"`
-	Instruction runtime.Optional[string]    `json:"instruction"`
-	JobId       runtime.Optional[string]    `json:"job_id"`
+	// CreatedAt (OPTIONAL)
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// Instruction (OPTIONAL)
+	Instruction runtime.Optional[string] `json:"instruction"`
+	// JobId (OPTIONAL)
+	JobId runtime.Optional[string] `json:"job_id"`
 }
 
 func (v PageInstruction) MarshalJSON() ([]byte, error) {
@@ -6369,6 +9846,9 @@ func (v *PageInstruction) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PageStatus PageStatus is the client-facing status derived from the current version and
+//
+//	latest generation job.
 type PageStatus string
 
 const (
@@ -6390,16 +9870,26 @@ func (v PageStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"PAGE_STATUS_UNSPECIFIED", "PAGE_STATUS_GENERATING", "PAGE_STATUS_READY", "PAGE_STATUS_FAILED"})
 }
 
+// PageSummary PageSummary is the lightweight list projection and never includes HTML.
 type PageSummary struct {
-	CategoryId            runtime.Optional[string]                 `json:"category_id"`
-	ContentRevision       string                                   `json:"content_revision"`
-	CreatedAt             Timestamp                                `json:"created_at"`
+	// CategoryId (OPTIONAL) Optional. Direct category identifier; absent when uncategorized.
+	CategoryId runtime.Optional[string] `json:"category_id"`
+	// ContentRevision Required. Current page content revision.
+	ContentRevision string `json:"content_revision"`
+	// CreatedAt Required. Page creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// CurrentVersionSummary (OPTIONAL) Conditional. Present whenever a current successful version exists.
 	CurrentVersionSummary runtime.Optional[*CurrentVersionSummary] `json:"current_version_summary"`
-	EventRevision         string                                   `json:"event_revision"`
-	PageId                string                                   `json:"page_id"`
-	Status                PageStatus                               `json:"status"`
-	Title                 string                                   `json:"title"`
-	UpdatedAt             Timestamp                                `json:"updated_at"`
+	// EventRevision Required. Current page event revision.
+	EventRevision string `json:"event_revision"`
+	// PageId Required. Opaque page identifier.
+	PageId string `json:"page_id"`
+	// Status Required. Status derived from page and latest-job facts.
+	Status PageStatus `json:"status"`
+	// Title Required. Current user-visible title.
+	Title string `json:"title"`
+	// UpdatedAt Required. Time the list-visible page projection last changed.
+	UpdatedAt Timestamp `json:"updated_at"`
 }
 
 func (v PageSummary) MarshalJSON() ([]byte, error) {
@@ -6427,20 +9917,36 @@ func (v *PageSummary) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PageVersion PageVersion is an immutable, complete published version including validated
+//
+//	offline HTML and artifact metadata.
 type PageVersion struct {
-	Artifacts                []*VersionArtifact              `json:"artifacts"`
-	CreatedAt                Timestamp                       `json:"created_at"`
-	Html                     string                          `json:"html"`
-	HtmlSha256               string                          `json:"html_sha256"`
-	InformationAsOf          runtime.Optional[Timestamp]     `json:"information_as_of"`
-	Orientation              Orientation                     `json:"orientation"`
-	PageId                   string                          `json:"page_id"`
-	PublishedContentRevision string                          `json:"published_content_revision"`
-	PublishedEventRevision   string                          `json:"published_event_revision"`
-	SequenceNumber           string                          `json:"sequence_number"`
-	SourceJobId              string                          `json:"source_job_id"`
-	SourceNotes              runtime.Optional[[]*SourceNote] `json:"source_notes"`
-	VersionId                string                          `json:"version_id"`
+	// Artifacts Required. Exactly one validated PDF and one validated PNG artifact.
+	Artifacts []*VersionArtifact `json:"artifacts"`
+	// CreatedAt Required. Immutable version creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// Html Required. Complete validated HTML suitable for offline caching.
+	Html string `json:"html"`
+	// HtmlSha256 Required. SHA-256 of the complete normalized HTML.
+	HtmlSha256 string `json:"html_sha256"`
+	// InformationAsOf (OPTIONAL) Conditional. Future-reserved; present only when external sources are enabled.
+	InformationAsOf runtime.Optional[Timestamp] `json:"information_as_of"`
+	// Orientation Required. Published A4 page orientation.
+	Orientation Orientation `json:"orientation"`
+	// PageId Required. Opaque owning page identifier.
+	PageId string `json:"page_id"`
+	// PublishedContentRevision Required. Page content revision committed on first publication.
+	PublishedContentRevision string `json:"published_content_revision"`
+	// PublishedEventRevision Required. Page event revision committed on first publication.
+	PublishedEventRevision string `json:"published_event_revision"`
+	// SequenceNumber Required. Monotonic display sequence within the page.
+	SequenceNumber string `json:"sequence_number"`
+	// SourceJobId Required. Unique successful job that created the version.
+	SourceJobId string `json:"source_job_id"`
+	// SourceNotes (OPTIONAL) Optional. Safe source, omission, and uncertainty notes.
+	SourceNotes runtime.Optional[[]*SourceNote] `json:"source_notes"`
+	// VersionId Required. Opaque version identifier.
+	VersionId string `json:"version_id"`
 }
 
 func (v PageVersion) MarshalJSON() ([]byte, error) {
@@ -6476,9 +9982,12 @@ func (v *PageVersion) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PageVersionMetadata PageVersionMetadata describes a published version without reading HTML or issuing tickets.
 type PageVersionMetadata struct {
-	Artifacts []*VersionArtifact  `json:"artifacts"`
-	Summary   *PageVersionSummary `json:"summary"`
+	// Artifacts Required. Exactly one validated PDF and one validated PNG artifact.
+	Artifacts []*VersionArtifact `json:"artifacts"`
+	// Summary Required. Authoritative immutable version identity and orientation.
+	Summary *PageVersionSummary `json:"summary"`
 }
 
 func (v PageVersionMetadata) MarshalJSON() ([]byte, error) {
@@ -6492,16 +10001,26 @@ func (v *PageVersionMetadata) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PageVersionSummary PageVersionSummary is an immutable list projection of a published version.
 type PageVersionSummary struct {
-	CreatedAt                Timestamp   `json:"created_at"`
-	HtmlSha256               string      `json:"html_sha256"`
-	Orientation              Orientation `json:"orientation"`
-	PageId                   string      `json:"page_id"`
-	PublishedContentRevision string      `json:"published_content_revision"`
-	PublishedEventRevision   string      `json:"published_event_revision"`
-	SequenceNumber           string      `json:"sequence_number"`
-	SourceJobId              string      `json:"source_job_id"`
-	VersionId                string      `json:"version_id"`
+	// CreatedAt Required. Immutable version creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// HtmlSha256 Required. SHA-256 of the complete normalized HTML.
+	HtmlSha256 string `json:"html_sha256"`
+	// Orientation Required. Published A4 page orientation.
+	Orientation Orientation `json:"orientation"`
+	// PageId Required. Opaque owning page identifier.
+	PageId string `json:"page_id"`
+	// PublishedContentRevision Required. Page content revision committed on first publication.
+	PublishedContentRevision string `json:"published_content_revision"`
+	// PublishedEventRevision Required. Page event revision committed on first publication.
+	PublishedEventRevision string `json:"published_event_revision"`
+	// SequenceNumber Required. Monotonic display sequence within the page.
+	SequenceNumber string `json:"sequence_number"`
+	// SourceJobId Required. Unique successful job that created the version.
+	SourceJobId string `json:"source_job_id"`
+	// VersionId Required. Opaque version identifier.
+	VersionId string `json:"version_id"`
 }
 
 func (v PageVersionSummary) MarshalJSON() ([]byte, error) {
@@ -6530,8 +10049,11 @@ func (v *PageVersionSummary) UnmarshalJSON(data []byte) error {
 }
 
 type PinpageCategoriesApplyOrganizationBody struct {
-	BillingIntentId   string `json:"billingIntentId"`
-	EstimateId        string `json:"estimateId"`
+	// BillingIntentId Required. Settled billing intent belonging to the organization job.
+	BillingIntentId string `json:"billingIntentId"`
+	// EstimateId Required. Estimate consumed by the organization job.
+	EstimateId string `json:"estimateId"`
+	// OrganizationJobId Required. Successful, unexpired organization job.
 	OrganizationJobId string `json:"organizationJobId"`
 }
 
@@ -6549,7 +10071,9 @@ func (v *PinpageCategoriesApplyOrganizationBody) UnmarshalJSON(data []byte) erro
 }
 
 type PinpageCategoriesEstimateOrganizationBody struct {
-	Instruction     string                   `json:"instruction"`
+	// Instruction Required. One-time organization instruction, from 1 to 2,000 characters.
+	Instruction string `json:"instruction"`
+	// ScopeCategoryId (OPTIONAL) Optional. Omit for the whole tree; otherwise restrict to this subtree.
 	ScopeCategoryId runtime.Optional[string] `json:"scopeCategoryId"`
 }
 
@@ -6565,10 +10089,14 @@ func (v *PinpageCategoriesEstimateOrganizationBody) UnmarshalJSON(data []byte) e
 }
 
 type PinpageCategoriesPreviewOrganizationBody struct {
+	// ConfirmedAuthorizedMaxCredit Required. Exact maximum user net charge confirmed by the user.
 	ConfirmedAuthorizedMaxCredit string `json:"confirmedAuthorizedMaxCredit"`
-	ConfirmedEstimatedAiCredit   string `json:"confirmedEstimatedAiCredit"`
-	EstimateId                   string `json:"estimateId"`
-	InputFingerprint             string `json:"inputFingerprint"`
+	// ConfirmedEstimatedAiCredit Required. Public AI estimate confirmed by the user.
+	ConfirmedEstimatedAiCredit string `json:"confirmedEstimatedAiCredit"`
+	// EstimateId Required. Active estimate whose tree snapshot still matches.
+	EstimateId string `json:"estimateId"`
+	// InputFingerprint Required. Exact frozen instruction, scope, and tree fingerprint.
+	InputFingerprint string `json:"inputFingerprint"`
 }
 
 func (v PinpageCategoriesPreviewOrganizationBody) MarshalJSON() ([]byte, error) {
@@ -6587,7 +10115,9 @@ func (v *PinpageCategoriesPreviewOrganizationBody) UnmarshalJSON(data []byte) er
 }
 
 type PinpageCategoryPreferenceUpdateCategoryPreferenceBody struct {
-	Etag      string `json:"etag"`
+	// Etag Required. Optimistic concurrency validator read from the singleton.
+	Etag string `json:"etag"`
+	// RulesText Required. Complete replacement text; empty explicitly clears the rules.
 	RulesText string `json:"rulesText"`
 }
 
@@ -6603,12 +10133,19 @@ func (v *PinpageCategoryPreferenceUpdateCategoryPreferenceBody) UnmarshalJSON(da
 }
 
 type PinpageJobsCreateGenerationBody struct {
-	ClientReference runtime.Optional[string]      `json:"clientReference"`
-	Instruction     string                        `json:"instruction"`
-	MaterialIds     runtime.Optional[[]string]    `json:"materialIds"`
-	Orientation     runtime.Optional[Orientation] `json:"orientation"`
-	Title           runtime.Optional[string]      `json:"title"`
-	UiLocale        runtime.Optional[string]      `json:"uiLocale"`
+	// ClientReference (OPTIONAL) Optional. Client-local draft correlation value, at most 128 characters.
+	ClientReference runtime.Optional[string] `json:"clientReference"`
+	// Instruction Required. The complete production requirement, including any source text
+	//  the user wants PinPage to use. It is never interpreted as a money budget.
+	Instruction string `json:"instruction"`
+	// MaterialIds (OPTIONAL) Optional. Complete set of READY materials attached to this generation.
+	MaterialIds runtime.Optional[[]string] `json:"materialIds"`
+	// Orientation (OPTIONAL) Optional. Defaults to AUTO.
+	Orientation runtime.Optional[Orientation] `json:"orientation"`
+	// Title (OPTIONAL) Optional. Candidate page title.
+	Title runtime.Optional[string] `json:"title"`
+	// UiLocale (OPTIONAL) Optional. Actual UI locale; valid Accept-Language takes precedence.
+	UiLocale runtime.Optional[string] `json:"uiLocale"`
 }
 
 func (v PinpageJobsCreateGenerationBody) MarshalJSON() ([]byte, error) {
@@ -6631,24 +10168,42 @@ func (v *PinpageJobsCreateGenerationBody) UnmarshalJSON(data []byte) error {
 }
 
 type PinpageJobsEstimateBody struct {
-	AddMaterialIds               runtime.Optional[[]string]                `json:"addMaterialIds"`
-	BaseJobId                    runtime.Optional[string]                  `json:"baseJobId"`
-	BriefInstruction             runtime.Optional[string]                  `json:"briefInstruction"`
-	ContentDecisionActionToken   runtime.Optional[string]                  `json:"contentDecisionActionToken"`
-	ContentDecisionContextDigest runtime.Optional[string]                  `json:"contentDecisionContextDigest"`
-	ContentDecisionContextId     runtime.Optional[string]                  `json:"contentDecisionContextId"`
-	ContentDecisionNote          runtime.Optional[string]                  `json:"contentDecisionNote"`
-	ContentDecisionOptionIds     runtime.Optional[[]string]                `json:"contentDecisionOptionIds"`
-	ExternalInformationMode      runtime.Optional[ExternalInformationMode] `json:"externalInformationMode"`
-	InlineText                   runtime.Optional[string]                  `json:"inlineText"`
-	InlineTextChange             runtime.Optional[*InlineTextChange]       `json:"inlineTextChange"`
-	MaterialIds                  runtime.Optional[[]string]                `json:"materialIds"`
-	Operation                    GenerationOperation                       `json:"operation"`
-	Orientation                  runtime.Optional[Orientation]             `json:"orientation"`
-	PageId                       runtime.Optional[string]                  `json:"pageId"`
-	RemoveMaterialIds            runtime.Optional[[]string]                `json:"removeMaterialIds"`
-	SourceJobId                  runtime.Optional[string]                  `json:"sourceJobId"`
-	Title                        runtime.Optional[string]                  `json:"title"`
+	// AddMaterialIds (OPTIONAL) Optional. Materials added to a regeneration baseline.
+	AddMaterialIds runtime.Optional[[]string] `json:"addMaterialIds"`
+	// BaseJobId (OPTIONAL) Optional. Regeneration baseline job when the selected branch requires one.
+	BaseJobId runtime.Optional[string] `json:"baseJobId"`
+	// BriefInstruction (OPTIONAL) Optional. Required for create and an optional delta for regeneration.
+	BriefInstruction runtime.Optional[string] `json:"briefInstruction"`
+	// ContentDecisionActionToken (OPTIONAL) Optional. Required with content_decision_context_id and never logged.
+	ContentDecisionActionToken runtime.Optional[string] `json:"contentDecisionActionToken"`
+	// ContentDecisionContextDigest (OPTIONAL) Optional. Required with content_decision_context_id.
+	ContentDecisionContextDigest runtime.Optional[string] `json:"contentDecisionContextDigest"`
+	// ContentDecisionContextId (OPTIONAL) Optional. Required when resolving a durable content-decision context.
+	ContentDecisionContextId runtime.Optional[string] `json:"contentDecisionContextId"`
+	// ContentDecisionNote (OPTIONAL) Optional. Regeneration-only note accompanying selected option identifiers.
+	ContentDecisionNote runtime.Optional[string] `json:"contentDecisionNote"`
+	// ContentDecisionOptionIds (OPTIONAL) Optional. Required and non-empty with content_decision_context_id.
+	ContentDecisionOptionIds runtime.Optional[[]string] `json:"contentDecisionOptionIds"`
+	// ExternalInformationMode (OPTIONAL) Optional. Required for create/regeneration and currently must be DISABLED.
+	ExternalInformationMode runtime.Optional[ExternalInformationMode] `json:"externalInformationMode"`
+	// InlineText (OPTIONAL) Optional. Complete inline source for create; forbidden for other operations.
+	InlineText runtime.Optional[string] `json:"inlineText"`
+	// InlineTextChange (OPTIONAL) Optional. Typed inline-text delta for regeneration only.
+	InlineTextChange runtime.Optional[*InlineTextChange] `json:"inlineTextChange"`
+	// MaterialIds (OPTIONAL) Optional. Complete create-time material set; conditionally non-empty.
+	MaterialIds runtime.Optional[[]string] `json:"materialIds"`
+	// Operation Required. CREATE_PAGE, REGENERATE_PAGE, or RETRY_JOB.
+	Operation GenerationOperation `json:"operation"`
+	// Orientation (OPTIONAL) Optional. Create or regeneration orientation; forbidden for retry.
+	Orientation runtime.Optional[Orientation] `json:"orientation"`
+	// PageId (OPTIONAL) Optional. Required for REGENERATE_PAGE and RETRY_JOB; forbidden for create.
+	PageId runtime.Optional[string] `json:"pageId"`
+	// RemoveMaterialIds (OPTIONAL) Optional. Materials removed from a regeneration baseline.
+	RemoveMaterialIds runtime.Optional[[]string] `json:"removeMaterialIds"`
+	// SourceJobId (OPTIONAL) Optional. Required only for RETRY_JOB.
+	SourceJobId runtime.Optional[string] `json:"sourceJobId"`
+	// Title (OPTIONAL) Optional. Create-only candidate title.
+	Title runtime.Optional[string] `json:"title"`
 }
 
 func (v PinpageJobsEstimateBody) MarshalJSON() ([]byte, error) {
@@ -6695,9 +10250,12 @@ func (v *PinpageJobsEstimateBody) UnmarshalJSON(data []byte) error {
 }
 
 type PinpageJobsRetryJobBody struct {
+	// ConfirmedAuthorizedMaxCredit Required. Exact maximum user net charge confirmed by the user.
 	ConfirmedAuthorizedMaxCredit string `json:"confirmedAuthorizedMaxCredit"`
-	EstimateId                   string `json:"estimateId"`
-	InputFingerprint             string `json:"inputFingerprint"`
+	// EstimateId Required. Active RETRY_JOB estimate bound to job_id.
+	EstimateId string `json:"estimateId"`
+	// InputFingerprint Required. Exact fingerprint from the durable estimate.
+	InputFingerprint string `json:"inputFingerprint"`
 }
 
 func (v PinpageJobsRetryJobBody) MarshalJSON() ([]byte, error) {
@@ -6714,10 +10272,14 @@ func (v *PinpageJobsRetryJobBody) UnmarshalJSON(data []byte) error {
 }
 
 type PinpageJobsSubmitBody struct {
-	ClientReference              runtime.Optional[string] `json:"clientReference"`
-	ConfirmedAuthorizedMaxCredit string                   `json:"confirmedAuthorizedMaxCredit"`
-	EstimateId                   string                   `json:"estimateId"`
-	InputFingerprint             string                   `json:"inputFingerprint"`
+	// ClientReference (OPTIONAL) Optional. Client-local draft correlation value, at most 128 characters.
+	ClientReference runtime.Optional[string] `json:"clientReference"`
+	// ConfirmedAuthorizedMaxCredit Required. Exact maximum user net charge confirmed by the user.
+	ConfirmedAuthorizedMaxCredit string `json:"confirmedAuthorizedMaxCredit"`
+	// EstimateId Required. Active CREATE_PAGE estimate identifier.
+	EstimateId string `json:"estimateId"`
+	// InputFingerprint Required. Exact fingerprint from the durable estimate.
+	InputFingerprint string `json:"inputFingerprint"`
 }
 
 func (v PinpageJobsSubmitBody) MarshalJSON() ([]byte, error) {
@@ -6736,11 +10298,17 @@ func (v *PinpageJobsSubmitBody) UnmarshalJSON(data []byte) error {
 }
 
 type PinpagePagesRegeneratePageBody struct {
+	// ConfirmedAuthorizedMaxCredit (OPTIONAL) Deprecated. Legacy user-authorized maximum charge.
 	ConfirmedAuthorizedMaxCredit runtime.Optional[string] `json:"confirmedAuthorizedMaxCredit"`
-	EstimateId                   runtime.Optional[string] `json:"estimateId"`
-	InputFingerprint             runtime.Optional[string] `json:"inputFingerprint"`
-	Instruction                  runtime.Optional[string] `json:"instruction"`
-	UiLocale                     runtime.Optional[string] `json:"uiLocale"`
+	// EstimateId (OPTIONAL) Deprecated. Legacy REGENERATE_PAGE estimate bound to page_id.
+	EstimateId runtime.Optional[string] `json:"estimateId"`
+	// InputFingerprint (OPTIONAL) Deprecated. Legacy fingerprint from the durable estimate.
+	InputFingerprint runtime.Optional[string] `json:"inputFingerprint"`
+	// Instruction (OPTIONAL) Required for the direct flow. Complete modification requirement. Vertex
+	//  owns LLM quota admission and charging behind the PinPage boundary.
+	Instruction runtime.Optional[string] `json:"instruction"`
+	// UiLocale (OPTIONAL) Optional. Actual UI locale; valid Accept-Language takes precedence.
+	UiLocale runtime.Optional[string] `json:"uiLocale"`
 }
 
 func (v PinpagePagesRegeneratePageBody) MarshalJSON() ([]byte, error) {
@@ -6761,8 +10329,10 @@ func (v *PinpagePagesRegeneratePageBody) UnmarshalJSON(data []byte) error {
 }
 
 type PinpagePagesRenamePageBody struct {
+	// ExpectedTitleRevision Required. Title revision from GetGenerationProgress; rejects stale edits.
 	ExpectedTitleRevision string `json:"expectedTitleRevision"`
-	Title                 string `json:"title"`
+	// Title Required. Desired display title.
+	Title string `json:"title"`
 }
 
 func (v PinpagePagesRenamePageBody) MarshalJSON() ([]byte, error) {
@@ -6777,8 +10347,10 @@ func (v *PinpagePagesRenamePageBody) UnmarshalJSON(data []byte) error {
 }
 
 type PinpageUploadsCreateUploadBody struct {
+	// ConfirmedAuthorizedMaxCredit Required. Exact parent-estimate maximum net charge confirmed by the user.
 	ConfirmedAuthorizedMaxCredit string `json:"confirmedAuthorizedMaxCredit"`
-	EstimateItemId               string `json:"estimateItemId"`
+	// EstimateItemId Required. Available item in an unexpired upload estimate.
+	EstimateItemId string `json:"estimateItemId"`
 }
 
 func (v PinpageUploadsCreateUploadBody) MarshalJSON() ([]byte, error) {
@@ -6793,6 +10365,7 @@ func (v *PinpageUploadsCreateUploadBody) UnmarshalJSON(data []byte) error {
 }
 
 type PinpageUploadsEstimateBody struct {
+	// Files Required. One to ten declarations with at most 200 MB in aggregate.
 	Files []*UploadEstimateDeclaration `json:"files"`
 }
 
@@ -6804,6 +10377,7 @@ func (v *PinpageUploadsEstimateBody) UnmarshalJSON(data []byte) error {
 }
 
 type PinpageUploadsSignUploadPartsBody struct {
+	// PartNumbers Required. One to one hundred unique numbers within the session part plan.
 	PartNumbers []int64 `json:"partNumbers"`
 }
 
@@ -6814,6 +10388,9 @@ func (v *PinpageUploadsSignUploadPartsBody) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "partNumbers", Value: &v.PartNumbers, Required: true, Nullable: false, Enum: []string{}})
 }
 
+// Platform Platform indicates the target publishing platform.
+//
+//	新增平台时，在此枚举追加值，并在 publish.proto 中添加对应的 XxxConfig 消息。
 type Platform string
 
 const (
@@ -6836,13 +10413,22 @@ func (v Platform) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"PLATFORM_UNSPECIFIED", "PLATFORM_WECHAT_MP", "PLATFORM_ZHIHU", "PLATFORM_TOUTIAO", "PLATFORM_YUQUE"})
 }
 
+// PlatformAccount PlatformAccount stores the binding info for a publishing platform account.
+//
+//	用户通过 OAuth 授权绑定平台账号后，后续发布操作使用该账号的凭据。
 type PlatformAccount struct {
-	AccountId    runtime.Optional[string]    `json:"account_id"`
+	// AccountId 账号绑定记录唯一标识。
+	AccountId runtime.Optional[string] `json:"account_id"`
+	// AuthorizedAt OAuth 授权时间。
 	AuthorizedAt runtime.Optional[Timestamp] `json:"authorized_at"`
-	DisplayName  runtime.Optional[string]    `json:"display_name"`
-	ExpiresAt    runtime.Optional[Timestamp] `json:"expires_at"`
-	IsActive     runtime.Optional[bool]      `json:"is_active"`
-	Platform     runtime.Optional[Platform]  `json:"platform"`
+	// DisplayName 平台账号显示名称（如公众号名称、知乎用户名）。
+	DisplayName runtime.Optional[string] `json:"display_name"`
+	// ExpiresAt 授权过期时间，过期后需重新授权。
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	// IsActive 账号是否可用（授权未过期且未被解绑）。
+	IsActive runtime.Optional[bool] `json:"is_active"`
+	// Platform 绑定的平台。
+	Platform runtime.Optional[Platform] `json:"platform"`
 }
 
 func (v PlatformAccount) MarshalJSON() ([]byte, error) {
@@ -6864,14 +10450,201 @@ func (v *PlatformAccount) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PlatformConfig PlatformConfig 封装各平台的发布配置。
+//
+//	使用 oneof 确保每次发布只携带一个平台的配置。
 type PlatformConfig = any
+
+// Preset Preset 用户自定义排版预设，基于系统模板微调。
 type Preset struct {
-	Config     runtime.Optional[string]    `json:"config"`
-	CreatedAt  runtime.Optional[Timestamp] `json:"created_at"`
-	Name       runtime.Optional[string]    `json:"name"`
-	PresetId   runtime.Optional[string]    `json:"preset_id"`
-	TemplateId runtime.Optional[string]    `json:"template_id"`
-	UpdatedAt  runtime.Optional[Timestamp] `json:"updated_at"`
+	// Config 自定义配置，JSON 格式存储。
+	Config runtime.Optional[string] `json:"config"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// Name 预设显示名称。
+	Name runtime.Optional[string] `json:"name"`
+	// PresetId 预设唯一标识。
+	PresetId runtime.Optional[string] `json:"preset_id"`
+	// TemplateId 基于的系统模板 ID。
+	TemplateId runtime.Optional[string] `json:"template_id"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
 func (v Preset) MarshalJSON() ([]byte, error) {
@@ -6894,8 +10667,10 @@ func (v *Preset) UnmarshalJSON(data []byte) error {
 }
 
 type PreviewCategoryDeletionRequest struct {
+	// CategoryId Required. Root category whose exact subtree impact is requested.
 	CategoryId string `json:"category_id"`
-	UserId     string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v PreviewCategoryDeletionRequest) MarshalJSON() ([]byte, error) {
@@ -6910,6 +10685,7 @@ func (v *PreviewCategoryDeletionRequest) UnmarshalJSON(data []byte) error {
 }
 
 type PreviewCategoryDeletionResponse struct {
+	// DeletionPreview Required. Signed, short-lived exact category and page impact snapshot.
 	DeletionPreview *CategoryDeletionPreview `json:"deletion_preview"`
 }
 
@@ -6921,11 +10697,16 @@ func (v *PreviewCategoryDeletionResponse) UnmarshalJSON(data []byte) error {
 }
 
 type PreviewCategoryOrganizationRequest struct {
+	// ConfirmedAuthorizedMaxCredit Required. Exact maximum user net charge confirmed by the user.
 	ConfirmedAuthorizedMaxCredit string `json:"confirmed_authorized_max_credit"`
-	ConfirmedEstimatedAiCredit   string `json:"confirmed_estimated_ai_credit"`
-	EstimateId                   string `json:"estimate_id"`
-	InputFingerprint             string `json:"input_fingerprint"`
-	UserId                       string `json:"user_id"`
+	// ConfirmedEstimatedAiCredit Required. Public AI estimate confirmed by the user.
+	ConfirmedEstimatedAiCredit string `json:"confirmed_estimated_ai_credit"`
+	// EstimateId Required. Active estimate whose tree snapshot still matches.
+	EstimateId string `json:"estimate_id"`
+	// InputFingerprint Required. Exact frozen instruction, scope, and tree fingerprint.
+	InputFingerprint string `json:"input_fingerprint"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v PreviewCategoryOrganizationRequest) MarshalJSON() ([]byte, error) {
@@ -6946,6 +10727,7 @@ func (v *PreviewCategoryOrganizationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type PreviewCategoryOrganizationResponse struct {
+	// OrganizationJob Required. Newly accepted asynchronous organization job.
 	OrganizationJob *CategoryOrganizationJob `json:"organization_job"`
 }
 
@@ -6957,7 +10739,9 @@ func (v *PreviewCategoryOrganizationResponse) UnmarshalJSON(data []byte) error {
 }
 
 type PreviewPageDeletionRequest struct {
+	// PageId Required. Page whose exact deletion impact is requested.
 	PageId string `json:"page_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
 	UserId string `json:"user_id"`
 }
 
@@ -6973,6 +10757,7 @@ func (v *PreviewPageDeletionRequest) UnmarshalJSON(data []byte) error {
 }
 
 type PreviewPageDeletionResponse struct {
+	// DeletionPreview Required. Signed, short-lived exact impact snapshot.
 	DeletionPreview *PageDeletionPreview `json:"deletion_preview"`
 }
 
@@ -6984,11 +10769,16 @@ func (v *PreviewPageDeletionResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ProgressMessage struct {
-	Arguments            runtime.Optional[map[string]string] `json:"arguments"`
-	DefaultMessage       string                              `json:"default_message"`
-	DefaultMessageLocale string                              `json:"default_message_locale"`
-	DynamicLocale        runtime.Optional[string]            `json:"dynamic_locale"`
-	MessageCode          string                              `json:"message_code"`
+	// Arguments (OPTIONAL) Optional. arguments.
+	Arguments runtime.Optional[map[string]string] `json:"arguments"`
+	// DefaultMessage Required. default message.
+	DefaultMessage string `json:"default_message"`
+	// DefaultMessageLocale Required. default message locale.
+	DefaultMessageLocale string `json:"default_message_locale"`
+	// DynamicLocale (OPTIONAL) Optional. dynamic locale.
+	DynamicLocale runtime.Optional[string] `json:"dynamic_locale"`
+	// MessageCode Required. message code.
+	MessageCode string `json:"message_code"`
 }
 
 func (v ProgressMessage) MarshalJSON() ([]byte, error) {
@@ -7024,15 +10814,203 @@ func (v *ProgressMessageArgumentsEntry) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// Project Project groups related creative content together.
+//
+//	Project 是创作的顶层聚合单元，一个项目包含多篇文章、多个视频任务和多个素材。
+//	典型场景：一次营销活动、一个专题系列、一期内容排期。
 type Project struct {
-	CreatedAt   runtime.Optional[Timestamp]         `json:"created_at"`
-	Description runtime.Optional[string]            `json:"description"`
-	Metadata    runtime.Optional[map[string]string] `json:"metadata"`
-	Name        runtime.Optional[string]            `json:"name"`
-	ProjectId   runtime.Optional[string]            `json:"project_id"`
-	Status      runtime.Optional[ProjectStatus]     `json:"status"`
-	Tags        runtime.Optional[[]string]          `json:"tags"`
-	UpdatedAt   runtime.Optional[Timestamp]         `json:"updated_at"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// Description 项目描述。
+	Description runtime.Optional[string] `json:"description"`
+	// Metadata 扩展元数据，用于存储业务自定义信息，避免频繁变更表结构。
+	Metadata runtime.Optional[map[string]string] `json:"metadata"`
+	// Name 项目名称。
+	Name runtime.Optional[string] `json:"name"`
+	// ProjectId 项目唯一标识。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// Status 项目状态。
+	Status runtime.Optional[ProjectStatus] `json:"status"`
+	// Tags 项目标签。
+	Tags runtime.Optional[[]string] `json:"tags"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
 func (v Project) MarshalJSON() ([]byte, error) {
@@ -7074,6 +11052,9 @@ func (v *ProjectMetadataEntry) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ProjectStatus ProjectStatus indicates the lifecycle state of a creative project.
+//
+//	状态流转: DRAFT → IN_PROGRESS → COMPLETED → ARCHIVED
 type ProjectStatus string
 
 const (
@@ -7096,10 +11077,15 @@ func (v ProjectStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"PROJECT_STATUS_UNSPECIFIED", "PROJECT_STATUS_DRAFT", "PROJECT_STATUS_IN_PROGRESS", "PROJECT_STATUS_COMPLETED", "PROJECT_STATUS_ARCHIVED"})
 }
 
+// PublishArticleRequest PublishArticleRequest 将一篇文章发布到指定平台。
 type PublishArticleRequest struct {
-	AccountId      runtime.Optional[string]         `json:"account_id"`
-	ArticleId      runtime.Optional[string]         `json:"article_id"`
-	Platform       runtime.Optional[Platform]       `json:"platform"`
+	// AccountId 使用哪个已绑定的平台账号发布。
+	AccountId runtime.Optional[string] `json:"account_id"`
+	// ArticleId 要发布的文章 ID。
+	ArticleId runtime.Optional[string] `json:"article_id"`
+	// Platform 目标平台。
+	Platform runtime.Optional[Platform] `json:"platform"`
+	// PlatformConfig 平台特有的发布配置。
 	PlatformConfig runtime.Optional[PlatformConfig] `json:"platform_config"`
 }
 
@@ -7119,6 +11105,7 @@ func (v *PublishArticleRequest) UnmarshalJSON(data []byte) error {
 }
 
 type PublishArticleResponse struct {
+	// Record 本次发布的记录，可通过 record_id 追踪后续状态。
 	Record runtime.Optional[*PublishRecord] `json:"record"`
 }
 
@@ -7129,14 +11116,112 @@ func (v *PublishArticleResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "record", Value: &v.Record, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// PublishRecord PublishRecord records a single publish attempt to a platform.
+//
+//	每次发布操作（无论成功或失败）都会产生一条记录，支持追溯和重试。
 type PublishRecord struct {
-	ArticleId    runtime.Optional[string]        `json:"article_id"`
-	ErrorMessage runtime.Optional[string]        `json:"error_message"`
-	Platform     runtime.Optional[Platform]      `json:"platform"`
-	PlatformUrl  runtime.Optional[string]        `json:"platform_url"`
-	PublishedAt  runtime.Optional[Timestamp]     `json:"published_at"`
-	RecordId     runtime.Optional[string]        `json:"record_id"`
-	Status       runtime.Optional[PublishStatus] `json:"status"`
+	// ArticleId 关联的文章 ID。
+	ArticleId runtime.Optional[string] `json:"article_id"`
+	// ErrorMessage 发布失败原因。
+	ErrorMessage runtime.Optional[string] `json:"error_message"`
+	// Platform 目标发布平台。
+	Platform runtime.Optional[Platform] `json:"platform"`
+	// PlatformUrl 发布成功后的文章链接（平台侧 URL）。
+	PlatformUrl runtime.Optional[string] `json:"platform_url"`
+	// PublishedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	PublishedAt runtime.Optional[Timestamp] `json:"published_at"`
+	// RecordId 发布记录唯一标识。
+	RecordId runtime.Optional[string] `json:"record_id"`
+	// Status 发布状态。
+	Status runtime.Optional[PublishStatus] `json:"status"`
 }
 
 func (v PublishRecord) MarshalJSON() ([]byte, error) {
@@ -7160,6 +11245,9 @@ func (v *PublishRecord) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PublishStatus PublishStatus indicates the lifecycle state of a publish operation.
+//
+//	状态流转: PENDING → PROCESSING → SUCCESS / FAILED
 type PublishStatus string
 
 const (
@@ -7182,22 +11270,41 @@ func (v PublishStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"PUBLISH_STATUS_UNSPECIFIED", "PUBLISH_STATUS_PENDING", "PUBLISH_STATUS_PROCESSING", "PUBLISH_STATUS_SUCCESS", "PUBLISH_STATUS_FAILED"})
 }
 
+// PublishToWechatMpRequest PublishToWechatMpRequest 一站式发布 Markdown 或 HTML 内容到微信公众号。
+//
+//	流程：按格式预处理正文 → 封面上传 → 创建/更新草稿 → 可选群发。
 type PublishToWechatMpRequest struct {
-	Author              runtime.Optional[string]                  `json:"author"`
-	CachedArticles      runtime.Optional[[]*PublishedArticleInfo] `json:"cached_articles"`
-	Content             runtime.Optional[string]                  `json:"content"`
-	ContentFormat       runtime.Optional[ContentFormat]           `json:"content_format"`
-	ContentSourceUrl    runtime.Optional[string]                  `json:"content_source_url"`
-	CoverUrl            runtime.Optional[string]                  `json:"cover_url"`
-	Debug               runtime.Optional[bool]                    `json:"debug"`
-	Digest              runtime.Optional[string]                  `json:"digest"`
-	ImageMap            runtime.Optional[map[string]string]       `json:"image_map"`
-	NeedOpenComment     runtime.Optional[bool]                    `json:"need_open_comment"`
-	ShowCoverPic        runtime.Optional[bool]                    `json:"show_cover_pic"`
-	Target              runtime.Optional[PublishToWechatMpTarget] `json:"target"`
-	TemplateId          runtime.Optional[string]                  `json:"template_id"`
-	Title               runtime.Optional[string]                  `json:"title"`
-	WechatMpCredentials runtime.Optional[*WechatMpCredentials]    `json:"wechat_mp_credentials"`
+	// Author 文章作者。
+	Author runtime.Optional[string] `json:"author"`
+	// CachedArticles 客户端缓存的已发布文章（往期推荐功能的回退数据源）。
+	CachedArticles runtime.Optional[[]*PublishedArticleInfo] `json:"cached_articles"`
+	// Content Markdown 或 HTML 正文内容（必填）。
+	Content runtime.Optional[string] `json:"content"`
+	// ContentFormat 正文格式。未指定时按 Markdown 处理，以兼容旧客户端。
+	ContentFormat runtime.Optional[ContentFormat] `json:"content_format"`
+	// ContentSourceUrl 原文链接 URL。
+	ContentSourceUrl runtime.Optional[string] `json:"content_source_url"`
+	// CoverUrl 封面图 URL，将自动上传为微信 thumb 素材。
+	CoverUrl runtime.Optional[string] `json:"cover_url"`
+	// Debug 是否返回调试日志。
+	Debug runtime.Optional[bool] `json:"debug"`
+	// Digest 文章摘要，未填写时微信默认截取正文前 120 字。
+	Digest runtime.Optional[string] `json:"digest"`
+	// ImageMap 正文中的图片映射：本地路径/标识 → 已上传的微信图片 URL。
+	ImageMap runtime.Optional[map[string]string] `json:"image_map"`
+	// NeedOpenComment 是否开启评论功能。
+	NeedOpenComment runtime.Optional[bool] `json:"need_open_comment"`
+	// ShowCoverPic 是否在正文中显示封面图。
+	ShowCoverPic runtime.Optional[bool] `json:"show_cover_pic"`
+	// Target 发布目标：草稿或群发。
+	Target runtime.Optional[PublishToWechatMpTarget] `json:"target"`
+	// TemplateId 排版模板/主题 ID。
+	TemplateId runtime.Optional[string] `json:"template_id"`
+	// Title 文章标题（必填）。
+	Title runtime.Optional[string] `json:"title"`
+	// WechatMpCredentials 微信公众号 API 调用凭证（必填）。
+	//  详见 WechatMpCredentials 设计说明（types.proto）。
+	WechatMpCredentials runtime.Optional[*WechatMpCredentials] `json:"wechat_mp_credentials"`
 }
 
 func (v PublishToWechatMpRequest) MarshalJSON() ([]byte, error) {
@@ -7253,11 +11360,17 @@ func (v *PublishToWechatMpRequestImageMapEntry) UnmarshalJSON(data []byte) error
 	)
 }
 
+// PublishToWechatMpResponse PublishToWechatMpResponse 发布结果。
 type PublishToWechatMpResponse struct {
-	DebugLogs         runtime.Optional[[]string]                `json:"debug_logs"`
-	MediaId           runtime.Optional[string]                  `json:"media_id"`
-	Message           runtime.Optional[string]                  `json:"message"`
-	Ok                runtime.Optional[bool]                    `json:"ok"`
+	// DebugLogs 调试日志（debug=true 时返回）。
+	DebugLogs runtime.Optional[[]string] `json:"debug_logs"`
+	// MediaId 草稿的 media_id。
+	MediaId runtime.Optional[string] `json:"media_id"`
+	// Message 结果描述信息。
+	Message runtime.Optional[string] `json:"message"`
+	// Ok 操作是否成功。
+	Ok runtime.Optional[bool] `json:"ok"`
+	// PublishedArticles 拉取到的已发布文章列表（供客户端缓存）。
 	PublishedArticles runtime.Optional[[]*PublishedArticleInfo] `json:"published_articles"`
 }
 
@@ -7278,6 +11391,7 @@ func (v *PublishToWechatMpResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// PublishToWechatMpTarget PublishToWechatMpTarget 发布目标。
 type PublishToWechatMpTarget string
 
 const (
@@ -7298,11 +11412,16 @@ func (v PublishToWechatMpTarget) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"PUBLISH_TO_WECHAT_MP_TARGET_UNSPECIFIED", "PUBLISH_TO_WECHAT_MP_TARGET_DRAFT", "PUBLISH_TO_WECHAT_MP_TARGET_SEND"})
 }
 
+// PublishedArticleInfo PublishedArticleInfo 已发布文章信息。
 type PublishedArticleInfo struct {
-	Category    runtime.Optional[string] `json:"category"`
+	// Category 文章分类（例如 "千万 QPS 架构系列 · 网络架构篇 · IP与路由"）。
+	Category runtime.Optional[string] `json:"category"`
+	// PublishTime 发布时间（Unix 时间戳，秒）。
 	PublishTime runtime.Optional[string] `json:"publish_time"`
-	Title       runtime.Optional[string] `json:"title"`
-	Url         runtime.Optional[string] `json:"url"`
+	// Title 文章标题。
+	Title runtime.Optional[string] `json:"title"`
+	// Url 文章链接。
+	Url runtime.Optional[string] `json:"url"`
 }
 
 func (v PublishedArticleInfo) MarshalJSON() ([]byte, error) {
@@ -7365,8 +11484,10 @@ func (v *RegenerateAPIKeyRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RegenerateAPIKeyResponse struct {
+	// ApiKey APIKey represents a developer's API key credential.
 	ApiKey runtime.Optional[*APIKey] `json:"api_key"`
-	Key    runtime.Optional[string]  `json:"key"`
+	// Key New key in plaintext; old key is immediately invalidated
+	Key runtime.Optional[string] `json:"key"`
 }
 
 func (v RegenerateAPIKeyResponse) MarshalJSON() ([]byte, error) {
@@ -7381,13 +11502,21 @@ func (v *RegenerateAPIKeyResponse) UnmarshalJSON(data []byte) error {
 }
 
 type RegeneratePageRequest struct {
+	// ConfirmedAuthorizedMaxCredit (OPTIONAL) Deprecated. Legacy user-authorized maximum charge.
 	ConfirmedAuthorizedMaxCredit runtime.Optional[string] `json:"confirmed_authorized_max_credit"`
-	EstimateId                   runtime.Optional[string] `json:"estimate_id"`
-	InputFingerprint             runtime.Optional[string] `json:"input_fingerprint"`
-	Instruction                  runtime.Optional[string] `json:"instruction"`
-	PageId                       string                   `json:"page_id"`
-	UiLocale                     runtime.Optional[string] `json:"ui_locale"`
-	UserId                       string                   `json:"user_id"`
+	// EstimateId (OPTIONAL) Deprecated. Legacy REGENERATE_PAGE estimate bound to page_id.
+	EstimateId runtime.Optional[string] `json:"estimate_id"`
+	// InputFingerprint (OPTIONAL) Deprecated. Legacy fingerprint from the durable estimate.
+	InputFingerprint runtime.Optional[string] `json:"input_fingerprint"`
+	// Instruction (OPTIONAL) Required for the direct flow. Complete modification requirement. Vertex
+	//  owns LLM quota admission and charging behind the PinPage boundary.
+	Instruction runtime.Optional[string] `json:"instruction"`
+	// PageId Required. Existing page to regenerate.
+	PageId string `json:"page_id"`
+	// UiLocale (OPTIONAL) Optional. Actual UI locale; valid Accept-Language takes precedence.
+	UiLocale runtime.Optional[string] `json:"ui_locale"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v RegeneratePageRequest) MarshalJSON() ([]byte, error) {
@@ -7412,8 +11541,10 @@ func (v *RegeneratePageRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RegeneratePageResponse struct {
-	Job  *JobSummary `json:"job"`
-	Page *Page       `json:"page"`
+	// Job Required. Newly created regeneration job.
+	Job *JobSummary `json:"job"`
+	// Page Required. Current page; its version pointer is not changed early.
+	Page *Page `json:"page"`
 }
 
 func (v RegeneratePageResponse) MarshalJSON() ([]byte, error) {
@@ -7428,9 +11559,12 @@ func (v *RegeneratePageResponse) UnmarshalJSON(data []byte) error {
 }
 
 type RegisterRequest struct {
-	Code         runtime.Optional[string] `json:"code"`
+	// Code verification code
+	Code runtime.Optional[string] `json:"code"`
+	// CodeVerifier PKCE verifier
 	CodeVerifier runtime.Optional[string] `json:"code_verifier"`
 	Email        runtime.Optional[string] `json:"email"`
+	// PasswordHash SHA256 hash from client
 	PasswordHash runtime.Optional[string] `json:"password_hash"`
 	Phone        runtime.Optional[string] `json:"phone"`
 	Txid         runtime.Optional[string] `json:"txid"`
@@ -7456,12 +11590,13 @@ func (v *RegisterRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RegisterResponse struct {
-	CsrfToken runtime.Optional[string]     `json:"csrf_token"`
-	Email     runtime.Optional[string]     `json:"email"`
-	Name      runtime.Optional[string]     `json:"name"`
-	Phone     runtime.Optional[string]     `json:"phone"`
-	SessionId runtime.Optional[string]     `json:"session_id"`
-	Tokens    runtime.Optional[*TokenPair] `json:"tokens"`
+	CsrfToken runtime.Optional[string] `json:"csrf_token"`
+	Email     runtime.Optional[string] `json:"email"`
+	Name      runtime.Optional[string] `json:"name"`
+	Phone     runtime.Optional[string] `json:"phone"`
+	SessionId runtime.Optional[string] `json:"session_id"`
+	// Tokens 注册后自动创建的 session（与 LoginResponse 一致）
+	Tokens runtime.Optional[*TokenPair] `json:"tokens"`
 }
 
 func (v RegisterResponse) MarshalJSON() ([]byte, error) {
@@ -7501,10 +11636,14 @@ func (v *RemoveMemberRequest) UnmarshalJSON(data []byte) error {
 
 type RemoveMemberResponse = any
 type RenamePageRequest struct {
+	// ExpectedTitleRevision Required. Title revision from GetGenerationProgress; rejects stale edits.
 	ExpectedTitleRevision string `json:"expected_title_revision"`
-	PageId                string `json:"page_id"`
-	Title                 string `json:"title"`
-	UserId                string `json:"user_id"`
+	// PageId Required. Owned page identifier.
+	PageId string `json:"page_id"`
+	// Title Required. Desired display title.
+	Title string `json:"title"`
+	// UserId Required. Authenticated owner or me.
+	UserId string `json:"user_id"`
 }
 
 func (v RenamePageRequest) MarshalJSON() ([]byte, error) {
@@ -7523,6 +11662,7 @@ func (v *RenamePageRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RenamePageResponse struct {
+	// Page Required. Current page after the name was saved.
 	Page *Page `json:"page"`
 }
 
@@ -7534,8 +11674,9 @@ func (v *RenamePageResponse) UnmarshalJSON(data []byte) error {
 }
 
 type RequestPasswordResetRequest struct {
-	Target runtime.Optional[string]           `json:"target"`
-	Type   runtime.Optional[VerificationType] `json:"type"`
+	Target runtime.Optional[string] `json:"target"`
+	// Type VerificationType indicates the channel for verification code delivery.
+	Type runtime.Optional[VerificationType] `json:"type"`
 }
 
 func (v RequestPasswordResetRequest) MarshalJSON() ([]byte, error) {
@@ -7551,12 +11692,13 @@ func (v *RequestPasswordResetRequest) UnmarshalJSON(data []byte) error {
 
 type RequestPasswordResetResponse = any
 type ResetPasswordRequest struct {
-	Code            runtime.Optional[string]           `json:"code"`
-	CodeVerifier    runtime.Optional[string]           `json:"code_verifier"`
-	NewPasswordHash runtime.Optional[string]           `json:"new_password_hash"`
-	Target          runtime.Optional[string]           `json:"target"`
-	Txid            runtime.Optional[string]           `json:"txid"`
-	Type            runtime.Optional[VerificationType] `json:"type"`
+	Code            runtime.Optional[string] `json:"code"`
+	CodeVerifier    runtime.Optional[string] `json:"code_verifier"`
+	NewPasswordHash runtime.Optional[string] `json:"new_password_hash"`
+	Target          runtime.Optional[string] `json:"target"`
+	Txid            runtime.Optional[string] `json:"txid"`
+	// Type VerificationType indicates the channel for verification code delivery.
+	Type runtime.Optional[VerificationType] `json:"type"`
 }
 
 func (v ResetPasswordRequest) MarshalJSON() ([]byte, error) {
@@ -7603,12 +11745,18 @@ func (v *RestoreAccountRequest) UnmarshalJSON(data []byte) error {
 
 type RestoreAccountResponse = any
 type RestorePageVersionRequest struct {
-	ExpectedContentRevision  string                   `json:"expected_content_revision"`
-	ExpectedCurrentVersionId string                   `json:"expected_current_version_id"`
-	PageEtag                 runtime.Optional[string] `json:"page_etag"`
-	PageId                   string                   `json:"page_id"`
-	UserId                   string                   `json:"user_id"`
-	VersionId                string                   `json:"version_id"`
+	// ExpectedContentRevision Required. Page content revision observed before the write.
+	ExpectedContentRevision string `json:"expected_content_revision"`
+	// ExpectedCurrentVersionId Required. Current version observed before the write.
+	ExpectedCurrentVersionId string `json:"expected_current_version_id"`
+	// PageEtag (OPTIONAL) Optional. Exact representation validator requested by the client.
+	PageEtag runtime.Optional[string] `json:"page_etag"`
+	// PageId Required. Owning page identifier.
+	PageId string `json:"page_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
+	// VersionId Required. Historical version to make current.
+	VersionId string `json:"version_id"`
 }
 
 func (v RestorePageVersionRequest) MarshalJSON() ([]byte, error) {
@@ -7631,6 +11779,7 @@ func (v *RestorePageVersionRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RestorePageVersionResponse struct {
+	// Page Required. Page after the historical version becomes current.
 	Page *Page `json:"page"`
 }
 
@@ -7642,11 +11791,16 @@ func (v *RestorePageVersionResponse) UnmarshalJSON(data []byte) error {
 }
 
 type RetryJobRequest struct {
+	// ConfirmedAuthorizedMaxCredit Required. Exact maximum user net charge confirmed by the user.
 	ConfirmedAuthorizedMaxCredit string `json:"confirmed_authorized_max_credit"`
-	EstimateId                   string `json:"estimate_id"`
-	InputFingerprint             string `json:"input_fingerprint"`
-	JobId                        string `json:"job_id"`
-	UserId                       string `json:"user_id"`
+	// EstimateId Required. Active RETRY_JOB estimate bound to job_id.
+	EstimateId string `json:"estimate_id"`
+	// InputFingerprint Required. Exact fingerprint from the durable estimate.
+	InputFingerprint string `json:"input_fingerprint"`
+	// JobId Required. Failed source job from the request path.
+	JobId string `json:"job_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v RetryJobRequest) MarshalJSON() ([]byte, error) {
@@ -7667,6 +11821,7 @@ func (v *RetryJobRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RetryJobResponse struct {
+	// Job Required. Newly created retry job; the source job remains unchanged.
 	Job *JobSummary `json:"job"`
 }
 
@@ -7689,6 +11844,7 @@ func (v *RetryWebhookDeliveryRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RetryWebhookDeliveryResponse struct {
+	// Delivery WebhookDelivery records a single delivery attempt.
 	Delivery runtime.Optional[*WebhookDelivery] `json:"delivery"`
 }
 
@@ -7724,9 +11880,11 @@ func (v *RevokeApplicationAccessRequest) UnmarshalJSON(data []byte) error {
 
 type RevokeApplicationAccessResponse = any
 type RevokeTokenRequest struct {
-	ClientId      runtime.Optional[string] `json:"client_id"`
-	ClientSecret  runtime.Optional[string] `json:"client_secret"`
-	Token         runtime.Optional[string] `json:"token"`
+	ClientId     runtime.Optional[string] `json:"client_id"`
+	ClientSecret runtime.Optional[string] `json:"client_secret"`
+	// Token The token to revoke (access or refresh)
+	Token runtime.Optional[string] `json:"token"`
+	// TokenTypeHint "access_token" or "refresh_token"
 	TokenTypeHint runtime.Optional[string] `json:"token_type_hint"`
 }
 
@@ -7758,6 +11916,7 @@ func (v *RotateClientSecretRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RotateClientSecretResponse struct {
+	// ClientSecret New secret in plaintext
 	ClientSecret runtime.Optional[string] `json:"client_secret"`
 }
 
@@ -7785,9 +11944,105 @@ func (v *RotateOAuthClientSecretRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RotateOAuthClientSecretResponse struct {
-	Client       runtime.Optional[*OAuthClient] `json:"client"`
-	ClientSecret runtime.Optional[string]       `json:"client_secret"`
-	RotatedAt    runtime.Optional[Timestamp]    `json:"rotated_at"`
+	// Client OAuthClient is one credential atom owned by IAM. An application may own
+	//  multiple clients; app_id and client_id must therefore be used together for
+	//  every management operation.
+	//
+	//  Secret material and secret hashes are deliberately absent from this read
+	//  model. Plaintext is returned exactly once by create and rotate responses.
+	Client runtime.Optional[*OAuthClient] `json:"client"`
+	// ClientSecret Plaintext returned once; old secret is invalidated.
+	ClientSecret runtime.Optional[string] `json:"client_secret"`
+	// RotatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	RotatedAt runtime.Optional[Timestamp] `json:"rotated_at"`
 }
 
 func (v RotateOAuthClientSecretResponse) MarshalJSON() ([]byte, error) {
@@ -7815,6 +12070,7 @@ func (v *RotateWebhookSecretRequest) UnmarshalJSON(data []byte) error {
 }
 
 type RotateWebhookSecretResponse struct {
+	// SigningSecret New secret in plaintext
 	SigningSecret runtime.Optional[string] `json:"signing_secret"`
 }
 
@@ -7825,15 +12081,199 @@ func (v *RotateWebhookSecretResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "signing_secret", Value: &v.SigningSecret, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// Scope Scope defines a permission boundary for OAuth access control.
 type Scope struct {
-	Category    runtime.Optional[string]    `json:"category"`
-	CreatedAt   runtime.Optional[Timestamp] `json:"created_at"`
-	Description runtime.Optional[string]    `json:"description"`
-	DisplayName runtime.Optional[string]    `json:"display_name"`
-	IsSensitive runtime.Optional[bool]      `json:"is_sensitive"`
-	Name        runtime.Optional[string]    `json:"name"`
-	ScopeId     runtime.Optional[string]    `json:"scope_id"`
-	UpdatedAt   runtime.Optional[Timestamp] `json:"updated_at"`
+	// Category Grouping, e.g. "creative", "hanzi", "user"
+	Category runtime.Optional[string] `json:"category"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// Description Shown on the consent screen
+	Description runtime.Optional[string] `json:"description"`
+	// DisplayName Human-readable label, e.g. "Read Creative Projects"
+	DisplayName runtime.Optional[string] `json:"display_name"`
+	// IsSensitive Requires explicit user approval
+	IsSensitive runtime.Optional[bool] `json:"is_sensitive"`
+	// Name Machine-readable identifier, e.g. "creative:read"
+	Name    runtime.Optional[string] `json:"name"`
+	ScopeId runtime.Optional[string] `json:"scope_id"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
 func (v Scope) MarshalJSON() ([]byte, error) {
@@ -7859,6 +12299,7 @@ func (v *Scope) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ScopeDetail ScopeDetail provides display information for a scope on the consent screen.
 type ScopeDetail struct {
 	Description runtime.Optional[string] `json:"description"`
 	DisplayName runtime.Optional[string] `json:"display_name"`
@@ -7881,8 +12322,11 @@ func (v *ScopeDetail) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// SearchUsersByPhoneRequest Bounded, masked INTERNAL account search. Digits match anywhere in phone.
 type SearchUsersByPhoneRequest struct {
-	PageSize   runtime.Optional[int64]  `json:"page_size"`
+	// PageSize 1-10, defaults to 10.
+	PageSize runtime.Optional[int64] `json:"page_size"`
+	// PhoneQuery 3-15 digits after removing formatting separators; no wildcard syntax.
 	PhoneQuery runtime.Optional[string] `json:"phone_query"`
 }
 
@@ -7909,10 +12353,14 @@ func (v *SearchUsersByPhoneResponse) UnmarshalJSON(data []byte) error {
 }
 
 type SendVerificationCodeRequest struct {
-	CodeChallenge runtime.Optional[string]              `json:"code_challenge"`
-	Purpose       runtime.Optional[VerificationPurpose] `json:"purpose"`
-	Target        runtime.Optional[string]              `json:"target"`
-	Type          runtime.Optional[VerificationType]    `json:"type"`
+	// CodeChallenge PKCE: base64url(SHA256(code_verifier))
+	CodeChallenge runtime.Optional[string] `json:"code_challenge"`
+	// Purpose VerificationPurpose indicates why the code is being sent.
+	Purpose runtime.Optional[VerificationPurpose] `json:"purpose"`
+	// Target email address or phone number
+	Target runtime.Optional[string] `json:"target"`
+	// Type VerificationType indicates the channel for verification code delivery.
+	Type runtime.Optional[VerificationType] `json:"type"`
 }
 
 func (v SendVerificationCodeRequest) MarshalJSON() ([]byte, error) {
@@ -7931,6 +12379,95 @@ func (v *SendVerificationCodeRequest) UnmarshalJSON(data []byte) error {
 }
 
 type SendVerificationCodeResponse struct {
+	// ExpiresAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
 	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
 	Txid      runtime.Optional[string]    `json:"txid"`
 }
@@ -7946,16 +12483,285 @@ func (v *SendVerificationCodeResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// SessionInfo SessionInfo describes an active session.
 type SessionInfo struct {
+	// DeviceInfo DeviceInfo describes the client device.
 	DeviceInfo runtime.Optional[*DeviceInfo] `json:"device_info"`
-	ExpiresAt  runtime.Optional[Timestamp]   `json:"expires_at"`
-	Ip         runtime.Optional[string]      `json:"ip"`
-	IsCurrent  runtime.Optional[bool]        `json:"is_current"`
-	LastActive runtime.Optional[Timestamp]   `json:"last_active"`
-	Location   runtime.Optional[string]      `json:"location"`
-	LoginTime  runtime.Optional[Timestamp]   `json:"login_time"`
-	Port       runtime.Optional[int64]       `json:"port"`
-	SessionId  runtime.Optional[string]      `json:"session_id"`
+	// ExpiresAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	Ip        runtime.Optional[string]    `json:"ip"`
+	IsCurrent runtime.Optional[bool]      `json:"is_current"`
+	// LastActive A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	LastActive runtime.Optional[Timestamp] `json:"last_active"`
+	Location   runtime.Optional[string]    `json:"location"`
+	// LoginTime A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	LoginTime runtime.Optional[Timestamp] `json:"login_time"`
+	Port      runtime.Optional[int64]     `json:"port"`
+	SessionId runtime.Optional[string]    `json:"session_id"`
 }
 
 func (v SessionInfo) MarshalJSON() ([]byte, error) {
@@ -8003,7 +12809,12 @@ func (v *SetPasswordRequest) UnmarshalJSON(data []byte) error {
 }
 
 type SetPasswordResponse = any
+
+// SignAssetUrlsRequest SignAssetUrlsRequest 为已缓存的素材对象键重新生成签名 URL。
+//
+//	用于客户端本地缓存了 object_key 后，URL 过期时重新签名。
 type SignAssetUrlsRequest struct {
+	// ObjectKeys 需要重新签名的对象键列表。
 	ObjectKeys runtime.Optional[[]string] `json:"object_keys"`
 }
 
@@ -8015,6 +12826,7 @@ func (v *SignAssetUrlsRequest) UnmarshalJSON(data []byte) error {
 }
 
 type SignAssetUrlsResponse struct {
+	// SignedUrls 对象键 → 签名后的访问 URL。
 	SignedUrls runtime.Optional[map[string]string] `json:"signed_urls"`
 }
 
@@ -8042,9 +12854,12 @@ func (v *SignAssetUrlsResponseSignedUrlsEntry) UnmarshalJSON(data []byte) error 
 }
 
 type SignUploadPartsRequest struct {
+	// PartNumbers Required. One to one hundred unique numbers within the session part plan.
 	PartNumbers []int64 `json:"part_numbers"`
-	UploadId    string  `json:"upload_id"`
-	UserId      string  `json:"user_id"`
+	// UploadId Required. OPEN upload session identifier.
+	UploadId string `json:"upload_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v SignUploadPartsRequest) MarshalJSON() ([]byte, error) {
@@ -8061,6 +12876,7 @@ func (v *SignUploadPartsRequest) UnmarshalJSON(data []byte) error {
 }
 
 type SignUploadPartsResponse struct {
+	// Parts Required. One short-lived signed capability per requested part.
 	Parts []*SignedUploadPart `json:"parts"`
 }
 
@@ -8071,10 +12887,17 @@ func (v *SignUploadPartsResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "parts", Value: &v.Parts, Required: true, Nullable: false, Enum: []string{}})
 }
 
+// SignedUploadPart SignedUploadPart is a short-lived, owner-authorized capability for uploading
+//
+//	one part. URLs and headers must never be logged or forwarded.
 type SignedUploadPart struct {
-	ExpiresAt       Timestamp         `json:"expires_at"`
-	PartNumber      int64             `json:"part_number"`
-	PutUrl          string            `json:"put_url"`
+	// ExpiresAt Required. Expiry time of put_url.
+	ExpiresAt Timestamp `json:"expires_at"`
+	// PartNumber Required. Multipart part number.
+	PartNumber int64 `json:"part_number"`
+	// PutUrl Required. Short-lived HTTPS bearer URL for this part.
+	PutUrl string `json:"put_url"`
+	// RequiredHeaders Required. Headers that must be sent byte-for-byte; empty when none.
 	RequiredHeaders map[string]string `json:"required_headers"`
 }
 
@@ -8110,11 +12933,16 @@ func (v *SignedUploadPartRequiredHeadersEntry) UnmarshalJSON(data []byte) error 
 }
 
 type SocialLoginRequest struct {
-	AuthCode     runtime.Optional[string]         `json:"auth_code"`
-	CodeVerifier runtime.Optional[string]         `json:"code_verifier"`
-	DeviceInfo   runtime.Optional[*DeviceInfo]    `json:"device_info"`
-	Provider     runtime.Optional[SocialProvider] `json:"provider"`
-	RedirectUri  runtime.Optional[string]         `json:"redirect_uri"`
+	// AuthCode Authorization code from the social provider
+	AuthCode runtime.Optional[string] `json:"auth_code"`
+	// CodeVerifier PKCE verifier (optional, depends on provider)
+	CodeVerifier runtime.Optional[string] `json:"code_verifier"`
+	// DeviceInfo DeviceInfo describes the client device.
+	DeviceInfo runtime.Optional[*DeviceInfo] `json:"device_info"`
+	// Provider SocialProvider identifies a third-party identity provider for social login.
+	Provider runtime.Optional[SocialProvider] `json:"provider"`
+	// RedirectUri Must match the redirect_uri used in the initial request
+	RedirectUri runtime.Optional[string] `json:"redirect_uri"`
 }
 
 func (v SocialLoginRequest) MarshalJSON() ([]byte, error) {
@@ -8135,10 +12963,13 @@ func (v *SocialLoginRequest) UnmarshalJSON(data []byte) error {
 }
 
 type SocialLoginResponse struct {
-	IsNewUser runtime.Optional[bool]       `json:"is_new_user"`
-	SessionId runtime.Optional[string]     `json:"session_id"`
-	Tokens    runtime.Optional[*TokenPair] `json:"tokens"`
-	User      runtime.Optional[*UserBrief] `json:"user"`
+	// IsNewUser True if this login created a new account
+	IsNewUser runtime.Optional[bool]   `json:"is_new_user"`
+	SessionId runtime.Optional[string] `json:"session_id"`
+	// Tokens TokenPair contains access and refresh tokens returned after authentication.
+	Tokens runtime.Optional[*TokenPair] `json:"tokens"`
+	// User UserBrief is a minimal user representation returned in auth responses.
+	User runtime.Optional[*UserBrief] `json:"user"`
 }
 
 func (v SocialLoginResponse) MarshalJSON() ([]byte, error) {
@@ -8156,6 +12987,7 @@ func (v *SocialLoginResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// SocialProvider SocialProvider identifies a third-party identity provider for social login.
 type SocialProvider string
 
 const (
@@ -8178,18 +13010,33 @@ func (v SocialProvider) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"SOCIAL_PROVIDER_UNSPECIFIED", "SOCIAL_PROVIDER_GITHUB", "SOCIAL_PROVIDER_GOOGLE", "SOCIAL_PROVIDER_WECHAT", "SOCIAL_PROVIDER_APPLE"})
 }
 
+// SourceNote SourceNote is a short, safe explanation of used, omitted, or uncertain
+//
+//	source material. External-source fields are future-reserved and absent in
+//	the current release.
 type SourceNote struct {
-	CanonicalUrl     runtime.Optional[string]    `json:"canonical_url"`
-	ContentSha256    runtime.Optional[string]    `json:"content_sha256"`
-	ExternalSourceId runtime.Optional[string]    `json:"external_source_id"`
-	Kind             SourceNoteKind              `json:"kind"`
-	MaterialId       runtime.Optional[string]    `json:"material_id"`
-	PublishedAt      runtime.Optional[Timestamp] `json:"published_at"`
-	Publisher        runtime.Optional[string]    `json:"publisher"`
-	RetrievedAt      runtime.Optional[Timestamp] `json:"retrieved_at"`
-	SourceLocation   runtime.Optional[string]    `json:"source_location"`
-	Summary          string                      `json:"summary"`
-	Title            runtime.Optional[string]    `json:"title"`
+	// CanonicalUrl (OPTIONAL) Conditional. Future-reserved canonical HTTPS URL; currently absent.
+	CanonicalUrl runtime.Optional[string] `json:"canonical_url"`
+	// ContentSha256 (OPTIONAL) Conditional. Future-reserved retrieved-content SHA-256; currently absent.
+	ContentSha256 runtime.Optional[string] `json:"content_sha256"`
+	// ExternalSourceId (OPTIONAL) Conditional. Future-reserved external source identifier; currently absent.
+	ExternalSourceId runtime.Optional[string] `json:"external_source_id"`
+	// Kind Required. Safe note kind; EXTERNAL_SOURCE is future-reserved.
+	Kind SourceNoteKind `json:"kind"`
+	// MaterialId (OPTIONAL) Optional. Opaque source material identifier when attributable.
+	MaterialId runtime.Optional[string] `json:"material_id"`
+	// PublishedAt (OPTIONAL) Optional. Future-reserved source publication time; currently absent.
+	PublishedAt runtime.Optional[Timestamp] `json:"published_at"`
+	// Publisher (OPTIONAL) Conditional. Future-reserved publisher; currently absent.
+	Publisher runtime.Optional[string] `json:"publisher"`
+	// RetrievedAt (OPTIONAL) Conditional. Future-reserved retrieval time; currently absent.
+	RetrievedAt runtime.Optional[Timestamp] `json:"retrieved_at"`
+	// SourceLocation (OPTIONAL) Optional. Safe page, slide, sheet, cell, or image-region description.
+	SourceLocation runtime.Optional[string] `json:"source_location"`
+	// Summary Required. User-understandable short explanation.
+	Summary string `json:"summary"`
+	// Title (OPTIONAL) Conditional. Future-reserved external source title; currently absent.
+	Title runtime.Optional[string] `json:"title"`
 }
 
 func (v SourceNote) MarshalJSON() ([]byte, error) {
@@ -8221,6 +13068,9 @@ func (v *SourceNote) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// SourceNoteKind SourceNoteKind identifies a safe, user-facing source note.
+//
+//	EXTERNAL_SOURCE is future-reserved and never returned in the current release.
 type SourceNoteKind string
 
 const (
@@ -8243,9 +13093,13 @@ func (v SourceNoteKind) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"SOURCE_NOTE_KIND_UNSPECIFIED", "SOURCE_NOTE_KIND_SOURCE", "SOURCE_NOTE_KIND_OMITTED_CONTENT", "SOURCE_NOTE_KIND_UNCERTAINTY", "SOURCE_NOTE_KIND_EXTERNAL_SOURCE"})
 }
 
+// Status The Status type defines a logical error model suitable for gRPC and REST APIs.
 type Status struct {
-	Code    runtime.Optional[int64]  `json:"code"`
+	// Code The status code, which should be an enum value of google.rpc.Code.
+	Code runtime.Optional[int64] `json:"code"`
+	// Details A list of messages that carry the error details.
 	Details runtime.Optional[[]*Any] `json:"details"`
+	// Message A developer-facing error message.
 	Message runtime.Optional[string] `json:"message"`
 }
 
@@ -8262,10 +13116,14 @@ func (v *Status) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// StatusUpdate StatusUpdate notifies the client about processing phase changes.
 type StatusUpdate struct {
-	Message         runtime.Optional[string] `json:"message"`
-	Phase           runtime.Optional[string] `json:"phase"`
-	ProgressPercent runtime.Optional[int64]  `json:"progress_percent"`
+	// Message 人类可读的状态描述。
+	Message runtime.Optional[string] `json:"message"`
+	// Phase 当前处理阶段，例如 "generating"、"optimizing"、"converting"。
+	Phase runtime.Optional[string] `json:"phase"`
+	// ProgressPercent 处理进度百分比（0-100），不可用时为 0。
+	ProgressPercent runtime.Optional[int64] `json:"progress_percent"`
 }
 
 func (v StatusUpdate) MarshalJSON() ([]byte, error) {
@@ -8281,11 +13139,19 @@ func (v *StatusUpdate) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// StorageStatementSnapshot StorageStatementSnapshot is the immutable metering statement projected into
+//
+//	a storage-period or storage-adjustment cost summary.
 type StorageStatementSnapshot struct {
-	BaseStatementDigest   runtime.Optional[string] `json:"base_statement_digest"`
-	CorrectionBatchId     runtime.Optional[string] `json:"correction_batch_id"`
-	StatementDigest       string                   `json:"statement_digest"`
-	UsageByteSeconds      string                   `json:"usage_byte_seconds"`
+	// BaseStatementDigest (OPTIONAL) Conditional. Required for STORAGE_ADJUSTMENT and identifies the base statement.
+	BaseStatementDigest runtime.Optional[string] `json:"base_statement_digest"`
+	// CorrectionBatchId (OPTIONAL) Conditional. Required for STORAGE_ADJUSTMENT and identifies the correction batch.
+	CorrectionBatchId runtime.Optional[string] `json:"correction_batch_id"`
+	// StatementDigest Required. SHA-256 of the canonical period, pricing, and metering statement.
+	StatementDigest string `json:"statement_digest"`
+	// UsageByteSeconds Required. Total byte-seconds in this statement period.
+	UsageByteSeconds string `json:"usage_byte_seconds"`
+	// UsageByteSecondsDelta (OPTIONAL) Conditional. Required for STORAGE_ADJUSTMENT; signed byte-second delta.
 	UsageByteSecondsDelta runtime.Optional[string] `json:"usage_byte_seconds_delta"`
 }
 
@@ -8306,8 +13172,11 @@ func (v *StorageStatementSnapshot) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// StreamError StreamError reports a non-fatal error during stream processing.
 type StreamError struct {
-	Code    runtime.Optional[int64]  `json:"code"`
+	// Code 错误码，业务自定义。
+	Code runtime.Optional[int64] `json:"code"`
+	// Message 错误描述信息。
 	Message runtime.Optional[string] `json:"message"`
 }
 
@@ -8322,6 +13191,7 @@ func (v *StreamError) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// StreamEvent StreamEvent is the unified envelope for streaming RPC responses.
 type StreamEvent = any
 type StreamEventMetadataEntry struct {
 	Key   runtime.Optional[string] `json:"key"`
@@ -8339,6 +13209,7 @@ func (v *StreamEventMetadataEntry) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// StreamEventType StreamEventType indicates the type of a stream event.
 type StreamEventType string
 
 const (
@@ -8362,13 +13233,16 @@ func (v StreamEventType) MarshalJSON() ([]byte, error) {
 }
 
 type SubmitConsentRequest struct {
+	// Approved False if the user denied consent
 	Approved            runtime.Optional[bool]   `json:"approved"`
 	ClientId            runtime.Optional[string] `json:"client_id"`
 	CodeChallenge       runtime.Optional[string] `json:"code_challenge"`
 	CodeChallengeMethod runtime.Optional[string] `json:"code_challenge_method"`
 	RedirectUri         runtime.Optional[string] `json:"redirect_uri"`
-	Scope               runtime.Optional[string] `json:"scope"`
-	State               runtime.Optional[string] `json:"state"`
+	// Scope Space-delimited scopes the user approved
+	Scope runtime.Optional[string] `json:"scope"`
+	// State CSRF state from the authorize request
+	State runtime.Optional[string] `json:"state"`
 }
 
 func (v SubmitConsentRequest) MarshalJSON() ([]byte, error) {
@@ -8393,8 +13267,10 @@ func (v *SubmitConsentRequest) UnmarshalJSON(data []byte) error {
 }
 
 type SubmitConsentResponse struct {
+	// AuthorizationCode Set only if approved = true
 	AuthorizationCode runtime.Optional[string] `json:"authorization_code"`
-	RedirectUri       runtime.Optional[string] `json:"redirect_uri"`
+	// RedirectUri Full redirect URI with code and state
+	RedirectUri runtime.Optional[string] `json:"redirect_uri"`
 }
 
 func (v SubmitConsentResponse) MarshalJSON() ([]byte, error) {
@@ -8409,11 +13285,16 @@ func (v *SubmitConsentResponse) UnmarshalJSON(data []byte) error {
 }
 
 type SubmitGenerationRequest struct {
-	ClientReference              runtime.Optional[string] `json:"client_reference"`
-	ConfirmedAuthorizedMaxCredit string                   `json:"confirmed_authorized_max_credit"`
-	EstimateId                   string                   `json:"estimate_id"`
-	InputFingerprint             string                   `json:"input_fingerprint"`
-	UserId                       string                   `json:"user_id"`
+	// ClientReference (OPTIONAL) Optional. Client-local draft correlation value, at most 128 characters.
+	ClientReference runtime.Optional[string] `json:"client_reference"`
+	// ConfirmedAuthorizedMaxCredit Required. Exact maximum user net charge confirmed by the user.
+	ConfirmedAuthorizedMaxCredit string `json:"confirmed_authorized_max_credit"`
+	// EstimateId Required. Active CREATE_PAGE estimate identifier.
+	EstimateId string `json:"estimate_id"`
+	// InputFingerprint Required. Exact fingerprint from the durable estimate.
+	InputFingerprint string `json:"input_fingerprint"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v SubmitGenerationRequest) MarshalJSON() ([]byte, error) {
@@ -8434,8 +13315,10 @@ func (v *SubmitGenerationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type SubmitGenerationResponse struct {
-	Job  *JobSummary `json:"job"`
-	Page *Page       `json:"page"`
+	// Job Required. Newly created logical generation job.
+	Job *JobSummary `json:"job"`
+	// Page Required. Newly created page.
+	Page *Page `json:"page"`
 }
 
 func (v SubmitGenerationResponse) MarshalJSON() ([]byte, error) {
@@ -8449,10 +13332,23 @@ func (v *SubmitGenerationResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// SyncAppMemberRequest SyncAppMemberRequest carries one upsert into the application
+//
+//	membership table. All fields are required.
 type SyncAppMemberRequest struct {
-	AppId  runtime.Optional[string] `json:"app_id"`
-	Role   runtime.Optional[string] `json:"role"`
+	// AppId Required. Application this row belongs to. Opaque entity-id with
+	//  `app` prefix.
+	AppId runtime.Optional[string] `json:"app_id"`
+	// Role Required. Application-level role. The role taxonomy differs from
+	//  organization roles (which use owner / admin / member); applications
+	//  use owner / admin / developer / viewer. Stored verbatim.
+	Role runtime.Optional[string] `json:"role"`
+	// Status Required. Membership status. One of "active" / "invited" /
+	//  "removed". Rows with status != "active" cause Check to return
+	//  NOT_A_MEMBER for the user/app pair, even when a row exists.
 	Status runtime.Optional[string] `json:"status"`
+	// UserId Required. The principal whose membership is being synced. Opaque
+	//  entity-id with `usr` prefix.
 	UserId runtime.Optional[string] `json:"user_id"`
 }
 
@@ -8471,14 +13367,113 @@ func (v *SyncAppMemberRequest) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// SyncAppMemberResponse SyncAppMemberResponse is intentionally empty; an OK status code
+//
+//	indicates the cache was updated. Idempotent.
 type SyncAppMemberResponse = any
+
+// Template Template 系统排版模板。
 type Template struct {
-	CreatedAt    runtime.Optional[Timestamp] `json:"created_at"`
-	Description  runtime.Optional[string]    `json:"description"`
-	IsDefault    runtime.Optional[bool]      `json:"is_default"`
-	Name         runtime.Optional[string]    `json:"name"`
-	TemplateId   runtime.Optional[string]    `json:"template_id"`
-	ThumbnailUrl runtime.Optional[string]    `json:"thumbnail_url"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// Description 模板描述。
+	Description runtime.Optional[string] `json:"description"`
+	// IsDefault 是否为默认模板。
+	IsDefault runtime.Optional[bool] `json:"is_default"`
+	// Name 模板显示名称。
+	Name runtime.Optional[string] `json:"name"`
+	// TemplateId 模板唯一标识。
+	TemplateId runtime.Optional[string] `json:"template_id"`
+	// ThumbnailUrl 模板缩略图 URL。
+	ThumbnailUrl runtime.Optional[string] `json:"thumbnail_url"`
 }
 
 func (v Template) MarshalJSON() ([]byte, error) {
@@ -8524,12 +13519,106 @@ func (v *TerminateSessionRequest) UnmarshalJSON(data []byte) error {
 }
 
 type TerminateSessionResponse = any
+
+// Timestamp A Timestamp represents a point in time independent of any time zone or local
+//
+//	calendar, encoded as a count of seconds and fractions of seconds at
+//	nanosecond resolution. The count is relative to an epoch at UTC midnight on
+//	January 1, 1970, in the proleptic Gregorian calendar which extends the
+//	Gregorian calendar backwards to year one.
+//
+//	All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+//	second table is needed for interpretation, using a [24-hour linear
+//	smear](https://developers.google.com/time/smear).
+//
+//	The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+//	restricting to that range, we ensure that we can convert to and from [RFC
+//	3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+//
+//	# Examples
+//
+//	Example 1: Compute Timestamp from POSIX `time()`.
+//
+//	    Timestamp timestamp;
+//	    timestamp.set_seconds(time(NULL));
+//	    timestamp.set_nanos(0);
+//
+//	Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+//
+//	    struct timeval tv;
+//	    gettimeofday(&tv, NULL);
+//
+//	    Timestamp timestamp;
+//	    timestamp.set_seconds(tv.tv_sec);
+//	    timestamp.set_nanos(tv.tv_usec * 1000);
+//
+//	Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+//
+//	    FILETIME ft;
+//	    GetSystemTimeAsFileTime(&ft);
+//	    UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+//
+//	    // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+//	    // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+//	    Timestamp timestamp;
+//	    timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+//	    timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+//
+//	Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+//
+//	    long millis = System.currentTimeMillis();
+//
+//	    Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+//	        .setNanos((int) ((millis % 1000) * 1000000)).build();
+//
+//	Example 5: Compute Timestamp from Java `Instant.now()`.
+//
+//	    Instant now = Instant.now();
+//
+//	    Timestamp timestamp =
+//	        Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+//	            .setNanos(now.getNano()).build();
+//
+//	Example 6: Compute Timestamp from current time in Python.
+//
+//	    timestamp = Timestamp()
+//	    timestamp.GetCurrentTime()
+//
+//	# JSON Mapping
+//
+//	In JSON format, the Timestamp type is encoded as a string in the
+//	[RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+//	format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+//	where {year} is always expressed using four digits while {month}, {day},
+//	{hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+//	seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+//	are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+//	is required. A ProtoJSON serializer should always use UTC (as indicated by
+//	"Z") when printing the Timestamp type and a ProtoJSON parser should be
+//	able to accept both UTC and other timezones (as indicated by an offset).
+//
+//	For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+//	01:30 UTC on January 15, 2017.
+//
+//	In JavaScript, one can convert a Date object to this format using the
+//	standard
+//	[toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+//	method. In Python, a standard `datetime.datetime` object can be converted
+//	to this format using
+//	[`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+//	the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+//	the Joda Time's [`ISODateTimeFormat.dateTime()`](
+//	http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+//	) to obtain a formatter capable of generating timestamps in this format.
 type Timestamp = time.Time
+
+// TokenPair TokenPair contains access and refresh tokens returned after authentication.
 type TokenPair struct {
 	AccessToken  runtime.Optional[string] `json:"access_token"`
 	ExpiresIn    runtime.Optional[int64]  `json:"expires_in"`
 	RefreshToken runtime.Optional[string] `json:"refresh_token"`
-	TokenType    runtime.Optional[string] `json:"token_type"`
+	// TokenType "Bearer"
+	TokenType runtime.Optional[string] `json:"token_type"`
 }
 
 func (v TokenPair) MarshalJSON() ([]byte, error) {
@@ -8548,15 +13637,26 @@ func (v *TokenPair) UnmarshalJSON(data []byte) error {
 }
 
 type TokenRequest struct {
-	ClientId     runtime.Optional[string]    `json:"client_id"`
-	ClientSecret runtime.Optional[string]    `json:"client_secret"`
-	Code         runtime.Optional[string]    `json:"code"`
-	CodeVerifier runtime.Optional[string]    `json:"code_verifier"`
-	GrantType    runtime.Optional[GrantType] `json:"grant_type"`
-	Nonce        runtime.Optional[string]    `json:"nonce"`
-	RedirectUri  runtime.Optional[string]    `json:"redirect_uri"`
-	RefreshToken runtime.Optional[string]    `json:"refresh_token"`
-	Scope        runtime.Optional[string]    `json:"scope"`
+	// ClientId Client authentication (all grant types)
+	ClientId     runtime.Optional[string] `json:"client_id"`
+	ClientSecret runtime.Optional[string] `json:"client_secret"`
+	// Code For authorization_code grant
+	Code runtime.Optional[string] `json:"code"`
+	// CodeVerifier PKCE verifier
+	CodeVerifier runtime.Optional[string] `json:"code_verifier"`
+	// GrantType GrantType enumerates supported OAuth 2.0 grant types.
+	GrantType runtime.Optional[GrantType] `json:"grant_type"`
+	// Nonce OIDC nonce (Core 1.0 §3.1.2.1). Optional. **旧客户端兼容兜底**：
+	//  标准路径是 AuthorizeRequest.nonce（authorize 阶段持久化，交换时自动
+	//  回灌 id_token）。仅当授权码上没有存储 nonce 时（旧链路 / 过渡期），
+	//  IAM 才使用本字段的值。BFF 转发时 verbatim 透传，不解析、不生成。
+	//  仅当 grant_type=authorization_code 且 scope 包含 "openid" 时有意义。
+	Nonce       runtime.Optional[string] `json:"nonce"`
+	RedirectUri runtime.Optional[string] `json:"redirect_uri"`
+	// RefreshToken For refresh_token grant
+	RefreshToken runtime.Optional[string] `json:"refresh_token"`
+	// Scope Requested scope (optional, for narrowing)
+	Scope runtime.Optional[string] `json:"scope"`
 }
 
 func (v TokenRequest) MarshalJSON() ([]byte, error) {
@@ -8585,12 +13685,31 @@ func (v *TokenRequest) UnmarshalJSON(data []byte) error {
 }
 
 type TokenResponse struct {
-	AccessToken  runtime.Optional[string] `json:"access_token"`
-	ExpiresIn    runtime.Optional[int64]  `json:"expires_in"`
-	IdToken      runtime.Optional[string] `json:"id_token"`
+	AccessToken runtime.Optional[string] `json:"access_token"`
+	ExpiresIn   runtime.Optional[int64]  `json:"expires_in"`
+	// IdToken OIDC ID Token (JWT, RS256). 仅当原始 /token 请求 scope 含 "openid"
+	//  时返回；否则为空串。
+	//
+	//  平台采用 access_token / id_token **严格分离**的双 token 模型：
+	//    - access_token：opaque 字符串，资源 API 调用 Authorization: Bearer
+	//      使用，由平台网关通过 IntrospectToken 校验。
+	//    - id_token：JWT，仅供客户端 / BFF **本地**验签确认登录身份
+	//      （iss / sub / aud / exp / iat / nonce / auth_time）。profile、email、
+	//      phone、picture 等展示资料统一用 access_token 从 UserInfo 获取。
+	//
+	//  严禁把 id_token 当作 Authorization: Bearer 调资源 API——平台网关
+	//  不会接受 JWT 形式的 access_token，且 IntrospectToken 只认 opaque
+	//  access_token。如果客户端混用，会得到 401 / introspect inactive。
+	//
+	//  详细模型见 site/docs/system-design/service-governance/security/
+	//  oauth-token-model.md。
+	IdToken runtime.Optional[string] `json:"id_token"`
+	// RefreshToken Not returned for client_credentials
 	RefreshToken runtime.Optional[string] `json:"refresh_token"`
-	Scope        runtime.Optional[string] `json:"scope"`
-	TokenType    runtime.Optional[string] `json:"token_type"`
+	// Scope Actually granted scopes
+	Scope runtime.Optional[string] `json:"scope"`
+	// TokenType "Bearer"
+	TokenType runtime.Optional[string] `json:"token_type"`
 }
 
 func (v TokenResponse) MarshalJSON() ([]byte, error) {
@@ -8612,11 +13731,16 @@ func (v *TokenResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// TokenUsage TokenUsage reports LLM token consumption statistics.
 type TokenUsage struct {
-	InputTokens  runtime.Optional[int64]  `json:"input_tokens"`
-	Model        runtime.Optional[string] `json:"model"`
-	OutputTokens runtime.Optional[int64]  `json:"output_tokens"`
-	TotalTokens  runtime.Optional[int64]  `json:"total_tokens"`
+	// InputTokens 输入 Token 数。
+	InputTokens runtime.Optional[int64] `json:"input_tokens"`
+	// Model 使用的模型标识，例如 "gpt-4o"、"claude-3-opus"。
+	Model runtime.Optional[string] `json:"model"`
+	// OutputTokens 输出 Token 数。
+	OutputTokens runtime.Optional[int64] `json:"output_tokens"`
+	// TotalTokens 总 Token 数。
+	TotalTokens runtime.Optional[int64] `json:"total_tokens"`
 }
 
 func (v TokenUsage) MarshalJSON() ([]byte, error) {
@@ -8634,6 +13758,10 @@ func (v *TokenUsage) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ToolCapability ToolCapability is a closed list of capabilities that a generation policy
+//
+//	may authorize. WEB_SEARCH is future-reserved; the current release authorizes
+//	no capability and has a zero tool budget.
 type ToolCapability string
 
 const (
@@ -8653,21 +13781,42 @@ func (v ToolCapability) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"TOOL_CAPABILITY_UNSPECIFIED", "TOOL_CAPABILITY_WEB_SEARCH"})
 }
 
+// ToolPolicySnapshot ToolPolicySnapshot is the immutable, server-selected capability and budget
+//
+//	contract captured by a generation estimate.
+//
+//	The current release requires mode=DISABLED, an empty allowed_capabilities
+//	list, and zero for every web-search budget. MCP server names, endpoints,
+//	credentials, and arbitrary tool names are intentionally not modeled.
 type ToolPolicySnapshot struct {
-	AllowedCapabilities    []ToolCapability           `json:"allowed_capabilities"`
-	FreshnessWindow        runtime.Optional[Duration] `json:"freshness_window"`
-	MaxAiTurnCount         int64                      `json:"max_ai_turn_count"`
-	MaxCallAttemptCount    int64                      `json:"max_call_attempt_count"`
-	MaxExecutionDurationMs string                     `json:"max_execution_duration_ms"`
-	MaxPlanStepCount       int64                      `json:"max_plan_step_count"`
-	MaxReplanCount         int64                      `json:"max_replan_count"`
-	MaxResultBytes         string                     `json:"max_result_bytes"`
-	MaxResultsPerCall      int64                      `json:"max_results_per_call"`
-	MaxWebSearchCallCount  int64                      `json:"max_web_search_call_count"`
-	MaxWebSearchDurationMs string                     `json:"max_web_search_duration_ms"`
-	Mode                   ExternalInformationMode    `json:"mode"`
-	PolicyVersion          string                     `json:"policy_version"`
-	RequiresFreshSources   bool                       `json:"requires_fresh_sources"`
+	// AllowedCapabilities Required. Current release is empty; WEB_SEARCH is future-reserved.
+	AllowedCapabilities []ToolCapability `json:"allowed_capabilities"`
+	// FreshnessWindow (OPTIONAL) Conditional. Future-reserved freshness window; absent in the current release.
+	FreshnessWindow runtime.Optional[Duration] `json:"freshness_window"`
+	// MaxAiTurnCount Required. Hard limit for logical AI turns across all plan revisions.
+	MaxAiTurnCount int64 `json:"max_ai_turn_count"`
+	// MaxCallAttemptCount Required. Future-reserved tool attempts; current release is zero.
+	MaxCallAttemptCount int64 `json:"max_call_attempt_count"`
+	// MaxExecutionDurationMs Required. End-to-end execution deadline in milliseconds.
+	MaxExecutionDurationMs string `json:"max_execution_duration_ms"`
+	// MaxPlanStepCount Required. Hard limit for steps in one plan revision.
+	MaxPlanStepCount int64 `json:"max_plan_step_count"`
+	// MaxReplanCount Required. Hard limit for replacement revisions; P1 fixes this to two.
+	MaxReplanCount int64 `json:"max_replan_count"`
+	// MaxResultBytes Required. Future-reserved result bytes; current release is zero.
+	MaxResultBytes string `json:"max_result_bytes"`
+	// MaxResultsPerCall Required. Future-reserved results per search call; current release is zero.
+	MaxResultsPerCall int64 `json:"max_results_per_call"`
+	// MaxWebSearchCallCount Required. Future-reserved web-search calls; current release is zero.
+	MaxWebSearchCallCount int64 `json:"max_web_search_call_count"`
+	// MaxWebSearchDurationMs Required. Future-reserved search duration in milliseconds; current release is zero.
+	MaxWebSearchDurationMs string `json:"max_web_search_duration_ms"`
+	// Mode Required. Current release is DISABLED; search modes are future-reserved.
+	Mode ExternalInformationMode `json:"mode"`
+	// PolicyVersion Required. Reviewed policy version included in the input fingerprint.
+	PolicyVersion string `json:"policy_version"`
+	// RequiresFreshSources Required. Future-reserved freshness flag; current release is false.
+	RequiresFreshSources bool `json:"requires_fresh_sources"`
 }
 
 func (v ToolPolicySnapshot) MarshalJSON() ([]byte, error) {
@@ -8705,9 +13854,14 @@ func (v *ToolPolicySnapshot) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ToutiaoConfig ToutiaoConfig 今日头条发布配置。
+//
+//	文章将通过头条号 API 发布。
 type ToutiaoConfig struct {
-	Category runtime.Optional[string]   `json:"category"`
-	Tags     runtime.Optional[[]string] `json:"tags"`
+	// Category 文章分类，例如 "科技"、"财经"。
+	Category runtime.Optional[string] `json:"category"`
+	// Tags 文章标签。
+	Tags runtime.Optional[[]string] `json:"tags"`
 }
 
 func (v ToutiaoConfig) MarshalJSON() ([]byte, error) {
@@ -8722,6 +13876,7 @@ func (v *ToutiaoConfig) UnmarshalJSON(data []byte) error {
 }
 
 type UnbindPlatformAccountRequest struct {
+	// AccountId 要解绑的账号 ID。
 	AccountId runtime.Optional[string] `json:"account_id"`
 }
 
@@ -8736,11 +13891,17 @@ type UnbindPlatformAccountResponse = any
 type UpdateApplicationRequest struct {
 	AllowedScopes runtime.Optional[[]string] `json:"allowed_scopes"`
 	AppId         runtime.Optional[string]   `json:"app_id"`
-	AppName       runtime.Optional[string]   `json:"app_name"`
-	Description   runtime.Optional[string]   `json:"description"`
-	HomepageUrl   runtime.Optional[string]   `json:"homepage_url"`
-	LogoUrl       runtime.Optional[string]   `json:"logo_url"`
-	RedirectUris  runtime.Optional[[]string] `json:"redirect_uris"`
+	// AppName Deprecated: send display-field updates via the developer center.
+	//  Accepted here for legacy callers; will be removed in a future major
+	//  version.
+	AppName runtime.Optional[string] `json:"app_name"`
+	// Description Deprecated: same as app_name.
+	Description runtime.Optional[string] `json:"description"`
+	// HomepageUrl Deprecated: same as app_name.
+	HomepageUrl runtime.Optional[string] `json:"homepage_url"`
+	// LogoUrl Deprecated: same as app_name.
+	LogoUrl      runtime.Optional[string]   `json:"logo_url"`
+	RedirectUris runtime.Optional[[]string] `json:"redirect_uris"`
 }
 
 func (v UpdateApplicationRequest) MarshalJSON() ([]byte, error) {
@@ -8765,6 +13926,13 @@ func (v *UpdateApplicationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateApplicationResponse struct {
+	// Application OAuthApplication represents a registered third-party application.
+	//
+	//  Display fields (`app_name`, `description`, `homepage_url`, `logo_url`)
+	//  on this message are deprecated; the developer center is the
+	//  authoritative source for application display metadata. The fields
+	//  remain populated on read for backward compatibility and will be
+	//  removed in a future major version.
 	Application runtime.Optional[*OAuthApplication] `json:"application"`
 }
 
@@ -8775,13 +13943,17 @@ func (v *UpdateApplicationResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "application", Value: &v.Application, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// UpdateArticleRequest UpdateArticleRequest 手动更新文章字段。使用 optional 语义：
+//
+//	未设置的字段不会被修改。
 type UpdateArticleRequest struct {
-	ArticleId     runtime.Optional[string]   `json:"article_id"`
-	Content       runtime.Optional[string]   `json:"content"`
-	CoverImageUrl runtime.Optional[string]   `json:"cover_image_url"`
-	Summary       runtime.Optional[string]   `json:"summary"`
-	Tags          runtime.Optional[[]string] `json:"tags"`
-	Title         runtime.Optional[string]   `json:"title"`
+	ArticleId     runtime.Optional[string] `json:"article_id"`
+	Content       runtime.Optional[string] `json:"content"`
+	CoverImageUrl runtime.Optional[string] `json:"cover_image_url"`
+	Summary       runtime.Optional[string] `json:"summary"`
+	// Tags 标签列表，提供时将完全替换原有标签。
+	Tags  runtime.Optional[[]string] `json:"tags"`
+	Title runtime.Optional[string]   `json:"title"`
 }
 
 func (v UpdateArticleRequest) MarshalJSON() ([]byte, error) {
@@ -8804,6 +13976,8 @@ func (v *UpdateArticleRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateArticleResponse struct {
+	// Article Article represents a piece of text content (article, post, etc.).
+	//  Article 是图文创作的核心实体，同一篇文章可能同时存在 Markdown 和 HTML 两个版本。
 	Article runtime.Optional[*Article] `json:"article"`
 }
 
@@ -8815,9 +13989,12 @@ func (v *UpdateArticleResponse) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateCategoryPreferenceRequest struct {
-	Etag      string `json:"etag"`
+	// Etag Required. Optimistic concurrency validator read from the singleton.
+	Etag string `json:"etag"`
+	// RulesText Required. Complete replacement text; empty explicitly clears the rules.
 	RulesText string `json:"rules_text"`
-	UserId    string `json:"user_id"`
+	// UserId Required. Owner path; accepts me or the authenticated user's identifier.
+	UserId string `json:"user_id"`
 }
 
 func (v UpdateCategoryPreferenceRequest) MarshalJSON() ([]byte, error) {
@@ -8834,6 +14011,7 @@ func (v *UpdateCategoryPreferenceRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateCategoryPreferenceResponse struct {
+	// CategoryPreference Required. Singleton after replacement or explicit clearing.
 	CategoryPreference *CategoryPreference `json:"category_preference"`
 }
 
@@ -8862,7 +14040,10 @@ func (v *UpdateEmailRequest) UnmarshalJSON(data []byte) error {
 
 type UpdateEmailResponse = any
 type UpdateMemberRoleRequest struct {
-	OrgId  runtime.Optional[string]                 `json:"org_id"`
+	OrgId runtime.Optional[string] `json:"org_id"`
+	// Role OrganizationMemberRole governs the actions a member may take within the
+	//  organization. Authorization decisions are delegated to AuthZService.Check;
+	//  these values are the canonical role identifiers stored on the row.
 	Role   runtime.Optional[OrganizationMemberRole] `json:"role"`
 	UserId runtime.Optional[string]                 `json:"user_id"`
 }
@@ -8881,6 +14062,12 @@ func (v *UpdateMemberRoleRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateMemberRoleResponse struct {
+	// Member OrganizationMember is a (org, user) edge with a role and lifecycle status.
+	//
+	//  The role taxonomy (owner / admin / member) is the SAME WORDS as the
+	//  application-level membership role surfaced by the developer center;
+	//  the two live at different scopes and do not transitively grant each
+	//  other.
 	Member runtime.Optional[*OrganizationMember] `json:"member"`
 }
 
@@ -8892,17 +14079,216 @@ func (v *UpdateMemberRoleResponse) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateOAuthClientRequest struct {
-	AllowedGrantTypes runtime.Optional[[]GrantType]            `json:"allowed_grant_types"`
-	AllowedIdentities runtime.Optional[[]IdentityType]         `json:"allowed_identities"`
-	AllowedScopes     runtime.Optional[[]string]               `json:"allowed_scopes"`
-	AppId             runtime.Optional[string]                 `json:"app_id"`
-	ClientId          runtime.Optional[string]                 `json:"client_id"`
-	ClientType        runtime.Optional[ClientCredentialType]   `json:"client_type"`
-	Description       runtime.Optional[string]                 `json:"description"`
-	Name              runtime.Optional[string]                 `json:"name"`
-	RedirectUris      runtime.Optional[[]string]               `json:"redirect_uris"`
-	Status            runtime.Optional[ClientCredentialStatus] `json:"status"`
-	UpdateMask        runtime.Optional[FieldMask]              `json:"update_mask"`
+	AllowedGrantTypes runtime.Optional[[]GrantType]    `json:"allowed_grant_types"`
+	AllowedIdentities runtime.Optional[[]IdentityType] `json:"allowed_identities"`
+	AllowedScopes     runtime.Optional[[]string]       `json:"allowed_scopes"`
+	AppId             runtime.Optional[string]         `json:"app_id"`
+	ClientId          runtime.Optional[string]         `json:"client_id"`
+	// ClientType ClientCredentialType describes whether an OAuth client can keep a secret.
+	ClientType   runtime.Optional[ClientCredentialType] `json:"client_type"`
+	Description  runtime.Optional[string]               `json:"description"`
+	Name         runtime.Optional[string]               `json:"name"`
+	RedirectUris runtime.Optional[[]string]             `json:"redirect_uris"`
+	// Status ClientCredentialStatus represents the lifecycle state of one OAuth client.
+	Status runtime.Optional[ClientCredentialStatus] `json:"status"`
+	// UpdateMask `FieldMask` represents a set of symbolic field paths, for example:
+	//
+	//      paths: "f.a"
+	//      paths: "f.b.d"
+	//
+	//  Here `f` represents a field in some root message, `a` and `b`
+	//  fields in the message found in `f`, and `d` a field found in the
+	//  message in `f.b`.
+	//
+	//  Field masks are used to specify a subset of fields that should be
+	//  returned by a get operation or modified by an update operation.
+	//  Field masks also have a custom JSON encoding (see below).
+	//
+	//  # Field Masks in Projections
+	//
+	//  When used in the context of a projection, a response message or
+	//  sub-message is filtered by the API to only contain those fields as
+	//  specified in the mask. For example, if the mask in the previous
+	//  example is applied to a response message as follows:
+	//
+	//      f {
+	//        a : 22
+	//        b {
+	//          d : 1
+	//          x : 2
+	//        }
+	//        y : 13
+	//      }
+	//      z: 8
+	//
+	//  The result will not contain specific values for fields x,y and z
+	//  (their value will be set to the default, and omitted in proto text
+	//  output):
+	//
+	//
+	//      f {
+	//        a : 22
+	//        b {
+	//          d : 1
+	//        }
+	//      }
+	//
+	//  A repeated field is not allowed except at the last position of a
+	//  paths string.
+	//
+	//  If a FieldMask object is not present in a get operation, the
+	//  operation applies to all fields (as if a FieldMask of all fields
+	//  had been specified).
+	//
+	//  Note that a field mask does not necessarily apply to the
+	//  top-level response message. In case of a REST get operation, the
+	//  field mask applies directly to the response, but in case of a REST
+	//  list operation, the mask instead applies to each individual message
+	//  in the returned resource list. In case of a REST custom method,
+	//  other definitions may be used. Where the mask applies will be
+	//  clearly documented together with its declaration in the API.  In
+	//  any case, the effect on the returned resource/resources is required
+	//  behavior for APIs.
+	//
+	//  # Field Masks in Update Operations
+	//
+	//  A field mask in update operations specifies which fields of the
+	//  targeted resource are going to be updated. The API is required
+	//  to only change the values of the fields as specified in the mask
+	//  and leave the others untouched. If a resource is passed in to
+	//  describe the updated values, the API ignores the values of all
+	//  fields not covered by the mask.
+	//
+	//  If a repeated field is specified for an update operation, new values will
+	//  be appended to the existing repeated field in the target resource. Note that
+	//  a repeated field is only allowed in the last position of a `paths` string.
+	//
+	//  If a sub-message is specified in the last position of the field mask for an
+	//  update operation, then new value will be merged into the existing sub-message
+	//  in the target resource.
+	//
+	//  For example, given the target message:
+	//
+	//      f {
+	//        b {
+	//          d: 1
+	//          x: 2
+	//        }
+	//        c: [1]
+	//      }
+	//
+	//  And an update message:
+	//
+	//      f {
+	//        b {
+	//          d: 10
+	//        }
+	//        c: [2]
+	//      }
+	//
+	//  then if the field mask is:
+	//
+	//   paths: ["f.b", "f.c"]
+	//
+	//  then the result will be:
+	//
+	//      f {
+	//        b {
+	//          d: 10
+	//          x: 2
+	//        }
+	//        c: [1, 2]
+	//      }
+	//
+	//  An implementation may provide options to override this default behavior for
+	//  repeated and message fields.
+	//
+	//  Note that libraries which implement FieldMask resolution have various
+	//  different behaviors in the face of empty masks or the special "*" mask.
+	//  When implementing a service you should confirm these cases have the
+	//  appropriate behavior in the underlying FieldMask library that you desire,
+	//  and you may need to special case those cases in your application code if
+	//  the underlying field mask library behavior differs from your intended
+	//  service semantics.
+	//
+	//  Update methods implementing https://google.aip.dev/134
+	//  - MUST support the special value * meaning "full replace"
+	//  - MUST treat an omitted field mask as "replace fields which are present".
+	//
+	//  Other methods implementing https://google.aip.dev/157
+	//  - SHOULD support the special value "*" to mean "get all".
+	//  - MUST treat an omitted field mask to mean "get all", unless otherwise
+	//  documented.
+	//
+	//  ## Considerations for HTTP REST
+	//
+	//  The HTTP kind of an update operation which uses a field mask must
+	//  be set to PATCH instead of PUT in order to satisfy HTTP semantics
+	//  (PUT must only be used for full updates).
+	//
+	//  # JSON Encoding of Field Masks
+	//
+	//  In JSON, a field mask is encoded as a single string where paths are
+	//  separated by a comma. Fields name in each path are converted
+	//  to/from lower-camel naming conventions.
+	//
+	//  As an example, consider the following message declarations:
+	//
+	//      message Profile {
+	//        User user = 1;
+	//        Photo photo = 2;
+	//      }
+	//      message User {
+	//        string display_name = 1;
+	//        string address = 2;
+	//      }
+	//
+	//  In proto a field mask for `Profile` may look as such:
+	//
+	//      mask {
+	//        paths: "user.display_name"
+	//        paths: "photo"
+	//      }
+	//
+	//  In JSON, the same mask is represented as below:
+	//
+	//      {
+	//        mask: "user.displayName,photo"
+	//      }
+	//
+	//  # Field Masks and Oneof Fields
+	//
+	//  Field masks treat fields in oneofs just as regular fields. Consider the
+	//  following message:
+	//
+	//      message SampleMessage {
+	//        oneof test_oneof {
+	//          string name = 4;
+	//          SubMessage sub_message = 9;
+	//        }
+	//      }
+	//
+	//  The field mask can be:
+	//
+	//      mask {
+	//        paths: "name"
+	//      }
+	//
+	//  Or:
+	//
+	//      mask {
+	//        paths: "sub_message"
+	//      }
+	//
+	//  Note that oneof type names ("test_oneof" in this case) cannot be used in
+	//  paths.
+	//
+	//  ## Field Mask Verification
+	//
+	//  The implementation of any API method which has a FieldMask type field in the
+	//  request should verify the included field paths, and return an
+	//  `INVALID_ARGUMENT` error if any path is unmappable.
+	UpdateMask runtime.Optional[FieldMask] `json:"update_mask"`
 }
 
 func (v UpdateOAuthClientRequest) MarshalJSON() ([]byte, error) {
@@ -8935,6 +14321,12 @@ func (v *UpdateOAuthClientRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateOAuthClientResponse struct {
+	// Client OAuthClient is one credential atom owned by IAM. An application may own
+	//  multiple clients; app_id and client_id must therefore be used together for
+	//  every management operation.
+	//
+	//  Secret material and secret hashes are deliberately absent from this read
+	//  model. Plaintext is returned exactly once by create and rotate responses.
 	Client runtime.Optional[*OAuthClient] `json:"client"`
 }
 
@@ -8946,9 +14338,14 @@ func (v *UpdateOAuthClientResponse) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateOrganizationRequest struct {
-	OrgId        runtime.Optional[string]        `json:"org_id"`
+	OrgId runtime.Optional[string] `json:"org_id"`
+	// Organization The (potentially partial) replacement values. Fields outside update_mask
+	//  are ignored. Empty mask is rejected (INVALID_ARGUMENT) to prevent
+	//  accidental full-replace semantics.
 	Organization runtime.Optional[*Organization] `json:"organization"`
-	UpdateMask   runtime.Optional[FieldMask]     `json:"update_mask"`
+	// UpdateMask Allowed paths: name, slug, status, metadata. Other paths return
+	//  INVALID_ARGUMENT.
+	UpdateMask runtime.Optional[FieldMask] `json:"update_mask"`
 }
 
 func (v UpdateOrganizationRequest) MarshalJSON() ([]byte, error) {
@@ -8965,6 +14362,13 @@ func (v *UpdateOrganizationRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateOrganizationResponse struct {
+	// Organization Organization is one of the two concrete tenant forms (the other is
+	//  Workspace).
+	//
+	//  `org_id` is an opaque entity-id with the `org` prefix and shares the
+	//  platform-wide `tenant_id` value space with workspace ids. Consumers
+	//  must treat it as opaque — no parsing, no length assumptions,
+	//  byte-exact case-sensitive comparison.
 	Organization runtime.Optional[*Organization] `json:"organization"`
 }
 
@@ -8993,13 +14397,20 @@ func (v *UpdatePhoneRequest) UnmarshalJSON(data []byte) error {
 
 type UpdatePhoneResponse = any
 type UpdateProfileRequest struct {
-	Bio               runtime.Optional[string] `json:"bio"`
+	Bio runtime.Optional[string] `json:"bio"`
+	// DefaultApiVersion Optional. Empty string clears the pin; a "YYYY-MM-DD" string sets it.
+	//  Both the write here and every subsequent read are validated against
+	//  the platform's published API version registry.
 	DefaultApiVersion runtime.Optional[string] `json:"default_api_version"`
-	HomeAddress       runtime.Optional[string] `json:"home_address"`
-	Location          runtime.Optional[string] `json:"location"`
-	Name              runtime.Optional[string] `json:"name"`
-	Website           runtime.Optional[string] `json:"website"`
-	WorkAddress       runtime.Optional[string] `json:"work_address"`
+	// HomeAddress Optional. Empty string clears the field; a non-empty value (up to
+	//  512 chars after server-side validation) sets it. See
+	//  GetProfileResponse.home_address for semantics.
+	HomeAddress runtime.Optional[string] `json:"home_address"`
+	Location    runtime.Optional[string] `json:"location"`
+	Name        runtime.Optional[string] `json:"name"`
+	Website     runtime.Optional[string] `json:"website"`
+	// WorkAddress Optional. Same semantics as home_address but for the workplace.
+	WorkAddress runtime.Optional[string] `json:"work_address"`
 }
 
 func (v UpdateProfileRequest) MarshalJSON() ([]byte, error) {
@@ -9024,6 +14435,95 @@ func (v *UpdateProfileRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateProfileResponse struct {
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
 	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
 }
 
@@ -9034,13 +14534,18 @@ func (v *UpdateProfileResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "updated_at", Value: &v.UpdatedAt, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// UpdateProjectRequest UpdateProjectRequest 更新项目字段。使用 optional 语义：
+//
+//	未设置的字段不会被修改。
 type UpdateProjectRequest struct {
-	Description runtime.Optional[string]            `json:"description"`
-	Metadata    runtime.Optional[map[string]string] `json:"metadata"`
-	Name        runtime.Optional[string]            `json:"name"`
-	ProjectId   runtime.Optional[string]            `json:"project_id"`
-	Status      runtime.Optional[ProjectStatus]     `json:"status"`
-	Tags        runtime.Optional[[]string]          `json:"tags"`
+	Description runtime.Optional[string] `json:"description"`
+	// Metadata 元数据，提供时将合并到已有元数据（相同 key 覆盖）。
+	Metadata  runtime.Optional[map[string]string] `json:"metadata"`
+	Name      runtime.Optional[string]            `json:"name"`
+	ProjectId runtime.Optional[string]            `json:"project_id"`
+	Status    runtime.Optional[ProjectStatus]     `json:"status"`
+	// Tags 标签列表，提供时将完全替换原有标签。
+	Tags runtime.Optional[[]string] `json:"tags"`
 }
 
 func (v UpdateProjectRequest) MarshalJSON() ([]byte, error) {
@@ -9079,6 +14584,9 @@ func (v *UpdateProjectRequestMetadataEntry) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateProjectResponse struct {
+	// Project Project groups related creative content together.
+	//  Project 是创作的顶层聚合单元，一个项目包含多篇文章、多个视频任务和多个素材。
+	//  典型场景：一次营销活动、一个专题系列、一期内容排期。
 	Project runtime.Optional[*Project] `json:"project"`
 }
 
@@ -9094,7 +14602,8 @@ type UpdateScopeRequest struct {
 	Description runtime.Optional[string] `json:"description"`
 	DisplayName runtime.Optional[string] `json:"display_name"`
 	IsSensitive runtime.Optional[bool]   `json:"is_sensitive"`
-	Name        runtime.Optional[string] `json:"name"`
+	// Name Identifies which scope to update
+	Name runtime.Optional[string] `json:"name"`
 }
 
 func (v UpdateScopeRequest) MarshalJSON() ([]byte, error) {
@@ -9115,6 +14624,7 @@ func (v *UpdateScopeRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateScopeResponse struct {
+	// Scope Scope defines a permission boundary for OAuth access control.
 	Scope runtime.Optional[*Scope] `json:"scope"`
 }
 
@@ -9126,6 +14636,7 @@ func (v *UpdateScopeResponse) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateWebhookRequest struct {
+	// Status WebhookStatus represents the state of a webhook endpoint.
 	Status           runtime.Optional[WebhookStatus] `json:"status"`
 	SubscribedEvents runtime.Optional[[]string]      `json:"subscribed_events"`
 	Url              runtime.Optional[string]        `json:"url"`
@@ -9148,6 +14659,7 @@ func (v *UpdateWebhookRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UpdateWebhookResponse struct {
+	// Webhook Webhook represents a registered webhook endpoint.
 	Webhook runtime.Optional[*Webhook] `json:"webhook"`
 }
 
@@ -9158,12 +14670,23 @@ func (v *UpdateWebhookResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "webhook", Value: &v.Webhook, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// UploadAssetRequest UploadAssetRequest 直接通过 gRPC 上传小文件（建议 < 4MB）。
+//
+//	大文件请使用 GenerateUploadUrl + ConfirmUpload 流程。
 type UploadAssetRequest struct {
-	ContentType         runtime.Optional[string]               `json:"content_type"`
-	Data                runtime.Optional[string]               `json:"data"`
-	Filename            runtime.Optional[string]               `json:"filename"`
-	Metadata            runtime.Optional[map[string]string]    `json:"metadata"`
-	ProjectId           runtime.Optional[string]               `json:"project_id"`
+	// ContentType MIME 类型，例如 "image/png"、"video/mp4"。
+	ContentType runtime.Optional[string] `json:"content_type"`
+	// Data 文件二进制数据。
+	Data runtime.Optional[string] `json:"data"`
+	// Filename 原始文件名。
+	Filename runtime.Optional[string] `json:"filename"`
+	// Metadata 扩展元数据。
+	Metadata runtime.Optional[map[string]string] `json:"metadata"`
+	// ProjectId 所属项目 ID。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// WechatMpCredentials 微信公众号 API 调用凭证。
+	//  当 server 需要把素材上传到微信公众号素材库时必填（图片 / 视频 / 缩略图）。
+	//  详见 WechatMpCredentials 设计说明（types.proto）。
 	WechatMpCredentials runtime.Optional[*WechatMpCredentials] `json:"wechat_mp_credentials"`
 }
 
@@ -9203,6 +14726,7 @@ func (v *UploadAssetRequestMetadataEntry) UnmarshalJSON(data []byte) error {
 }
 
 type UploadAssetResponse struct {
+	// Asset 上传成功后返回的素材信息（含 asset_id 和 url）。
 	Asset runtime.Optional[*Asset] `json:"asset"`
 }
 
@@ -9214,6 +14738,7 @@ func (v *UploadAssetResponse) UnmarshalJSON(data []byte) error {
 }
 
 type UploadAvatarRequest struct {
+	// ContentType e.g. "image/png", "image/jpeg"
 	ContentType runtime.Optional[string] `json:"content_type"`
 	ImageData   runtime.Optional[string] `json:"image_data"`
 }
@@ -9230,9 +14755,15 @@ func (v *UploadAvatarRequest) UnmarshalJSON(data []byte) error {
 }
 
 type UploadAvatarResponse struct {
-	AvatarUrl   runtime.Optional[string]            `json:"avatar_url"`
-	ExpiresAt   runtime.Optional[Timestamp]         `json:"expires_at"`
-	MediaId     runtime.Optional[string]            `json:"media_id"`
+	// AvatarUrl Pre-signed URL for the 1024×1024 WebP primary variant.
+	AvatarUrl runtime.Optional[string] `json:"avatar_url"`
+	// ExpiresAt Common expiration for avatar_url and all variant_urls.
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	// MediaId Opaque platform.Media id (prefix `med`). Cache client-side so
+	//  future refreshes can skip GetProfile.
+	MediaId runtime.Optional[string] `json:"media_id"`
+	// VariantUrls Variant key -> pre-signed URL for smaller renditions. Keys are
+	//  decimal-stringified pixel sizes (e.g. "256", "64").
 	VariantUrls runtime.Optional[map[string]string] `json:"variant_urls"`
 }
 
@@ -9267,20 +14798,36 @@ func (v *UploadAvatarResponseVariantUrlsEntry) UnmarshalJSON(data []byte) error 
 	)
 }
 
+// UploadEstimate UploadEstimate is a durable, short-lived batch estimate created before any
+//
+//	multipart upload, signed URL, reserve, or object exists.
 type UploadEstimate struct {
-	AuthorizedMaxCredit          string                `json:"authorized_max_credit"`
-	BalanceSufficient            bool                  `json:"balance_sufficient"`
-	CreatedAt                    Timestamp             `json:"created_at"`
-	CurrentBalanceCredit         string                `json:"current_balance_credit"`
-	ExpiresAt                    Timestamp             `json:"expires_at"`
-	InputFingerprint             string                `json:"input_fingerprint"`
-	Items                        []*UploadEstimateItem `json:"items"`
-	PricingVersion               string                `json:"pricing_version"`
-	RemainingEstimatedFileCredit string                `json:"remaining_estimated_file_credit"`
-	RemainingFileCount           int64                 `json:"remaining_file_count"`
-	RemainingTotalSizeBytes      string                `json:"remaining_total_size_bytes"`
-	State                        UploadEstimateState   `json:"state"`
-	UploadEstimateId             string                `json:"upload_estimate_id"`
+	// AuthorizedMaxCredit Required. Immutable maximum net charge confirmed for the original batch.
+	AuthorizedMaxCredit string `json:"authorized_max_credit"`
+	// BalanceSufficient Required. Whether the balance covers authorized_max_credit.
+	BalanceSufficient bool `json:"balance_sufficient"`
+	// CreatedAt Required. Durable estimate creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// CurrentBalanceCredit Required. Wallet balance snapshot at estimate creation.
+	CurrentBalanceCredit string `json:"current_balance_credit"`
+	// ExpiresAt Required. Time after which remaining items cannot be consumed.
+	ExpiresAt Timestamp `json:"expires_at"`
+	// InputFingerprint Required. SHA-256 of the original normalized declarations.
+	InputFingerprint string `json:"input_fingerprint"`
+	// Items Required. Original ordered item positions, including purged tombstones.
+	Items []*UploadEstimateItem `json:"items"`
+	// PricingVersion Required. Public file-service pricing contract version.
+	PricingVersion string `json:"pricing_version"`
+	// RemainingEstimatedFileCredit Required. File estimate across current non-purged items.
+	RemainingEstimatedFileCredit string `json:"remaining_estimated_file_credit"`
+	// RemainingFileCount Required. Count of current non-purged items.
+	RemainingFileCount int64 `json:"remaining_file_count"`
+	// RemainingTotalSizeBytes Required. Declared bytes across current non-purged items.
+	RemainingTotalSizeBytes string `json:"remaining_total_size_bytes"`
+	// State Required. Derived batch lifecycle state.
+	State UploadEstimateState `json:"state"`
+	// UploadEstimateId Required. Opaque upload estimate identifier.
+	UploadEstimateId string `json:"upload_estimate_id"`
 }
 
 func (v UploadEstimate) MarshalJSON() ([]byte, error) {
@@ -9316,11 +14863,18 @@ func (v *UploadEstimate) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// UploadEstimateDeclaration UploadEstimateDeclaration is one client file declaration priced as an
+//
+//	immutable item before any multipart session or signed URL exists.
 type UploadEstimateDeclaration struct {
+	// DeclaredMediaType Required. Client-declared MIME used for validation and estimation.
 	DeclaredMediaType string `json:"declared_media_type"`
-	DeclaredSha256    string `json:"declared_sha256"`
+	// DeclaredSha256 Required. Lowercase hexadecimal SHA-256 of the complete file.
+	DeclaredSha256 string `json:"declared_sha256"`
+	// DeclaredSizeBytes Required. Declared complete-file size, from 1 to 50,000,000 bytes.
 	DeclaredSizeBytes string `json:"declared_size_bytes"`
-	DisplayName       string `json:"display_name"`
+	// DisplayName Required. Sanitized user-visible basename, from 1 to 255 characters.
+	DisplayName string `json:"display_name"`
 }
 
 func (v UploadEstimateDeclaration) MarshalJSON() ([]byte, error) {
@@ -9338,14 +14892,24 @@ func (v *UploadEstimateDeclaration) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// UploadEstimateItem UploadEstimateItem is one immutable declared file position in an upload
+//
+//	estimate batch. Content-bearing fields are suppressed after CONTENT_PURGED.
 type UploadEstimateItem struct {
-	ConsumedUploadId  runtime.Optional[string] `json:"consumed_upload_id"`
+	// ConsumedUploadId (OPTIONAL) Conditional. Required in CONSUMED and omitted after CONTENT_PURGED.
+	ConsumedUploadId runtime.Optional[string] `json:"consumed_upload_id"`
+	// DeclaredMediaType (OPTIONAL) Conditional. Required in AVAILABLE or CONSUMED; omitted after CONTENT_PURGED.
 	DeclaredMediaType runtime.Optional[string] `json:"declared_media_type"`
-	DeclaredSha256    runtime.Optional[string] `json:"declared_sha256"`
+	// DeclaredSha256 (OPTIONAL) Conditional. Required in AVAILABLE or CONSUMED; omitted after CONTENT_PURGED.
+	DeclaredSha256 runtime.Optional[string] `json:"declared_sha256"`
+	// DeclaredSizeBytes (OPTIONAL) Conditional. Required in AVAILABLE or CONSUMED; omitted after CONTENT_PURGED.
 	DeclaredSizeBytes runtime.Optional[string] `json:"declared_size_bytes"`
-	DisplayName       runtime.Optional[string] `json:"display_name"`
-	EstimateItemId    string                   `json:"estimate_item_id"`
-	State             UploadEstimateItemState  `json:"state"`
+	// DisplayName (OPTIONAL) Conditional. Required in AVAILABLE or CONSUMED; omitted after CONTENT_PURGED.
+	DisplayName runtime.Optional[string] `json:"display_name"`
+	// EstimateItemId Required. Opaque item identifier allocated within the estimate.
+	EstimateItemId string `json:"estimate_item_id"`
+	// State Required. Current item lifecycle state.
+	State UploadEstimateItemState `json:"state"`
 }
 
 func (v UploadEstimateItem) MarshalJSON() ([]byte, error) {
@@ -9369,6 +14933,9 @@ func (v *UploadEstimateItem) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// UploadEstimateItemState UploadEstimateItemState is the lifecycle of a position in an upload
+//
+//	estimate. CONTENT_PURGED suppresses all content-bearing fields.
 type UploadEstimateItemState string
 
 const (
@@ -9390,6 +14957,7 @@ func (v UploadEstimateItemState) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"UPLOAD_ESTIMATE_ITEM_STATE_UNSPECIFIED", "UPLOAD_ESTIMATE_ITEM_STATE_AVAILABLE", "UPLOAD_ESTIMATE_ITEM_STATE_CONSUMED", "UPLOAD_ESTIMATE_ITEM_STATE_CONTENT_PURGED"})
 }
 
+// UploadEstimateState UploadEstimateState is the derived lifecycle of an upload estimate batch.
 type UploadEstimateState string
 
 const (
@@ -9412,21 +14980,38 @@ func (v UploadEstimateState) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"UPLOAD_ESTIMATE_STATE_UNSPECIFIED", "UPLOAD_ESTIMATE_STATE_ACTIVE", "UPLOAD_ESTIMATE_STATE_PARTIALLY_CONSUMED", "UPLOAD_ESTIMATE_STATE_CONSUMED", "UPLOAD_ESTIMATE_STATE_EXPIRED"})
 }
 
+// UploadSession UploadSession is the durable, resumable public multipart fact. It excludes
+//
+//	provider upload identifiers, object-storage keys, and credentials.
 type UploadSession struct {
-	CostSummary       *CostSummary             `json:"cost_summary"`
-	CreatedAt         Timestamp                `json:"created_at"`
-	DeclaredMediaType string                   `json:"declared_media_type"`
-	DeclaredSha256    string                   `json:"declared_sha256"`
-	DeclaredSizeBytes string                   `json:"declared_size_bytes"`
-	DisplayName       string                   `json:"display_name"`
-	ExpiresAt         Timestamp                `json:"expires_at"`
-	FailureReason     runtime.Optional[string] `json:"failure_reason"`
-	MaterialId        runtime.Optional[string] `json:"material_id"`
-	PartCount         runtime.Optional[int64]  `json:"part_count"`
-	PartSizeBytes     runtime.Optional[string] `json:"part_size_bytes"`
-	Status            UploadStatus             `json:"status"`
-	UploadId          string                   `json:"upload_id"`
-	UploadedParts     []*UploadedPart          `json:"uploaded_parts"`
+	// CostSummary Required. FILE_UPLOAD estimate, authorization, and settlement summary.
+	CostSummary *CostSummary `json:"cost_summary"`
+	// CreatedAt Required. Durable session creation time.
+	CreatedAt Timestamp `json:"created_at"`
+	// DeclaredMediaType Required. Declared MIME copied from the immutable estimate item.
+	DeclaredMediaType string `json:"declared_media_type"`
+	// DeclaredSha256 Required. Declared complete-file SHA-256 copied from the estimate item.
+	DeclaredSha256 string `json:"declared_sha256"`
+	// DeclaredSizeBytes Required. Declared bytes copied from the immutable estimate item.
+	DeclaredSizeBytes string `json:"declared_size_bytes"`
+	// DisplayName Required. Sanitized display name copied from the immutable estimate item.
+	DisplayName string `json:"display_name"`
+	// ExpiresAt Required. Expiry time for an unfinished session.
+	ExpiresAt Timestamp `json:"expires_at"`
+	// FailureReason (OPTIONAL) Conditional. Required in REJECTED or FAILED; stable and provider-safe.
+	FailureReason runtime.Optional[string] `json:"failure_reason"`
+	// MaterialId (OPTIONAL) Conditional. Required in COMPLETED and absent in other states.
+	MaterialId runtime.Optional[string] `json:"material_id"`
+	// PartCount (OPTIONAL) Conditional. Present with part_size_bytes after the multipart plan is established.
+	PartCount runtime.Optional[int64] `json:"part_count"`
+	// PartSizeBytes (OPTIONAL) Conditional. Present with part_count after the multipart plan is established.
+	PartSizeBytes runtime.Optional[string] `json:"part_size_bytes"`
+	// Status Required. Current public upload lifecycle.
+	Status UploadStatus `json:"status"`
+	// UploadId Required. Opaque PinPage upload session identifier.
+	UploadId string `json:"upload_id"`
+	// UploadedParts Required. Authoritative persisted parts; an empty list before any upload.
+	UploadedParts []*UploadedPart `json:"uploaded_parts"`
 }
 
 func (v UploadSession) MarshalJSON() ([]byte, error) {
@@ -9464,6 +15049,7 @@ func (v *UploadSession) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// UploadStatus UploadStatus is the public multipart upload lifecycle.
 type UploadStatus string
 
 const (
@@ -9491,10 +15077,16 @@ func (v UploadStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"UPLOAD_STATUS_UNSPECIFIED", "UPLOAD_STATUS_OPENING", "UPLOAD_STATUS_OPEN", "UPLOAD_STATUS_COMPLETING", "UPLOAD_STATUS_COMPLETED", "UPLOAD_STATUS_ABORTING", "UPLOAD_STATUS_ABORTED", "UPLOAD_STATUS_EXPIRED", "UPLOAD_STATUS_REJECTED", "UPLOAD_STATUS_FAILED"})
 }
 
+// UploadedPart UploadedPart is one authoritative part confirmed by object storage and
+//
+//	persisted into the upload session.
 type UploadedPart struct {
-	Etag       string `json:"etag"`
-	PartNumber int64  `json:"part_number"`
-	SizeBytes  string `json:"size_bytes"`
+	// Etag Required. Provider ETag preserved byte-for-byte.
+	Etag string `json:"etag"`
+	// PartNumber Required. Multipart part number.
+	PartNumber int64 `json:"part_number"`
+	// SizeBytes Required. Actual part size confirmed by object storage.
+	SizeBytes string `json:"size_bytes"`
 }
 
 func (v UploadedPart) MarshalJSON() ([]byte, error) {
@@ -9510,6 +15102,7 @@ func (v *UploadedPart) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// UserBrief UserBrief is a minimal user representation returned in auth responses.
 type UserBrief struct {
 	Avatar runtime.Optional[string] `json:"avatar"`
 	Email  runtime.Optional[string] `json:"email"`
@@ -9535,16 +15128,39 @@ func (v *UserBrief) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// UserProfile UserProfile 是 OIDC userinfo 标准 claims 的 IAM 视图。字段对齐
+//
+//	OpenID Connect Core 1.0 §5.4 Standard Claims。空 / 未知字段一律省略
+//	（proto3 zero-value 自然 omit），与 OIDC userinfo HTTP 端点的语义一致。
+//
+//	仅作为 IntrospectTokenResponse.profile 的载体，让 BFF 在一次
+//	IntrospectToken RPC 内拿齐 userinfo 所需的全部 claims，避免再调
+//	UserService.GetProfile。
 type UserProfile struct {
-	Email               runtime.Optional[string] `json:"email"`
-	EmailVerified       runtime.Optional[bool]   `json:"email_verified"`
-	Name                runtime.Optional[string] `json:"name"`
-	PhoneNumber         runtime.Optional[string] `json:"phone_number"`
-	PhoneNumberVerified runtime.Optional[bool]   `json:"phone_number_verified"`
-	Picture             runtime.Optional[string] `json:"picture"`
-	PreferredUsername   runtime.Optional[string] `json:"preferred_username"`
-	Sub                 runtime.Optional[string] `json:"sub"`
-	UpdatedAt           runtime.Optional[string] `json:"updated_at"`
+	// Email OIDC email claim。
+	Email runtime.Optional[string] `json:"email"`
+	// EmailVerified OIDC email_verified claim。
+	EmailVerified runtime.Optional[bool] `json:"email_verified"`
+	// Name OIDC name claim — 用户全名（可能空）。
+	Name runtime.Optional[string] `json:"name"`
+	// PhoneNumber OIDC phone_number claim — 国际 E.164 格式，如 "+8613800138000"。
+	PhoneNumber runtime.Optional[string] `json:"phone_number"`
+	// PhoneNumberVerified OIDC phone_number_verified claim。
+	PhoneNumberVerified runtime.Optional[bool] `json:"phone_number_verified"`
+	// Picture OIDC picture claim — MediaService 生成的临时 HTTPS 图片资源直链。
+	//  IAM 数据库只保存 media_id；输出 UserInfo profile 前必须解析并校验为
+	//  image/* 资源的预签名 URL，约 15 分钟过期。解析失败时 omit，禁止回退为
+	//  media_id、网页 URL 或永久 URL，避免被当作公共图床。
+	Picture runtime.Optional[string] `json:"picture"`
+	// PreferredUsername OIDC preferred_username claim — IAM 不分 name 和 preferred_username，
+	//  两个字段都填 user.name。客户端 UI 选其一显示即可。
+	PreferredUsername runtime.Optional[string] `json:"preferred_username"`
+	// Sub OIDC sub claim（= IAM user_id）。冗余字段，调用方可直接用
+	//  IntrospectTokenResponse.user_id；保留在 profile 里方便 BFF 直接序列
+	//  化成 OIDC claims JSON 不需要再拼。
+	Sub runtime.Optional[string] `json:"sub"`
+	// UpdatedAt OIDC updated_at claim — 秒级 Unix 时间戳，user 信息最近一次修改时间。
+	UpdatedAt runtime.Optional[string] `json:"updated_at"`
 }
 
 func (v UserProfile) MarshalJSON() ([]byte, error) {
@@ -9572,6 +15188,7 @@ func (v *UserProfile) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// UserStatus UserStatus represents the account status.
 type UserStatus string
 
 const (
@@ -9593,6 +15210,7 @@ func (v UserStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"USER_STATUS_UNSPECIFIED", "USER_STATUS_ACTIVE", "USER_STATUS_SUSPENDED", "USER_STATUS_DELETED"})
 }
 
+// VerificationPurpose VerificationPurpose indicates why the code is being sent.
 type VerificationPurpose string
 
 const (
@@ -9616,6 +15234,7 @@ func (v VerificationPurpose) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"VERIFICATION_PURPOSE_UNSPECIFIED", "VERIFICATION_PURPOSE_REGISTER", "VERIFICATION_PURPOSE_LOGIN", "VERIFICATION_PURPOSE_RESET_PASSWORD", "VERIFICATION_PURPOSE_VERIFY_EMAIL", "VERIFICATION_PURPOSE_VERIFY_PHONE"})
 }
 
+// VerificationType VerificationType indicates the channel for verification code delivery.
 type VerificationType string
 
 const (
@@ -9660,9 +15279,16 @@ func (v *VerifyPhoneRequest) UnmarshalJSON(data []byte) error {
 }
 
 type VerifyPhoneResponse = any
+
+// VerifyPlatformAccountRequest VerifyPlatformAccountRequest 验证平台账号凭证是否有效。
+//
+//	用于在正式发布前检查凭证可用性，例如验证微信公众号的 appid/appsecret。
 type VerifyPlatformAccountRequest struct {
+	// Credentials 平台凭证，键值对格式。
+	//  微信公众号: {"appid": "...", "appsecret": "..."}
 	Credentials runtime.Optional[map[string]string] `json:"credentials"`
-	Platform    runtime.Optional[Platform]          `json:"platform"`
+	// Platform 目标平台。
+	Platform runtime.Optional[Platform] `json:"platform"`
 }
 
 func (v VerifyPlatformAccountRequest) MarshalJSON() ([]byte, error) {
@@ -9693,9 +15319,12 @@ func (v *VerifyPlatformAccountRequestCredentialsEntry) UnmarshalJSON(data []byte
 }
 
 type VerifyPlatformAccountResponse struct {
-	DisplayName  runtime.Optional[string] `json:"display_name"`
+	// DisplayName 验证通过时返回的账号名称（如公众号名称）。
+	DisplayName runtime.Optional[string] `json:"display_name"`
+	// ErrorMessage 验证失败时的错误信息。
 	ErrorMessage runtime.Optional[string] `json:"error_message"`
-	Valid        runtime.Optional[bool]   `json:"valid"`
+	// Valid 凭证是否有效。
+	Valid runtime.Optional[bool] `json:"valid"`
 }
 
 func (v VerifyPlatformAccountResponse) MarshalJSON() ([]byte, error) {
@@ -9711,11 +15340,18 @@ func (v *VerifyPlatformAccountResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// VersionArtifact VersionArtifact is immutable metadata for one validated artifact published
+//
+//	with a page version.
 type VersionArtifact struct {
-	ExportId  string       `json:"export_id"`
-	Format    ExportFormat `json:"format"`
-	Sha256    string       `json:"sha256"`
-	SizeBytes string       `json:"size_bytes"`
+	// ExportId Required. Opaque persisted export artifact identifier.
+	ExportId string `json:"export_id"`
+	// Format Required. PDF or PNG; unique within the version.
+	Format ExportFormat `json:"format"`
+	// Sha256 Required. SHA-256 of the validated artifact.
+	Sha256 string `json:"sha256"`
+	// SizeBytes Required. Actual persisted artifact size in bytes.
+	SizeBytes string `json:"size_bytes"`
 }
 
 func (v VersionArtifact) MarshalJSON() ([]byte, error) {
@@ -9734,9 +15370,12 @@ func (v *VersionArtifact) UnmarshalJSON(data []byte) error {
 }
 
 type VersionsRestorePageVersionBody struct {
-	ExpectedContentRevision  string                   `json:"expectedContentRevision"`
-	ExpectedCurrentVersionId string                   `json:"expectedCurrentVersionId"`
-	PageEtag                 runtime.Optional[string] `json:"pageEtag"`
+	// ExpectedContentRevision Required. Page content revision observed before the write.
+	ExpectedContentRevision string `json:"expectedContentRevision"`
+	// ExpectedCurrentVersionId Required. Current version observed before the write.
+	ExpectedCurrentVersionId string `json:"expectedCurrentVersionId"`
+	// PageEtag (OPTIONAL) Optional. Exact representation validator requested by the client.
+	PageEtag runtime.Optional[string] `json:"pageEtag"`
 }
 
 func (v VersionsRestorePageVersionBody) MarshalJSON() ([]byte, error) {
@@ -9752,6 +15391,10 @@ func (v *VersionsRestorePageVersionBody) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// VideoStatus VideoStatus indicates the state of a video generation task.
+//
+//	视频生成是异步多阶段流程，状态反映当前所处阶段。
+//	状态流转: PENDING → GENERATING_SCRIPT → GENERATING_ASSETS → COMPOSITING → COMPLETED / FAILED
 type VideoStatus string
 
 const (
@@ -9776,6 +15419,9 @@ func (v VideoStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"VIDEO_STATUS_UNSPECIFIED", "VIDEO_STATUS_PENDING", "VIDEO_STATUS_GENERATING_SCRIPT", "VIDEO_STATUS_GENERATING_ASSETS", "VIDEO_STATUS_COMPOSITING", "VIDEO_STATUS_COMPLETED", "VIDEO_STATUS_FAILED"})
 }
 
+// VideoStyle VideoStyle indicates the visual style for video generation.
+//
+//	不同风格对应不同的视频生成流水线和模板。
 type VideoStyle string
 
 const (
@@ -9798,20 +15444,212 @@ func (v VideoStyle) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"VIDEO_STYLE_UNSPECIFIED", "VIDEO_STYLE_SLIDESHOW", "VIDEO_STYLE_TALKING_HEAD", "VIDEO_STYLE_EXPLAINER", "VIDEO_STYLE_HIGHLIGHT"})
 }
 
+// VideoTask VideoTask represents a video generation job.
+//
+//	视频生成是异步任务，客户端提交后通过轮询 GetVideoTask 获取进度。
 type VideoTask struct {
-	CreatedAt       runtime.Optional[Timestamp]   `json:"created_at"`
-	DurationSeconds runtime.Optional[int64]       `json:"duration_seconds"`
-	ErrorMessage    runtime.Optional[string]      `json:"error_message"`
-	ProgressPercent runtime.Optional[int64]       `json:"progress_percent"`
-	ProjectId       runtime.Optional[string]      `json:"project_id"`
-	Script          runtime.Optional[string]      `json:"script"`
-	Status          runtime.Optional[VideoStatus] `json:"status"`
-	Style           runtime.Optional[VideoStyle]  `json:"style"`
-	TaskId          runtime.Optional[string]      `json:"task_id"`
-	ThumbnailUrl    runtime.Optional[string]      `json:"thumbnail_url"`
-	Title           runtime.Optional[string]      `json:"title"`
-	UpdatedAt       runtime.Optional[Timestamp]   `json:"updated_at"`
-	VideoUrl        runtime.Optional[string]      `json:"video_url"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// DurationSeconds 视频时长（秒）。
+	DurationSeconds runtime.Optional[int64] `json:"duration_seconds"`
+	// ErrorMessage 失败原因，status=FAILED 时填充。
+	ErrorMessage runtime.Optional[string] `json:"error_message"`
+	// ProgressPercent 生成进度百分比（0-100）。
+	ProgressPercent runtime.Optional[int64] `json:"progress_percent"`
+	// ProjectId 所属项目 ID。
+	ProjectId runtime.Optional[string] `json:"project_id"`
+	// Script LLM 生成的视频脚本。
+	Script runtime.Optional[string] `json:"script"`
+	// Status 当前任务状态。
+	Status runtime.Optional[VideoStatus] `json:"status"`
+	// Style 视频风格。
+	Style runtime.Optional[VideoStyle] `json:"style"`
+	// TaskId 任务唯一标识。
+	TaskId runtime.Optional[string] `json:"task_id"`
+	// ThumbnailUrl 视频缩略图 URL。
+	ThumbnailUrl runtime.Optional[string] `json:"thumbnail_url"`
+	// Title 视频标题。
+	Title runtime.Optional[string] `json:"title"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
+	// VideoUrl 最终视频 URL，status=COMPLETED 时可用。
+	VideoUrl runtime.Optional[string] `json:"video_url"`
 }
 
 func (v VideoTask) MarshalJSON() ([]byte, error) {
@@ -9847,15 +15685,197 @@ func (v *VideoTask) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// Webhook Webhook represents a registered webhook endpoint.
 type Webhook struct {
-	AppId               runtime.Optional[string]        `json:"app_id"`
-	CreatedAt           runtime.Optional[Timestamp]     `json:"created_at"`
-	SigningSecretMasked runtime.Optional[string]        `json:"signing_secret_masked"`
-	Status              runtime.Optional[WebhookStatus] `json:"status"`
-	SubscribedEvents    runtime.Optional[[]string]      `json:"subscribed_events"`
-	UpdatedAt           runtime.Optional[Timestamp]     `json:"updated_at"`
-	Url                 runtime.Optional[string]        `json:"url"`
-	WebhookId           runtime.Optional[string]        `json:"webhook_id"`
+	AppId runtime.Optional[string] `json:"app_id"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	// SigningSecretMasked Only last 4 chars visible
+	SigningSecretMasked runtime.Optional[string] `json:"signing_secret_masked"`
+	// Status WebhookStatus represents the state of a webhook endpoint.
+	Status runtime.Optional[WebhookStatus] `json:"status"`
+	// SubscribedEvents e.g. "project.created", "article.published"
+	SubscribedEvents runtime.Optional[[]string] `json:"subscribed_events"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
+	Url       runtime.Optional[string]    `json:"url"`
+	WebhookId runtime.Optional[string]    `json:"webhook_id"`
 }
 
 func (v Webhook) MarshalJSON() ([]byte, error) {
@@ -9881,16 +15901,111 @@ func (v *Webhook) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// WebhookDelivery WebhookDelivery records a single delivery attempt.
 type WebhookDelivery struct {
-	DeliveredAt    runtime.Optional[Timestamp]      `json:"delivered_at"`
-	DeliveryId     runtime.Optional[string]         `json:"delivery_id"`
-	DurationMs     runtime.Optional[int64]          `json:"duration_ms"`
-	ErrorMessage   runtime.Optional[string]         `json:"error_message"`
-	EventType      runtime.Optional[string]         `json:"event_type"`
-	ResponseBody   runtime.Optional[string]         `json:"response_body"`
-	ResponseStatus runtime.Optional[int64]          `json:"response_status"`
-	Status         runtime.Optional[DeliveryStatus] `json:"status"`
-	WebhookId      runtime.Optional[string]         `json:"webhook_id"`
+	// DeliveredAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	DeliveredAt runtime.Optional[Timestamp] `json:"delivered_at"`
+	DeliveryId  runtime.Optional[string]    `json:"delivery_id"`
+	// DurationMs Round-trip time
+	DurationMs runtime.Optional[int64] `json:"duration_ms"`
+	// ErrorMessage Set on failure
+	ErrorMessage runtime.Optional[string] `json:"error_message"`
+	EventType    runtime.Optional[string] `json:"event_type"`
+	// ResponseBody Truncated response body for debugging
+	ResponseBody runtime.Optional[string] `json:"response_body"`
+	// ResponseStatus HTTP status code from the receiver
+	ResponseStatus runtime.Optional[int64] `json:"response_status"`
+	// Status DeliveryStatus represents the outcome of a webhook delivery attempt.
+	Status    runtime.Optional[DeliveryStatus] `json:"status"`
+	WebhookId runtime.Optional[string]         `json:"webhook_id"`
 }
 
 func (v WebhookDelivery) MarshalJSON() ([]byte, error) {
@@ -9918,6 +16033,7 @@ func (v *WebhookDelivery) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// WebhookStatus WebhookStatus represents the state of a webhook endpoint.
 type WebhookStatus string
 
 const (
@@ -9938,11 +16054,18 @@ func (v WebhookStatus) MarshalJSON() ([]byte, error) {
 	return runtime.MarshalEnum(string(v), []string{"WEBHOOK_STATUS_UNSPECIFIED", "WEBHOOK_STATUS_ACTIVE", "WEBHOOK_STATUS_DISABLED"})
 }
 
+// WechatMpConfig WechatMpConfig 微信公众号发布配置。
+//
+//	对应微信公众平台"新建图文消息"的参数。
 type WechatMpConfig struct {
-	Author          runtime.Optional[string] `json:"author"`
-	Digest          runtime.Optional[string] `json:"digest"`
-	NeedOpenComment runtime.Optional[bool]   `json:"need_open_comment"`
-	ShowCoverPic    runtime.Optional[bool]   `json:"show_cover_pic"`
+	// Author 文章作者名。
+	Author runtime.Optional[string] `json:"author"`
+	// Digest 图文消息摘要，未填写时默认截取正文前 120 字。
+	Digest runtime.Optional[string] `json:"digest"`
+	// NeedOpenComment 是否开启文章评论功能。
+	NeedOpenComment runtime.Optional[bool] `json:"need_open_comment"`
+	// ShowCoverPic 是否在正文中显示封面图。
+	ShowCoverPic runtime.Optional[bool] `json:"show_cover_pic"`
 }
 
 func (v WechatMpConfig) MarshalJSON() ([]byte, error) {
@@ -9960,8 +16083,18 @@ func (v *WechatMpConfig) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// WechatMpCredentials WechatMpCredentials 微信公众号 API 调用凭证。
+//
+//	由调用方在请求体中提供，server 端用于调用微信公众号开放 API（上传素材 /
+//	创建草稿 / 群发等）。**业务凭证是请求的固有属性，应随请求体传输**，不应
+//	放在 HTTP header 中——HTTP header 在跨网关 / 多跳 RPC 时透传策略不一定
+//	可靠，且不受 proto 类型 / 必填校验保护，审计日志透明度也差。
+//
+//	注意：app_secret 是敏感凭证，server 端日志 / 错误响应 / wire dump 必须脱敏。
 type WechatMpCredentials struct {
-	AppId     runtime.Optional[string] `json:"app_id"`
+	// AppId 微信公众号 AppID（形如 "wxbd099e0f2e27cca4"，18 位）。
+	AppId runtime.Optional[string] `json:"app_id"`
+	// AppSecret 微信公众号 AppSecret（32 位十六进制）。**敏感字段，禁止落日志**。
 	AppSecret runtime.Optional[string] `json:"app_secret"`
 }
 
@@ -9976,10 +16109,16 @@ func (v *WechatMpCredentials) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// YuqueConfig YuqueConfig 语雀发布配置。
+//
+//	文章将发布到指定的语雀知识库。
 type YuqueConfig struct {
-	BookId       runtime.Optional[string] `json:"book_id"`
-	PublicAccess runtime.Optional[bool]   `json:"public_access"`
-	Slug         runtime.Optional[string] `json:"slug"`
+	// BookId 目标知识库 ID。
+	BookId runtime.Optional[string] `json:"book_id"`
+	// PublicAccess 是否公开访问。
+	PublicAccess runtime.Optional[bool] `json:"public_access"`
+	// Slug 文档路径（slug），用于生成文档 URL。
+	Slug runtime.Optional[string] `json:"slug"`
 }
 
 func (v YuqueConfig) MarshalJSON() ([]byte, error) {
@@ -9995,8 +16134,13 @@ func (v *YuqueConfig) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ZhihuConfig ZhihuConfig 知乎发布配置。
+//
+//	文章将发布到指定的知乎专栏。
 type ZhihuConfig struct {
-	ColumnId runtime.Optional[string]   `json:"column_id"`
+	// ColumnId 目标专栏 ID。
+	ColumnId runtime.Optional[string] `json:"column_id"`
+	// TopicIds 关联的话题 ID 列表。
 	TopicIds runtime.Optional[[]string] `json:"topic_ids"`
 }
 
