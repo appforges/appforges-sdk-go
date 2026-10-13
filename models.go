@@ -15739,6 +15739,32 @@ func (v *VerifyVertexAPIKeyResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "key", Value: &v.Key, Required: false, Nullable: false, Enum: []string{}})
 }
 
+// VerifyVertexToolCredentialRequest Contains a secret: never log, trace, cache or persist its body.
+//
+//	No owner, model, amount or requested grants may be supplied by the caller.
+type VerifyVertexToolCredentialRequest struct {
+	ApiKey runtime.Optional[string] `json:"api_key"`
+}
+
+func (v VerifyVertexToolCredentialRequest) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "api_key", Value: v.ApiKey, Required: false, Nullable: false, Enum: []string{}})
+}
+func (v *VerifyVertexToolCredentialRequest) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "api_key", Value: &v.ApiKey, Required: false, Nullable: false, Enum: []string{}})
+}
+
+type VerifyVertexToolCredentialResponse struct {
+	// Key Authenticated metadata only; not a wallet or paid-tool delegation.
+	Key runtime.Optional[*VertexAPIKey] `json:"key"`
+}
+
+func (v VerifyVertexToolCredentialResponse) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "key", Value: v.Key, Required: false, Nullable: false, Enum: []string{}})
+}
+func (v *VerifyVertexToolCredentialResponse) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "key", Value: &v.Key, Required: false, Nullable: false, Enum: []string{}})
+}
+
 // VersionArtifact VersionArtifact is immutable metadata for one validated artifact published
 //
 //	with a page version.
@@ -16141,6 +16167,25 @@ func (v VertexDelegationCredential) MarshalJSON() ([]byte, error) {
 func (v *VertexDelegationCredential) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "api_key", Value: &v.ApiKey, Required: false, Nullable: false, Enum: []string{}},
 		runtime.Field{Name: "model", Value: &v.Model, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+
+type VertexToolDelegationCredential struct {
+	ApiKey runtime.Optional[string] `json:"api_key"`
+	// Sku Exact registered SKU (e.g. web_search.basic), no wildcard. Must be bound
+	//  into the signed proof and enforced by Vertex and Billing against the
+	//  accepted operation and actual settlement usage. Never a model alias.
+	Sku runtime.Optional[string] `json:"sku"`
+}
+
+func (v VertexToolDelegationCredential) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "api_key", Value: v.ApiKey, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "sku", Value: v.Sku, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *VertexToolDelegationCredential) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "api_key", Value: &v.ApiKey, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "sku", Value: &v.Sku, Required: false, Nullable: false, Enum: []string{}},
 	)
 }
 
