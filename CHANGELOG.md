@@ -1,7 +1,11 @@
 # Changelog
 
-## v0.63.0
+## v0.64.0
 
-Compared with v0.62.0.
+Compared with v0.63.0.
 
-No public wire API changes. SDK runtime and documentation changes are described in the release notes.
+- added `types/appforges.iam.v1.ApplicationDelegationPrincipal` (compatible)
+- added `types/appforges.iam.v1.ApplicationDelegationPrincipal/fields/app_id` (compatible)
+- added `types/appforges.iam.v1.ApplicationDelegationPrincipal/fields/client_id` (compatible)
+- added `types/appforges.iam.v1.ApplicationDelegationPrincipal/fields/scopes` (compatible)
+- added `types/appforges.iam.v1.IssueInternalDelegationResponse/fields/application` (compatible)

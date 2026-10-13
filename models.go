@@ -466,6 +466,33 @@ func (v *AppforgesCommonV1PaginationResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// ApplicationDelegationPrincipal Application identity is not an end user and not a workload ServiceAccount.
+//
+//	A valid application proof also requires the caller's own workload identity.
+type ApplicationDelegationPrincipal struct {
+	AppId runtime.Optional[string] `json:"app_id"`
+	// ClientId Active OAuth client that obtained the credential. Required and signed.
+	//  This is distinct from app_id; never use one as a fallback for the other.
+	ClientId runtime.Optional[string] `json:"client_id"`
+	// Scopes Nonempty exact intersection of current token/client and installed policy.
+	//  No wildcard or implicit administrator/user permission. Resource-level
+	//  authorization remains mandatory at the destination.
+	Scopes runtime.Optional[[]string] `json:"scopes"`
+}
+
+func (v ApplicationDelegationPrincipal) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "app_id", Value: v.AppId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "client_id", Value: v.ClientId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "scopes", Value: v.Scopes, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *ApplicationDelegationPrincipal) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "app_id", Value: &v.AppId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "client_id", Value: &v.ClientId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "scopes", Value: &v.Scopes, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+
 // ApplicationStatus ApplicationStatus represents the lifecycle state of an OAuth application.
 type ApplicationStatus string
 
@@ -6992,6 +7019,11 @@ func (v *IntrospectTokenResponse) UnmarshalJSON(data []byte) error {
 // IssueInternalDelegationRequest Secret-bearing request: never log, trace, cache or persist its body.
 type IssueInternalDelegationRequest = any
 type IssueInternalDelegationResponse struct {
+	// Application Present only for an application proof. The signed token uses the distinct
+	//  appforges-app-delegation+jwt type and application payload; old user-only
+	//  verifiers must reject it. Check these fields against the verified signature,
+	//  and apply the receiving route's explicit application scope/resource policy.
+	Application runtime.Optional[*ApplicationDelegationPrincipal] `json:"application"`
 	// Delegation Signed proof: subject, issuer, expiry, exact caller/audience/method/path
 	//  grants and credential-derived bindings. Receiver must enforce bindings.
 	//  Lifetime <= 5 minutes and bounded by the credential/operation expiry.
@@ -7086,18 +7118,22 @@ type IssueInternalDelegationResponse struct {
 	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
 	//  ) to obtain a formatter capable of generating timestamps in this format.
 	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
-	// UserId Authoritative subject used with the proof; never independently trusted.
+	// UserId Authoritative user subject; never independently trusted. Required only for
+	//  user proofs. Empty for an application proof. Receivers must reject a
+	//  response carrying both user_id and application, or neither.
 	UserId runtime.Optional[string] `json:"user_id"`
 }
 
 func (v IssueInternalDelegationResponse) MarshalJSON() ([]byte, error) {
-	return runtime.MarshalModel(runtime.Field{Name: "delegation", Value: v.Delegation, Required: false, Nullable: false, Enum: []string{}},
+	return runtime.MarshalModel(runtime.Field{Name: "application", Value: v.Application, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "delegation", Value: v.Delegation, Required: false, Nullable: false, Enum: []string{}},
 		runtime.Field{Name: "expires_at", Value: v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
 		runtime.Field{Name: "user_id", Value: v.UserId, Required: false, Nullable: false, Enum: []string{}},
 	)
 }
 func (v *IssueInternalDelegationResponse) UnmarshalJSON(data []byte) error {
-	return runtime.UnmarshalModel(data, runtime.Field{Name: "delegation", Value: &v.Delegation, Required: false, Nullable: false, Enum: []string{}},
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "application", Value: &v.Application, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "delegation", Value: &v.Delegation, Required: false, Nullable: false, Enum: []string{}},
 		runtime.Field{Name: "expires_at", Value: &v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
 		runtime.Field{Name: "user_id", Value: &v.UserId, Required: false, Nullable: false, Enum: []string{}},
 	)
