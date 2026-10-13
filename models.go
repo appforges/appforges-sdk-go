@@ -3588,6 +3588,55 @@ func (v *CreateUploadResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+type CreateVertexAPIKeyRequest struct {
+	AllowedModels runtime.Optional[[]string] `json:"allowed_models"`
+	CallerService runtime.Optional[string]   `json:"caller_service"`
+	// ExpiresAt Required, in the future and no more than 366 days from now.
+	ExpiresAt   runtime.Optional[Timestamp] `json:"expires_at"`
+	Name        runtime.Optional[string]    `json:"name"`
+	OwnerUserId runtime.Optional[string]    `json:"owner_user_id"`
+	// RequestId Unique issuance attempt ID. Replays return ALREADY_EXISTS, without issuing
+	//  another key. If a response is lost, revoke its listed key and create anew.
+	RequestId runtime.Optional[string] `json:"request_id"`
+}
+
+func (v CreateVertexAPIKeyRequest) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "allowed_models", Value: v.AllowedModels, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "caller_service", Value: v.CallerService, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expires_at", Value: v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "name", Value: v.Name, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "owner_user_id", Value: v.OwnerUserId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "request_id", Value: v.RequestId, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *CreateVertexAPIKeyRequest) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "allowed_models", Value: &v.AllowedModels, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "caller_service", Value: &v.CallerService, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expires_at", Value: &v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "name", Value: &v.Name, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "owner_user_id", Value: &v.OwnerUserId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "request_id", Value: &v.RequestId, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+
+type CreateVertexAPIKeyResponse struct {
+	// ApiKey Secret, shown once; must never be logged, cached or persisted by Smithy.
+	ApiKey runtime.Optional[string] `json:"api_key"`
+	// Key VertexAPIKey contains non-secret metadata only. Identity bindings are immutable.
+	Key runtime.Optional[*VertexAPIKey] `json:"key"`
+}
+
+func (v CreateVertexAPIKeyResponse) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "api_key", Value: v.ApiKey, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "key", Value: v.Key, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *CreateVertexAPIKeyResponse) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "api_key", Value: &v.ApiKey, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "key", Value: &v.Key, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+
 // CreateVideoRequest CreateVideoRequest 基于脚本和素材合成视频。
 //
 //	支持两种模式：
@@ -3947,6 +3996,23 @@ func (v *DeleteProjectRequest) UnmarshalJSON(data []byte) error {
 }
 
 type DeleteProjectResponse = any
+type DeleteVertexAPIKeyRequest struct {
+	ApiKeyId        runtime.Optional[string] `json:"api_key_id"`
+	ExpectedVersion runtime.Optional[string] `json:"expected_version"`
+}
+
+func (v DeleteVertexAPIKeyRequest) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "api_key_id", Value: v.ApiKeyId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expected_version", Value: v.ExpectedVersion, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *DeleteVertexAPIKeyRequest) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "api_key_id", Value: &v.ApiKeyId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expected_version", Value: &v.ExpectedVersion, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+
+type DeleteVertexAPIKeyResponse = any
 
 // DeleteVideoTaskRequest DeleteVideoTaskRequest 删除视频任务及其生成的视频文件。
 type DeleteVideoTaskRequest struct {
@@ -6515,6 +6581,29 @@ func (v *GetVersionHintResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "default_api_version", Value: &v.DefaultApiVersion, Required: false, Nullable: false, Enum: []string{}})
 }
 
+type GetVertexAPIKeyRequest struct {
+	ApiKeyId runtime.Optional[string] `json:"api_key_id"`
+}
+
+func (v GetVertexAPIKeyRequest) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "api_key_id", Value: v.ApiKeyId, Required: false, Nullable: false, Enum: []string{}})
+}
+func (v *GetVertexAPIKeyRequest) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "api_key_id", Value: &v.ApiKeyId, Required: false, Nullable: false, Enum: []string{}})
+}
+
+type GetVertexAPIKeyResponse struct {
+	// Key VertexAPIKey contains non-secret metadata only. Identity bindings are immutable.
+	Key runtime.Optional[*VertexAPIKey] `json:"key"`
+}
+
+func (v GetVertexAPIKeyResponse) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "key", Value: v.Key, Required: false, Nullable: false, Enum: []string{}})
+}
+func (v *GetVertexAPIKeyResponse) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "key", Value: &v.Key, Required: false, Nullable: false, Enum: []string{}})
+}
+
 type GetVideoTaskRequest struct {
 	TaskId runtime.Optional[string] `json:"task_id"`
 }
@@ -6896,6 +6985,120 @@ func (v *IntrospectTokenResponse) UnmarshalJSON(data []byte) error {
 		runtime.Field{Name: "profile", Value: &v.Profile, Required: false, Nullable: true, Enum: []string{}},
 		runtime.Field{Name: "scope", Value: &v.Scope, Required: false, Nullable: false, Enum: []string{}},
 		runtime.Field{Name: "token_type", Value: &v.TokenType, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "user_id", Value: &v.UserId, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+
+// IssueInternalDelegationRequest Secret-bearing request: never log, trace, cache or persist its body.
+type IssueInternalDelegationRequest = any
+type IssueInternalDelegationResponse struct {
+	// Delegation Signed proof: subject, issuer, expiry, exact caller/audience/method/path
+	//  grants and credential-derived bindings. Receiver must enforce bindings.
+	//  Lifetime <= 5 minutes and bounded by the credential/operation expiry.
+	Delegation runtime.Optional[string] `json:"delegation"`
+	// ExpiresAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	// UserId Authoritative subject used with the proof; never independently trusted.
+	UserId runtime.Optional[string] `json:"user_id"`
+}
+
+func (v IssueInternalDelegationResponse) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "delegation", Value: v.Delegation, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expires_at", Value: v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "user_id", Value: v.UserId, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *IssueInternalDelegationResponse) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "delegation", Value: &v.Delegation, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expires_at", Value: &v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
 		runtime.Field{Name: "user_id", Value: &v.UserId, Required: false, Nullable: false, Enum: []string{}},
 	)
 }
@@ -7783,6 +7986,42 @@ func (v ListTemplatesResponse) MarshalJSON() ([]byte, error) {
 }
 func (v *ListTemplatesResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "templates", Value: &v.Templates, Required: false, Nullable: false, Enum: []string{}})
+}
+
+type ListVertexAPIKeysRequest struct {
+	// OwnerUserId Optional exact owner filter.
+	OwnerUserId runtime.Optional[string] `json:"owner_user_id"`
+	PageSize    runtime.Optional[int64]  `json:"page_size"`
+	PageToken   runtime.Optional[string] `json:"page_token"`
+}
+
+func (v ListVertexAPIKeysRequest) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "owner_user_id", Value: v.OwnerUserId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "page_size", Value: v.PageSize, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "page_token", Value: v.PageToken, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *ListVertexAPIKeysRequest) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "owner_user_id", Value: &v.OwnerUserId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "page_size", Value: &v.PageSize, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "page_token", Value: &v.PageToken, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+
+type ListVertexAPIKeysResponse struct {
+	Keys          runtime.Optional[[]*VertexAPIKey] `json:"keys"`
+	NextPageToken runtime.Optional[string]          `json:"next_page_token"`
+}
+
+func (v ListVertexAPIKeysResponse) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "keys", Value: v.Keys, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "next_page_token", Value: v.NextPageToken, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *ListVertexAPIKeysResponse) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "keys", Value: &v.Keys, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "next_page_token", Value: &v.NextPageToken, Required: false, Nullable: false, Enum: []string{}},
+	)
 }
 
 type ListVideoTasksRequest struct {
@@ -14635,6 +14874,135 @@ func (v *UpdateScopeResponse) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "scope", Value: &v.Scope, Required: false, Nullable: false, Enum: []string{}})
 }
 
+type UpdateVertexAPIKeyRequest struct {
+	AllowedModels   runtime.Optional[[]string] `json:"allowed_models"`
+	ApiKeyId        runtime.Optional[string]   `json:"api_key_id"`
+	ExpectedVersion runtime.Optional[string]   `json:"expected_version"`
+	// ExpiresAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	ExpiresAt runtime.Optional[Timestamp]          `json:"expires_at"`
+	Name      runtime.Optional[string]             `json:"name"`
+	Status    runtime.Optional[VertexAPIKeyStatus] `json:"status"`
+}
+
+func (v UpdateVertexAPIKeyRequest) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "allowed_models", Value: v.AllowedModels, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "api_key_id", Value: v.ApiKeyId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expected_version", Value: v.ExpectedVersion, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expires_at", Value: v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "name", Value: v.Name, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "status", Value: v.Status, Required: false, Nullable: false, Enum: []string{"VERTEX_API_KEY_STATUS_UNSPECIFIED", "VERTEX_API_KEY_STATUS_ACTIVE", "VERTEX_API_KEY_STATUS_DISABLED"}},
+	)
+}
+func (v *UpdateVertexAPIKeyRequest) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "allowed_models", Value: &v.AllowedModels, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "api_key_id", Value: &v.ApiKeyId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expected_version", Value: &v.ExpectedVersion, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expires_at", Value: &v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "name", Value: &v.Name, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "status", Value: &v.Status, Required: false, Nullable: false, Enum: []string{"VERTEX_API_KEY_STATUS_UNSPECIFIED", "VERTEX_API_KEY_STATUS_ACTIVE", "VERTEX_API_KEY_STATUS_DISABLED"}},
+	)
+}
+
+type UpdateVertexAPIKeyResponse struct {
+	// Key VertexAPIKey contains non-secret metadata only. Identity bindings are immutable.
+	Key runtime.Optional[*VertexAPIKey] `json:"key"`
+}
+
+func (v UpdateVertexAPIKeyResponse) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "key", Value: v.Key, Required: false, Nullable: false, Enum: []string{}})
+}
+func (v *UpdateVertexAPIKeyResponse) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "key", Value: &v.Key, Required: false, Nullable: false, Enum: []string{}})
+}
+
 type UpdateWebhookRequest struct {
 	// Status WebhookStatus represents the state of a webhook endpoint.
 	Status           runtime.Optional[WebhookStatus] `json:"status"`
@@ -15340,6 +15708,37 @@ func (v *VerifyPlatformAccountResponse) UnmarshalJSON(data []byte) error {
 	)
 }
 
+// VerifyVertexAPIKeyRequest Contains a secret. Request/response body logging and caching are prohibited.
+type VerifyVertexAPIKeyRequest struct {
+	ApiKey runtime.Optional[string] `json:"api_key"`
+	// Model Exact requested model, no wildcard or provider-resolved substitution.
+	Model runtime.Optional[string] `json:"model"`
+}
+
+func (v VerifyVertexAPIKeyRequest) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "api_key", Value: v.ApiKey, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "model", Value: v.Model, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *VerifyVertexAPIKeyRequest) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "api_key", Value: &v.ApiKey, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "model", Value: &v.Model, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+
+type VerifyVertexAPIKeyResponse struct {
+	// Key Metadata of the authenticated key; no hash or plaintext credential.
+	//  This metadata is not a wallet delegation and must never be treated as one.
+	Key runtime.Optional[*VertexAPIKey] `json:"key"`
+}
+
+func (v VerifyVertexAPIKeyResponse) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "key", Value: v.Key, Required: false, Nullable: false, Enum: []string{}})
+}
+func (v *VerifyVertexAPIKeyResponse) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "key", Value: &v.Key, Required: false, Nullable: false, Enum: []string{}})
+}
+
 // VersionArtifact VersionArtifact is immutable metadata for one validated artifact published
 //
 //	with a page version.
@@ -15388,6 +15787,360 @@ func (v *VersionsRestorePageVersionBody) UnmarshalJSON(data []byte) error {
 	return runtime.UnmarshalModel(data, runtime.Field{Name: "expectedContentRevision", Value: &v.ExpectedContentRevision, Required: true, Nullable: false, Enum: []string{}},
 		runtime.Field{Name: "expectedCurrentVersionId", Value: &v.ExpectedCurrentVersionId, Required: true, Nullable: false, Enum: []string{}},
 		runtime.Field{Name: "pageEtag", Value: &v.PageEtag, Required: false, Nullable: true, Enum: []string{}},
+	)
+}
+
+// VertexAPIKey VertexAPIKey contains non-secret metadata only. Identity bindings are immutable.
+type VertexAPIKey struct {
+	// AllowedModels Exact requested model IDs; nonempty, no wildcard. No privilege escalation
+	//  through user-supplied internal identity or application headers.
+	AllowedModels runtime.Optional[[]string] `json:"allowed_models"`
+	ApiKeyId      runtime.Optional[string]   `json:"api_key_id"`
+	CallerService runtime.Optional[string]   `json:"caller_service"`
+	// CreatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	CreatedAt runtime.Optional[Timestamp] `json:"created_at"`
+	CreatedBy runtime.Optional[string]    `json:"created_by"`
+	// ExpiresAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	ExpiresAt runtime.Optional[Timestamp] `json:"expires_at"`
+	KeyPrefix runtime.Optional[string]    `json:"key_prefix"`
+	Name      runtime.Optional[string]    `json:"name"`
+	// OwnerUserId IAM user charged and audited for calls made with this key.
+	OwnerUserId runtime.Optional[string]             `json:"owner_user_id"`
+	Status      runtime.Optional[VertexAPIKeyStatus] `json:"status"`
+	// UpdatedAt A Timestamp represents a point in time independent of any time zone or local
+	//  calendar, encoded as a count of seconds and fractions of seconds at
+	//  nanosecond resolution. The count is relative to an epoch at UTC midnight on
+	//  January 1, 1970, in the proleptic Gregorian calendar which extends the
+	//  Gregorian calendar backwards to year one.
+	//
+	//  All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+	//  second table is needed for interpretation, using a [24-hour linear
+	//  smear](https://developers.google.com/time/smear).
+	//
+	//  The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+	//  restricting to that range, we ensure that we can convert to and from [RFC
+	//  3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+	//
+	//  # Examples
+	//
+	//  Example 1: Compute Timestamp from POSIX `time()`.
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(time(NULL));
+	//      timestamp.set_nanos(0);
+	//
+	//  Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+	//
+	//      struct timeval tv;
+	//      gettimeofday(&tv, NULL);
+	//
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds(tv.tv_sec);
+	//      timestamp.set_nanos(tv.tv_usec * 1000);
+	//
+	//  Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+	//
+	//      FILETIME ft;
+	//      GetSystemTimeAsFileTime(&ft);
+	//      UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+	//
+	//      // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+	//      // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+	//      Timestamp timestamp;
+	//      timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+	//      timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+	//
+	//  Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+	//
+	//      long millis = System.currentTimeMillis();
+	//
+	//      Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+	//          .setNanos((int) ((millis % 1000) * 1000000)).build();
+	//
+	//  Example 5: Compute Timestamp from Java `Instant.now()`.
+	//
+	//      Instant now = Instant.now();
+	//
+	//      Timestamp timestamp =
+	//          Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+	//              .setNanos(now.getNano()).build();
+	//
+	//  Example 6: Compute Timestamp from current time in Python.
+	//
+	//      timestamp = Timestamp()
+	//      timestamp.GetCurrentTime()
+	//
+	//  # JSON Mapping
+	//
+	//  In JSON format, the Timestamp type is encoded as a string in the
+	//  [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+	//  format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+	//  where {year} is always expressed using four digits while {month}, {day},
+	//  {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+	//  seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+	//  are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+	//  is required. A ProtoJSON serializer should always use UTC (as indicated by
+	//  "Z") when printing the Timestamp type and a ProtoJSON parser should be
+	//  able to accept both UTC and other timezones (as indicated by an offset).
+	//
+	//  For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+	//  01:30 UTC on January 15, 2017.
+	//
+	//  In JavaScript, one can convert a Date object to this format using the
+	//  standard
+	//  [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+	//  method. In Python, a standard `datetime.datetime` object can be converted
+	//  to this format using
+	//  [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+	//  the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+	//  the Joda Time's [`ISODateTimeFormat.dateTime()`](
+	//  http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+	//  ) to obtain a formatter capable of generating timestamps in this format.
+	UpdatedAt runtime.Optional[Timestamp] `json:"updated_at"`
+	// Version Optimistic concurrency version. Update/Delete require the current value.
+	Version runtime.Optional[string] `json:"version"`
+}
+
+func (v VertexAPIKey) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "allowed_models", Value: v.AllowedModels, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "api_key_id", Value: v.ApiKeyId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "caller_service", Value: v.CallerService, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "created_at", Value: v.CreatedAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "created_by", Value: v.CreatedBy, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expires_at", Value: v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "key_prefix", Value: v.KeyPrefix, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "name", Value: v.Name, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "owner_user_id", Value: v.OwnerUserId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "status", Value: v.Status, Required: false, Nullable: false, Enum: []string{"VERTEX_API_KEY_STATUS_UNSPECIFIED", "VERTEX_API_KEY_STATUS_ACTIVE", "VERTEX_API_KEY_STATUS_DISABLED"}},
+		runtime.Field{Name: "updated_at", Value: v.UpdatedAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "version", Value: v.Version, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *VertexAPIKey) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "allowed_models", Value: &v.AllowedModels, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "api_key_id", Value: &v.ApiKeyId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "caller_service", Value: &v.CallerService, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "created_at", Value: &v.CreatedAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "created_by", Value: &v.CreatedBy, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "expires_at", Value: &v.ExpiresAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "key_prefix", Value: &v.KeyPrefix, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "name", Value: &v.Name, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "owner_user_id", Value: &v.OwnerUserId, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "status", Value: &v.Status, Required: false, Nullable: false, Enum: []string{"VERTEX_API_KEY_STATUS_UNSPECIFIED", "VERTEX_API_KEY_STATUS_ACTIVE", "VERTEX_API_KEY_STATUS_DISABLED"}},
+		runtime.Field{Name: "updated_at", Value: &v.UpdatedAt, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "version", Value: &v.Version, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+
+type VertexAPIKeyStatus string
+
+const (
+	VertexAPIKeyStatusVERTEXAPIKEYSTATUSUNSPECIFIED VertexAPIKeyStatus = "VERTEX_API_KEY_STATUS_UNSPECIFIED"
+	VertexAPIKeyStatusVERTEXAPIKEYSTATUSACTIVE      VertexAPIKeyStatus = "VERTEX_API_KEY_STATUS_ACTIVE"
+	VertexAPIKeyStatusVERTEXAPIKEYSTATUSDISABLED    VertexAPIKeyStatus = "VERTEX_API_KEY_STATUS_DISABLED"
+)
+
+func (v *VertexAPIKeyStatus) UnmarshalJSON(data []byte) error {
+	var value string
+	if err := runtime.UnmarshalModel(append(append([]byte(`{"value":`), data...), '}'), runtime.Field{Name: "value", Value: &value, Required: true, Enum: []string{"VERTEX_API_KEY_STATUS_UNSPECIFIED", "VERTEX_API_KEY_STATUS_ACTIVE", "VERTEX_API_KEY_STATUS_DISABLED"}}); err != nil {
+		return err
+	}
+	*v = VertexAPIKeyStatus(value)
+	return nil
+}
+func (v VertexAPIKeyStatus) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalEnum(string(v), []string{"VERTEX_API_KEY_STATUS_UNSPECIFIED", "VERTEX_API_KEY_STATUS_ACTIVE", "VERTEX_API_KEY_STATUS_DISABLED"})
+}
+
+type VertexDelegationCredential struct {
+	ApiKey runtime.Optional[string] `json:"api_key"`
+	Model  runtime.Optional[string] `json:"model"`
+}
+
+func (v VertexDelegationCredential) MarshalJSON() ([]byte, error) {
+	return runtime.MarshalModel(runtime.Field{Name: "api_key", Value: v.ApiKey, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "model", Value: v.Model, Required: false, Nullable: false, Enum: []string{}},
+	)
+}
+func (v *VertexDelegationCredential) UnmarshalJSON(data []byte) error {
+	return runtime.UnmarshalModel(data, runtime.Field{Name: "api_key", Value: &v.ApiKey, Required: false, Nullable: false, Enum: []string{}},
+		runtime.Field{Name: "model", Value: &v.Model, Required: false, Nullable: false, Enum: []string{}},
 	)
 }
 
