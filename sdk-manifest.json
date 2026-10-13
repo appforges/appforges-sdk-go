@@ -2,6 +2,6 @@
   "generator": "https://github.com/appforges/sdk-gen",
   "minimum_go": "1.23",
   "module": "github.com/appforges/appforges-sdk-go",
-  "spec_tag": "v0.62.0",
-  "version": "0.62.0"
+  "spec_tag": "v0.63.0",
+  "version": "0.63.0"
 }

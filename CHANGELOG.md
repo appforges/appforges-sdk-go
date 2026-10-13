@@ -1,13 +1,7 @@
 # Changelog
 
-## v0.62.0
+## v0.63.0
 
-Compared with v0.61.0.
+Compared with v0.62.0.
 
-- added `types/appforges.iam.v1.VerifyVertexToolCredentialRequest` (compatible)
-- added `types/appforges.iam.v1.VerifyVertexToolCredentialRequest/fields/api_key` (compatible)
-- added `types/appforges.iam.v1.VerifyVertexToolCredentialResponse` (compatible)
-- added `types/appforges.iam.v1.VerifyVertexToolCredentialResponse/fields/key` (compatible)
-- added `types/appforges.iam.v1.VertexToolDelegationCredential` (compatible)
-- added `types/appforges.iam.v1.VertexToolDelegationCredential/fields/api_key` (compatible)
-- added `types/appforges.iam.v1.VertexToolDelegationCredential/fields/sku` (compatible)
+No public wire API changes. SDK runtime and documentation changes are described in the release notes.
