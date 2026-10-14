@@ -2,7 +2,7 @@
 
 Official standard-library-only SDK. Requires Go 1.23 or newer.
 
-Install: `go get github.com/appforges/appforges-sdk-go@v0.64.0`
+Install: `go get github.com/appforges/appforges-sdk-go@v0.65.0`
 
 Generated from the matching OpenAPI specification tag; JSON fields retain wire snake_case names.
 
